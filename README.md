@@ -5,7 +5,7 @@ on a Raspberry Pi computer and publish the data to a MQTT server.
 I wrote this so I can monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script was written and tested on Python 2 but it should work fine on Python 3.
 The script if very light, it takes 4 seconds as there are 4 one second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay.
 
-Each value measured by the script is send via a separate message for easier craetion of the home assistant sensors.
+Each value measured by the script is send via a separate message for easier craetion of home assistant sensors.
 
 Example message topic:
 
@@ -35,7 +35,7 @@ Create a cron entry like this (you might need to update the path on the cron ent
 ```
 */2 * * * * /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
 ```
-# Home Assistant Integration
+# Home Assistant Integration:
 
 ![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
 
