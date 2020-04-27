@@ -60,6 +60,7 @@ def publish_to_mqtt (cpu_load, cpu_temp, used_space, voltage, sys_clock_speed):
 		time.sleep(1)
 		client.publish(mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
 		time.sleep(1)
+		client.publish(mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
 		#disconect from mqtt server
 		client.disconnect()
 
