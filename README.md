@@ -12,11 +12,9 @@ If you don't have pip installed:
 
 $ sudo apt install python-pip
 
-Then install these two modules needed for the script:
+Then install this module needed for the script:
 
 $ pip install paho-mqtt
-
-$ sudo apt-get install python-pip
 
 Rename config.py.example to config.py and populate the needed variables
 
