@@ -8,9 +8,9 @@ The script if very light, it takes 4 seconds as there are 4 one second sleeps in
 Each value measured by the script is send via a separate message for easier craetion of home assistant sensors.
 
 Example message topic:
-
+```
 masoko/rpi4/cpuload
-
+```
 - first part (masoko) is the main topic configurable via the congig.py file
 - second part (pi4) is the host name of the raspberry which is automatically pulled by the script, so you don't have to configure it for each installation (in case you have many raspberries like me)
 - third part (cpuload) is the name of the value (these are all values published via MQTT - cpuload, cputemp, diskusage, voltage, sys_clock_speed)
@@ -25,13 +25,18 @@ Then install this module needed for the script:
 ```bash
 $ pip install paho-mqtt
 ```
-Rename config.py.example to config.py and populate the needed variables
+
+Copy rpi-cpu2mqtt.py and config.py.example to a folder of your choise (I am using ```/home/pi/scripts/``` ).
+
+Rename config.py.example to config.py and populate the needed variables (MQTT host, user, password and main topic).
 
 Test the script.
 ```bash
 $ /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
 ```
-Create a cron entry like this (you might need to update the path on the cron entry below, depending on where you put the script):
+Once you test the script there will be no output if it run OK but you should get 5 messages via the configured MQTT server.
+
+Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
 ```
 */2 * * * * /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
 ```

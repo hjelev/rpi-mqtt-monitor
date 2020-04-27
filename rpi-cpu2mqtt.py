@@ -33,7 +33,9 @@ def check_cpu_load():
 		
 def check_voltage():
 		full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
-		return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+		voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+		voltage = voltage.strip()[:-1]
+		return voltage
 
 def check_cpu_temp():
 		full_cmd = "/opt/vc/bin/vcgencmd measure_temp"
@@ -71,6 +73,6 @@ if __name__ == '__main__':
 		used_space = check_used_space('/')
 		voltage = check_voltage() 
 		sys_clock_speed = check_sys_clock_speed()
-
+		print(voltage)
 		#Publish messages to MQTT
 		publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed)
