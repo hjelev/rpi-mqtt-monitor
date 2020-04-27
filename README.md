@@ -8,11 +8,15 @@ The script if very light, it takes 4 seconds as there are 4 one second sleeps in
 
 # Installation:
 
-Install these two modules needed for the script
+If you don't have pip installed:
 
-RUN pip install paho-mqtt
+$ sudo apt install python-pip
 
-RUN sudo apt-get install python-pip
+Then install these two modules needed for the script:
+
+$ pip install paho-mqtt
+
+$ sudo apt-get install python-pip
 
 Rename config.py.example to config.py and populate the needed variables
 
