@@ -28,7 +28,7 @@ $ pip install paho-mqtt
 
 Copy rpi-cpu2mqtt.py and config.py.example to a folder of your choise (I am using ```/home/pi/scripts/``` ).
 
-Rename config.py.example to config.py and populate the needed variables (MQTT host, user, password and main topic).
+Rename ```config.py.example``` to ```config.py``` and populate the needed variables (MQTT host, user, password and main topic).
 
 Test the script.
 ```bash
@@ -46,7 +46,7 @@ Create a cron entry like this (you might need to update the path in the cron ent
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
 
-This is the sensors configuration assuming your sensors are separated in sensors.yaml file.
+This is the sensors configuration assuming your sensors are separated in ```sensors.yaml``` file.
 ```yaml
   - platform: mqtt
     state_topic: "masoko/rpi4/cpuload"
