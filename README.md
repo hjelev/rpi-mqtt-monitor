@@ -8,23 +8,23 @@ The script if very light, it takes 4 seconds as there are 4 one second sleeps in
 # Installation:
 
 If you don't have pip installed:
-
+```bash
 $ sudo apt install python-pip
-
+```
 Then install this module needed for the script:
-
+```bash
 $ pip install paho-mqtt
-
+```
 Rename config.py.example to config.py and populate the needed variables
 
 Test the script.
-
+```bash
 $ /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
-
+```
 Create a cron entry like this (you might need to update the path on the cron entry below, depending on where you put the script):
-
+```
 */2 * * * * /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
-
+```
 # Home Assistant Integration
 
 ![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
@@ -57,4 +57,18 @@ This is the sensors configuration assuming your sensors are separated in sensors
     state_topic: "masoko/rpi4/sys_clock_speed"
     name: rpi 4 sys clock speed
     unit_of_measurement: "hz"
+```
+
+After that you need to create entities list via the home assistant GUI.
+You can use this code or compose it via the GUI.
+
+```yaml
+type: entities
+title: Rapsberry Pi MQTT monitor
+entities:
+  - entity: sensor.rpi4_cpu_load
+  - entity: sensor.rpi4_cpu_temp
+  - entity: sensor.rpi4_diskusage
+  - entity: sensor.rpi_4_voltage
+  - entity: sensor.rpi_4_sys_clock_speed
 ```
