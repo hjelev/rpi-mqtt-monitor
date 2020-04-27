@@ -1,9 +1,19 @@
 # Rapsberry Pi MQTT monitor
-Python script to check cpu load, cpu temperature, free space, voltage and system clock speed
+Python script to check the cpu load, cpu temperature, free space, voltage and system clock speed
 on a Raspberry Pi computer and publish the data to a MQTT server.
 
 I wrote this so I can monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script was written and tested on Python 2 but it should work fine on Python 3.
-The script if very light, it takes 4 seconds as there are 4 one second sleeps in the code - due to mqtt have problems if I shoot the messages with no delay.
+The script if very light, it takes 4 seconds as there are 4 one second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay.
+
+Each value measured by the script is send via a separate message for easier craetion of the home assistant sensors.
+
+Example message topic:
+
+masoko/rpi4/cpuload
+
+- first part (masoko) is the main topic configurable via the congig.py file
+- second part (pi4) is the host name of the raspberry which is automatically pulled by the script, so you don't have to configure it for each installation (in case you have many raspberries like me)
+- third part (cpuload) is the name of the value (these are all values published via MQTT - cpuload, cputemp, diskusage, voltage, sys_clock_speed)
 
 # Installation:
 
