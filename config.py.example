@@ -1,0 +1,5 @@
+mqtt_host = "192.168.0.13"
+mqtt_user = "user"
+mqtt_password = "password"
+mqtt_port = "1883"
+mqtt_topic_prefix = "topic"
