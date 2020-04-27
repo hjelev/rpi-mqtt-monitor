@@ -20,6 +20,12 @@ Rename config.py.example to config.py and populate the needed variables
 
 Test the script.
 
+$ /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
+
 Create a cron entry like this (you might need to update the path on the cron entry below, depending on where you put the script):
 
 */2 * * * * /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
+
+Home Assistant Integration
+
+![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
