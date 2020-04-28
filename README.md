@@ -1,9 +1,9 @@
 # Rapsberry Pi MQTT monitor
-Python script to check the cpu load, cpu temperature, free space, voltage and system clock speed
+Python script to check the cpu load, cpu temperature, free space, used memory, swap usage, voltage and system clock speed
 on a Raspberry Pi computer and publish the data to a MQTT server.
 
 I wrote this so I can monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script was written and tested on Python 2 but it should work fine on Python 3.
-The script if very light, it takes 4 seconds as there are 4 one second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay.
+The script if very light, it takes 7 seconds as there are 7 one second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay.
 
 Each value measured by the script is send via a separate message for easier craetion of home assistant sensors.
 
@@ -72,6 +72,16 @@ This is the sensors configuration assuming your sensors are separated in ```sens
     state_topic: "masoko/rpi4/sys_clock_speed"
     name: rpi 4 sys clock speed
     unit_of_measurement: "hz"
+
+  - platform: mqtt
+    state_topic: "masoko/rpi4/swap"
+    name: rpi 4 swap
+    unit_of_measurement: "%" 
+
+  - platform: mqtt
+    state_topic: "masoko/rpi4/memory"
+    name: rpi 4 memory
+    unit_of_measurement: "%"
 ```
 
 After that you need to create entities list via the home assistant GUI.
