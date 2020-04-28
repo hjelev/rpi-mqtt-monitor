@@ -96,4 +96,6 @@ entities:
   - entity: sensor.rpi4_diskusage
   - entity: sensor.rpi_4_voltage
   - entity: sensor.rpi_4_sys_clock_speed
+  - entity: sensor.rpi_4_swap
+  - entity: sensor.rpi_4_swap
 ```
