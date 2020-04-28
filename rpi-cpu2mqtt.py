@@ -31,7 +31,6 @@ def check_cpu_load():
 		cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]		
 		cpu_load = p.split("average:")[1].split(",")[0].replace(' ', '')
 		cpu_load = float(cpu_load)/int(cores)*100
-
 		return cpu_load
 		
 def check_voltage():
@@ -40,6 +39,18 @@ def check_voltage():
 		voltage = voltage.strip()[:-1]
 		return voltage
 
+def check_swap():
+		full_cmd = "free -t | awk 'NR == 3 {print $3/$2*100}'"
+		swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+		swap = round(float(swap), 1)
+		return swap
+
+def check_memory():
+		full_cmd = "free -t | awk 'NR == 2 {print $3/$2*100}'"
+		memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+		memory = round(float(memory), 1)
+		return memory		
+		
 def check_cpu_temp():
 		full_cmd = "/opt/vc/bin/vcgencmd measure_temp"
 		p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
@@ -51,7 +62,7 @@ def check_sys_clock_speed():
 		return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 	
-def publish_to_mqtt (cpu_load, cpu_temp, used_space, voltage, sys_clock_speed):
+def publish_to_mqtt (cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory):
 		#connect to mqtt server
 		client = paho.Client()
 		client.username_pw_set(mqtt_user, mqtt_password)
@@ -66,6 +77,10 @@ def publish_to_mqtt (cpu_load, cpu_temp, used_space, voltage, sys_clock_speed):
 		time.sleep(1)
 		client.publish(mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
 		time.sleep(1)
+		client.publish(mqtt_topic_prefix+"/"+hostname+"/swap", swap, qos=1)
+		time.sleep(1)
+		client.publish(mqtt_topic_prefix+"/"+hostname+"/swap", memory, qos=1)
+		time.sleep(1)
 		client.publish(mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
 		#disconect from mqtt server
 		client.disconnect()
@@ -77,6 +92,8 @@ if __name__ == '__main__':
 		used_space = check_used_space('/')
 		voltage = check_voltage() 
 		sys_clock_speed = check_sys_clock_speed()
+		swap = check_swap()
+		memory = check_memory()
 
 		#Publish messages to MQTT
-		publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed)
+		publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory)
