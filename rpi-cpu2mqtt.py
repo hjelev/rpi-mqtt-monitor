@@ -46,7 +46,8 @@ def check_cpu_temp():
 def check_sys_clock_speed():
 		full_cmd = "awk '{printf (\"%0.0f\",$1/1000); }' </sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
 		return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-		
+
+	
 def publish_to_mqtt (cpu_load, cpu_temp, used_space, voltage, sys_clock_speed):
 		#connect to mqtt server
 		client = paho.Client()
@@ -73,6 +74,6 @@ if __name__ == '__main__':
 		used_space = check_used_space('/')
 		voltage = check_voltage() 
 		sys_clock_speed = check_sys_clock_speed()
-		print(voltage)
+
 		#Publish messages to MQTT
 		publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed)
