@@ -8,10 +8,10 @@ import subprocess, time, socket, os
 import paho.mqtt.client as paho
 import config
 
-#get device host name - used in mqtt topic
+# get device host name - used in mqtt topic
 hostname = socket.gethostname()
 
-#mqtt server configuration
+# mqtt server configuration
 mqtt_host = config.mqtt_host
 mqtt_user = config.mqtt_user
 mqtt_password = config.mqtt_password
@@ -26,7 +26,7 @@ def check_used_space(path):
 		return used_space
 
 def check_cpu_load():
-		#bash command to get cpu load from uptime command
+		# bash command to get cpu load from uptime command
 		p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
 		cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]		
 		cpu_load = p.split("average:")[1].split(",")[0].replace(' ', '')
@@ -62,39 +62,56 @@ def check_sys_clock_speed():
 		return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 	
-def publish_to_mqtt (cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory):
-		#connect to mqtt server
+def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0):
+		# connect to mqtt server
 		client = paho.Client()
 		client.username_pw_set(mqtt_user, mqtt_password)
 		client.connect(mqtt_host, mqtt_port)
 
-		#publish monitored values to MQTT
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
-		time.sleep(1)
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/cputemp", cpu_temp, qos=1)
-		time.sleep(1)
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/diskusage", used_space, qos=1)
-		time.sleep(1)
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
-		time.sleep(1)
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/swap", swap, qos=1)
-		time.sleep(1)
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/memory", memory, qos=1)
-		time.sleep(1)
-		client.publish(mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
-		time.sleep(1)
-		#disconect from mqtt server
+		# publish monitored values to MQTT
+		if config.cpu_load:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
+			time.sleep(config.sleep_time)
+		if config.cpu_temp:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/cputemp", cpu_temp, qos=1)
+			time.sleep(config.sleep_time)
+		if config.used_space:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/diskusage", used_space, qos=1)
+			time.sleep(config.sleep_time)
+		if config.voltage:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
+			time.sleep(config.sleep_time)
+		if config.swap:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/swap", swap, qos=1)
+			time.sleep(config.sleep_time)
+		if config.memory:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/memory", memory, qos=1)
+			time.sleep(config.sleep_time)
+		if config.sys_clock_speed:
+			client.publish(mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
+			time.sleep(config.sleep_time)
+		# disconect from mqtt server
 		client.disconnect()
 
 if __name__ == '__main__':
-		#collect the monitored values
-		cpu_load = check_cpu_load()
-		cpu_temp = check_cpu_temp()
-		used_space = check_used_space('/')
-		voltage = check_voltage() 
-		sys_clock_speed = check_sys_clock_speed()
-		swap = check_swap()
-		memory = check_memory()
+		# set all monitored values to False in case they are turned off in the config
+		cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = False
+		
+		# collect the monitored values		
+		if config.cpu_load:
+			cpu_load = check_cpu_load()
+		if config.cpu_temp:
+			cpu_temp = check_cpu_temp()
+		if config.used_space:
+			used_space = check_used_space('/')
+		if config.voltage:
+			voltage = check_voltage() 
+		if config.sys_clock_speed:
+			sys_clock_speed = check_sys_clock_speed()
+		if config.swap:
+			swap = check_swap()
+		if config.memory:
+			memory = check_memory()
 
-		#Publish messages to MQTT
+		# Publish messages to MQTT
 		publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory)
