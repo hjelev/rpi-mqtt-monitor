@@ -26,13 +26,14 @@ Then install this module needed for the script:
 $ pip install paho-mqtt
 ```
 
-Copy rpi-cpu2mqtt.py and config.py.example to a folder of your choise (I am using ```/home/pi/scripts/``` ).
-
-Rename ```config.py.example``` to ```config.py``` and populate the needed variables (MQTT host, user, password and main topic).
+Copy ```rpi-cpu2mqtt.py``` and ```config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ).
+Rename ```config.py.example``` to ```config.py``` 
 
 # Configuration
 
-In config.py you can choose what messages are send and what is the delay between them.
+Populate the variables for MQTT host, user, password and main topic in config.py.
+
+You can also choose what messages are send and what is the delay between them.
 This is the default configuration:
 
 ```
