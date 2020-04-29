@@ -11,9 +11,9 @@ Example message topic:
 ```
 masoko/rpi4/cpuload
 ```
-- first part (masoko) is the main topic configurable via the congig.py file
-- second part (pi4) is the host name of the raspberry which is automatically pulled by the script, so you don't have to configure it for each installation (in case you have many raspberries like me)
-- third part (cpuload) is the name of the value (these are all values published via MQTT - cpuload, cputemp, diskusage, voltage, sys_clock_speed)
+- first part (masoko) is the main topic configurable via the ```config.py``` file.
+- second part (pi4) is the host name of the raspberry which is automatically pulled by the script, so you don't have to configure it for each installation (in case you have many raspberries like me).
+- third part (cpuload) is the name of the value (these are all values published via MQTT - cpuload, cputemp, diskusage, voltage, sys_clock_speed).
 
 # Installation:
 
@@ -26,14 +26,14 @@ Then install this module needed for the script:
 $ pip install paho-mqtt
 ```
 
-Copy ```rpi-cpu2mqtt.py``` and ```config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ).
-Rename ```config.py.example``` to ```config.py``` 
+Copy ```rpi-cpu2mqtt.py``` and ```config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py``` 
 
 # Configuration
 
-Populate the variables for MQTT host, user, password and main topic in config.py.
+Populate the variables for MQTT host, user, password and main topic in ```config.py```.
 
 You can also choose what messages are send and what is the delay between them.
+
 This is the default configuration:
 
 ```
