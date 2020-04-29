@@ -3,7 +3,7 @@ Python script to check the cpu load, cpu temperature, free space, used memory, s
 on a Raspberry Pi computer and publish the data to a MQTT server.
 
 I wrote this so I can monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script was written and tested on Python 2 but it should work fine on Python 3.
-The script if very light, it takes 7 seconds as there are 7 one second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay.
+The script if very light, it takes 3 seconds as there are 5 half second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay.
 
 Each value measured by the script is send via a separate message for easier craetion of home assistant sensors.
 
@@ -50,7 +50,7 @@ Test the script.
 ```bash
 $ /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
 ```
-Once you test the script there will be no output if it run OK but you should get 5 messages via the configured MQTT server.
+Once you test the script there will be no output if it run OK but you should get 5 messages via the configured MQTT server (the messages count depends on your configuration).
 
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
 ```
@@ -115,3 +115,5 @@ entities:
   - entity: sensor.rpi_4_swap
   - entity: sensor.rpi_4_memory
 ```
+# TODO
+- make an option to send all values as one message
