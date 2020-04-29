@@ -15,7 +15,7 @@ masoko/rpi4/cpuload
 - second part (pi4) is the host name of the raspberry which is automatically pulled by the script, so you don't have to configure it for each installation (in case you have many raspberries like me).
 - third part (cpuload) is the name of the value (these are all values published via MQTT - cpuload, cputemp, diskusage, voltage, sys_clock_speed).
 
-# Installation:
+# Installation
 
 If you don't have pip installed:
 ```bash
@@ -57,7 +57,7 @@ Create a cron entry like this (you might need to update the path in the cron ent
 ```
 */2 * * * * /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
 ```
-# Home Assistant Integration:
+# Home Assistant Integration
 
 ![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
 
