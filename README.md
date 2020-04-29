@@ -30,6 +30,22 @@ Copy rpi-cpu2mqtt.py and config.py.example to a folder of your choise (I am usin
 
 Rename ```config.py.example``` to ```config.py``` and populate the needed variables (MQTT host, user, password and main topic).
 
+# Configuration
+
+In config.py you can choose what messages are send and what is the delay between them.
+This is the default configuration:
+
+```
+sleep_time = 0.5
+cpu_load = True
+cpu_temp = True
+used_space = True
+voltage = True
+sys_clock_speed = True
+swap = False
+memory = False
+```
+
 Test the script.
 ```bash
 $ /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
