@@ -115,5 +115,6 @@ entities:
   - entity: sensor.rpi_4_swap
   - entity: sensor.rpi_4_memory
 ```
-# TODO
+# To Do
 - make an option to send all values as one message
+- maybe add network trafic monitoring via some third party software (for now I can't find a way to do it without additinal software)
