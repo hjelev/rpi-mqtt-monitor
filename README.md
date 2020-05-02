@@ -103,7 +103,7 @@ This is the sensors configuration assuming your sensors are separated in ```sens
 
 Add this to your ```customize.yaml``` file to change the icons of the sensors.
 
-```
+```yaml
 sensor.rpi_4_voltage:
   friendly_name: rpi 4 voltage
   icon: mdi:flash
