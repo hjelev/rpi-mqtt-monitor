@@ -101,6 +101,28 @@ This is the sensors configuration assuming your sensors are separated in ```sens
     unit_of_measurement: "%"
 ```
 
+Add this to your ```customize.yaml``` file to change the icons of the sensors.
+
+```
+sensor.rpi_4_voltage:
+  friendly_name: rpi 4 voltage
+  icon: mdi:flash
+sensor.rpi4_cpu_load:
+  friendly_name: rpi4 cpu load
+  icon: mdi:chip
+sensor.rpi4_diskusage:
+  friendly_name: rpi4 diskusage
+  icon: mdi:harddisk
+sensor.rpi_4_sys_clock_speed:
+  icon: mdi:clock
+sensor.rpi4_cpu_temp:
+  friendly_name: rpi4 cpu temperature
+sensor.rpi_4_swap:
+  icon: mdi:folder-swap
+sensor.rpi_4_memory:
+  icon: mdi:memory
+```
+
 After that you need to create entities list via the home assistant GUI.
 You can use this code or compose it via the GUI.
 
