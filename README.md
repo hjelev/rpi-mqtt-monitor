@@ -48,8 +48,8 @@ swap = False
 memory = False
 ```
 
-If the ```group_messages``` is set to true the script will send just one message containing all values (I still haven't made the sensor configuration for this - the one below is for separate messages only)
-The group message is in json and looks like this:
+If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
+The group message looks like this:
 ```
 {'used_space': '25', 'sys_clock_speed': '1500', 'cpu_temp': '43.0', 'voltage': '0.8500', 'cpu_load': '1.25', 'memory': 'False', 'swap': 'False'}
 ```
@@ -70,48 +70,95 @@ Create a cron entry like this (you might need to update the path in the cron ent
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
 
-This is the sensors configuration assuming your sensors are separated in ```sensors.yaml``` file.
+
+
+This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
+```yaml
+  - platform: mqtt
+    name: 'rpi4 cpu load'
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[0] }}'
+    unit_of_measurement: "%"
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[1] }}'
+    name: rpi4 cpu temp
+    unit_of_measurement: "°C"
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[2] }}'
+    name: rpi4 diskusage
+    unit_of_measurement: "%"
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[3] }}'
+    name: rpi4 voltage
+    unit_of_measurement: "V"
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[4] }}'
+    name: rpi4 sys clock speed
+    unit_of_measurement: "MHz"
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[5] }}'
+    name: rpi4 swap
+    unit_of_measurement: "%" 
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[6] }}'
+    name: rpi4 memory
+    unit_of_measurement: "%" 
+```
+
+This is the sensors configuration if ```group_messages = False``` assuming your sensors are separated in ```sensors.yaml``` file.
 ```yaml
   - platform: mqtt
     state_topic: "masoko/rpi4/cpuload"
-    name: rpi 4 cpu load
+    name: rpi4 cpu load
     unit_of_measurement: "%"
 
   - platform: mqtt
     state_topic: "masoko/rpi4/cputemp"
-    name: rpi 4 cpu temp
+    name: rpi4 cpu temp
     unit_of_measurement: "°C"
 
   - platform: mqtt
     state_topic: "masoko/rpi4/diskusage"
-    name: rpi 4 diskusage
+    name: rpi4 diskusage
     unit_of_measurement: "%"
 
   - platform: mqtt
     state_topic: "masoko/rpi4/voltage"
-    name: rpi 4 voltage
+    name: rpi4 voltage
     unit_of_measurement: "V"
 
   - platform: mqtt
     state_topic: "masoko/rpi4/sys_clock_speed"
-    name: rpi 4 sys clock speed
+    name: rpi4 sys clock speed
     unit_of_measurement: "hz"
 
   - platform: mqtt
     state_topic: "masoko/rpi4/swap"
-    name: rpi 4 swap
+    name: rpi4 swap
     unit_of_measurement: "%" 
 
   - platform: mqtt
     state_topic: "masoko/rpi4/memory"
-    name: rpi 4 memory
+    name: rpi4 memory
     unit_of_measurement: "%"
 ```
 
 Add this to your ```customize.yaml``` file to change the icons of the sensors.
 
 ```yaml
-sensor.rpi_4_voltage:
+sensor.rpi4_voltage:
   friendly_name: rpi 4 voltage
   icon: mdi:flash
 sensor.rpi4_cpu_load:
@@ -120,13 +167,13 @@ sensor.rpi4_cpu_load:
 sensor.rpi4_diskusage:
   friendly_name: rpi4 diskusage
   icon: mdi:harddisk
-sensor.rpi_4_sys_clock_speed:
+sensor.rpi4_sys_clock_speed:
   icon: mdi:clock
 sensor.rpi4_cpu_temp:
   friendly_name: rpi4 cpu temperature
-sensor.rpi_4_swap:
+sensor.rpi4_swap:
   icon: mdi:folder-swap
-sensor.rpi_4_memory:
+sensor.rpi4_memory:
   icon: mdi:memory
 ```
 
@@ -140,11 +187,11 @@ entities:
   - entity: sensor.rpi4_cpu_load
   - entity: sensor.rpi4_cpu_temp
   - entity: sensor.rpi4_diskusage
-  - entity: sensor.rpi_4_voltage
-  - entity: sensor.rpi_4_sys_clock_speed
-  - entity: sensor.rpi_4_swap
-  - entity: sensor.rpi_4_memory
+  - entity: sensor.rpi4_voltage
+  - entity: sensor.rpi4_sys_clock_speed
+  - entity: sensor.rpi4_swap
+  - entity: sensor.rpi4_memory
 ```
 # To Do
-- make an option to send all values as one message
+
 - maybe add network trafic monitoring via some third party software (for now I can't find a way to do it without additinal software)

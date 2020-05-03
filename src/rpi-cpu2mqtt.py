@@ -89,23 +89,18 @@ def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sy
 		client.disconnect()
 
 def bulk_publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0):
-		# compose the json message containing the measured values
-		values = {}
-		values['cpu_load'] = str(cpu_load)
-		values['cpu_temp'] = str(cpu_temp)
-		values['used_space'] = str(used_space)
-		values['voltage'] = str(voltage)
-		values['sys_clock_speed'] = str(sys_clock_speed)
-		values['swap'] = str(swap)
-		values['memory'] = str(memory)
-		print(values)
+		# compose the CSV message containing the measured values
+		
+		values = cpu_load, float(cpu_temp), used_space, float(voltage), int(sys_clock_speed), swap, memory
+		values = str(values)[1:-1]
+
 		# connect to mqtt server
 		client = paho.Client()
 		client.username_pw_set(config.mqtt_user, config.mqtt_password)
 		client.connect(config.mqtt_host, config.mqtt_port)
 		
 		# publish monitored values to MQTT
-		client.publish(config.mqtt_topic_prefix+"/"+hostname, str(values), qos=1)
+		client.publish(config.mqtt_topic_prefix+"/"+hostname, values, qos=1)
 		
 		# disconect from mqtt server
 		client.disconnect()
