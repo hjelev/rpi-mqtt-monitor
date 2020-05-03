@@ -49,6 +49,10 @@ memory = False
 ```
 
 If the ```group_messages``` is set to true the script will send just one message containing all values (I still haven't made the sensor configuration for this - the one below is for separate messages only)
+The group message is in json and looks like this:
+```
+{'used_space': '25', 'sys_clock_speed': '1500', 'cpu_temp': '43.0', 'voltage': '0.8500', 'cpu_load': '1.25', 'memory': 'False', 'swap': 'False'}
+```
 
 Test the script.
 ```bash
