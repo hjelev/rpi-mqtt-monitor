@@ -1,5 +1,6 @@
 #script config file
 config.py
+update.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
