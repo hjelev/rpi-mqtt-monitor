@@ -39,7 +39,7 @@ Then install this module needed for the script:
 $ pip install paho-mqtt
 ```
 
-Copy ```rpi-cpu2mqtt.py``` and ```config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py``` 
+Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py``` 
 
 # Configuration
 
@@ -90,7 +90,7 @@ This is the sensors configuration if ```group_messages = True``` assuming your s
   - platform: mqtt
     name: 'rpi4 cpu load'
     state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[0] }}'
+    value_template: '{{ value.split(",")[0] | float}}'
     unit_of_measurement: "%"
 
   - platform: mqtt
