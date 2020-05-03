@@ -90,7 +90,7 @@ This is the sensors configuration if ```group_messages = True``` assuming your s
   - platform: mqtt
     name: 'rpi4 cpu load'
     state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[0] | float}}'
+    value_template: '{{ value.split(",")[0] }}'
     unit_of_measurement: "%"
 
   - platform: mqtt
