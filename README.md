@@ -37,6 +37,7 @@ You can also choose what messages are send and what is the delay between them.
 This is the default configuration:
 
 ```
+group_messages = True 
 sleep_time = 0.5
 cpu_load = True
 cpu_temp = True
@@ -46,6 +47,8 @@ sys_clock_speed = True
 swap = False
 memory = False
 ```
+
+If the ```group_messages``` is set to true the script will send just one message containing all values (I still haven't made the sensor configuration for this - the one below is for separate messages only)
 
 Test the script.
 ```bash
