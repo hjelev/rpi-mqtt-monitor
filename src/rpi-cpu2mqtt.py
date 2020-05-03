@@ -26,6 +26,7 @@ def check_cpu_load():
 		cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]		
 		cpu_load = p.split("average:")[1].split(",")[0].replace(' ', '')
 		cpu_load = float(cpu_load)/int(cores)*100
+		cpu_load = round(float(cpu_load), 1)
 		return cpu_load
 		
 def check_voltage():
