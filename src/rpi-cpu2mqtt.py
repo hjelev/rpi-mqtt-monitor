@@ -6,17 +6,12 @@
 from __future__ import division
 import subprocess, time, socket, os
 import paho.mqtt.client as paho
+import json
 import config
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
 
-# mqtt server configuration
-mqtt_host = config.mqtt_host
-mqtt_user = config.mqtt_user
-mqtt_password = config.mqtt_password
-mqtt_port = config.mqtt_port
-mqtt_topic_prefix = config.mqtt_topic_prefix
 
 def check_used_space(path):
 		st = os.statvfs(path)
@@ -65,33 +60,57 @@ def check_sys_clock_speed():
 def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0):
 		# connect to mqtt server
 		client = paho.Client()
-		client.username_pw_set(mqtt_user, mqtt_password)
-		client.connect(mqtt_host, mqtt_port)
+		client.username_pw_set(config.mqtt_user, config.mqtt_password)
+		client.connect(config.mqtt_host, config.mqtt_port)
 
 		# publish monitored values to MQTT
 		if config.cpu_load:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
 			time.sleep(config.sleep_time)
 		if config.cpu_temp:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/cputemp", cpu_temp, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/cputemp", cpu_temp, qos=1)
 			time.sleep(config.sleep_time)
 		if config.used_space:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/diskusage", used_space, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/diskusage", used_space, qos=1)
 			time.sleep(config.sleep_time)
 		if config.voltage:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
 			time.sleep(config.sleep_time)
 		if config.swap:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/swap", swap, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/swap", swap, qos=1)
 			time.sleep(config.sleep_time)
 		if config.memory:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/memory", memory, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/memory", memory, qos=1)
 			time.sleep(config.sleep_time)
 		if config.sys_clock_speed:
-			client.publish(mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
+			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
 			time.sleep(config.sleep_time)
 		# disconect from mqtt server
 		client.disconnect()
+
+def bulk_publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0):
+		# compose the json message containing the measured values
+		values = {}
+		values['cpu_load'] = str(cpu_load)
+		values['cpu_temp'] = str(cpu_temp)
+		values['used_space'] = str(used_space)
+		values['voltage'] = str(voltage)
+		values['sys_clock_speed'] = str(sys_clock_speed)
+		values['swap'] = str(swap)
+		values['memory'] = str(memory)
+		print(values)
+		# connect to mqtt server
+		client = paho.Client()
+		client.username_pw_set(config.mqtt_user, config.mqtt_password)
+		client.connect(config.mqtt_host, config.mqtt_port)
+		
+		# publish monitored values to MQTT
+		client.publish(config.mqtt_topic_prefix+"/"+hostname, str(values), qos=1)
+		
+		# disconect from mqtt server
+		client.disconnect()
+
+
 
 if __name__ == '__main__':
 		# set all monitored values to False in case they are turned off in the config
@@ -114,4 +133,7 @@ if __name__ == '__main__':
 			memory = check_memory()
 
 		# Publish messages to MQTT
-		publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory)
+		if config.group_messages:
+			bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory)
+		else:
+			publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory)
