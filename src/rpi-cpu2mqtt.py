@@ -112,6 +112,9 @@ if __name__ == '__main__':
 		# set all monitored values to False in case they are turned off in the config
 		cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = False
 		
+		# delay the execution of the script
+		time.sleep(config.random_delay)
+		
 		# collect the monitored values		
 		if config.cpu_load:
 			cpu_load = check_cpu_load()

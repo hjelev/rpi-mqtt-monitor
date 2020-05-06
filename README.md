@@ -45,11 +45,12 @@ Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of 
 
 Populate the variables for MQTT host, user, password and main topic in ```config.py```.
 
-You can also choose what messages are send and what is the delay between them.
-
+You can also choose what messages are send and what is the delay (sleep_time is only used for multiple messages) between them.
+If you are sending a grouped message and you want to delay the execution of the script you need to use the ```random_delay``` variable which is set to 30 by default.
 This is the default configuration:
 
 ```
+random_delay = randrange(30)
 group_messages = True 
 sleep_time = 0.5
 cpu_load = True
