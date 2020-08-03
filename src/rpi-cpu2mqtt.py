@@ -48,7 +48,7 @@ def check_memory():
 		return memory		
 		
 def check_cpu_temp():
-		full_cmd = "/opt/vc/bin/vcgencmd measure_temp"
+		full_cmd = "vcgencmd measure_temp"
 		p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 		cpu_temp = p.replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
 		return cpu_temp
