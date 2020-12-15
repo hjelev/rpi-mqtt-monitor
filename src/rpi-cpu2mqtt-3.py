@@ -24,7 +24,6 @@ def check_cpu_load():
 		# bash command to get cpu load from uptime command
 		p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
 		cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]
-		print(str(p).split("average:"))
 		cpu_load = str(p).split("average:")[1].split(",")[0].replace(' ', '')
 		cpu_load = float(cpu_load)/int(cores)*100
 		cpu_load = round(float(cpu_load), 1)
