@@ -104,7 +104,7 @@ def bulk_publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 
 		# connect to mqtt server
 		client = paho.Client()
 		client.username_pw_set(config.mqtt_user, config.mqtt_password)
-		client.connect(int(config.mqtt_host), int(config.mqtt_port))
+		client.connect(config.mqtt_host, int(config.mqtt_port))
 
 		# publish monitored values to MQTT
 		client.publish(config.mqtt_topic_prefix+"/"+hostname, values, qos=1)
