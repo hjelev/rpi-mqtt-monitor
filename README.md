@@ -3,7 +3,7 @@ Python script to check the cpu load, cpu temperature, free space, used memory, s
 on a Raspberry Pi computer and publish the data to a MQTT broker.
 
 I wrote this so I can monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script was written and tested on Python 2 but it should work fine on Python 3.
-The script if very light, it takes 3 seconds as there are 5 half second sleeps in the code - due to mqtt haveing problems if I shoot the messages with no delay, this is only if you choose to send the messages separetely, now the script support a group CSV message that don't have this delay.
+The script if very light, it takes 3 seconds as there are 5 half second sleeps in the code - due to mqtt having problems if I shoot the messages with no delay, this is only if you choose to send the messages separately, now the script support a group CSV message that don't have this delay.
 
 Each value measured by the script is send via a separate message for easier craetion of home assistant sensors.
 
@@ -39,7 +39,7 @@ Then install this module needed for the script:
 $ pip install paho-mqtt
 ```
 
-Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py``` 
+Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py```
 
 # Configuration
 
@@ -51,7 +51,7 @@ This is the default configuration:
 
 ```
 random_delay = randrange(30)
-group_messages = True 
+group_messages = True
 sleep_time = 0.5
 cpu_load = True
 cpu_temp = True
@@ -60,23 +60,24 @@ voltage = True
 sys_clock_speed = True
 swap = False
 memory = False
+uptime = True
 ```
 
 If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
 ```
-{'used_space': '25', 'sys_clock_speed': '1500', 'cpu_temp': '43.0', 'voltage': '0.8500', 'cpu_load': '1.25', 'memory': 'False', 'swap': 'False'}
+1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12
 ```
 
 Test the script.
 ```bash
-$ /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
+$ /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
 Once you test the script there will be no output if it run OK but you should get 5 messages via the configured MQTT server (the messages count depends on your configuration).
 
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
 ```
-*/2 * * * * /usr/bin/python /home/pi/scripts/rpi-cpu2mqtt.py
+*/2 * * * * /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
 # Home Assistant Integration
 
@@ -122,13 +123,19 @@ This is the sensors configuration if ```group_messages = True``` assuming your s
     state_topic: 'masoko/rpi4'
     value_template: '{{ value.split(",")[5] }}'
     name: rpi4 swap
-    unit_of_measurement: "%" 
+    unit_of_measurement: "%"
 
   - platform: mqtt
     state_topic: 'masoko/rpi4'
     value_template: '{{ value.split(",")[6] }}'
     name: rpi4 memory
-    unit_of_measurement: "%" 
+    unit_of_measurement: "%"
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[7] }}'
+    name: rpi4 uptime
+    unit_of_measurement: "days"
+
 ```
 
 This is the sensors configuration if ```group_messages = False``` assuming your sensors are separated in ```sensors.yaml``` file.
@@ -161,12 +168,16 @@ This is the sensors configuration if ```group_messages = False``` assuming your 
   - platform: mqtt
     state_topic: "masoko/rpi4/swap"
     name: rpi4 swap
-    unit_of_measurement: "%" 
+    unit_of_measurement: "%"
 
   - platform: mqtt
     state_topic: "masoko/rpi4/memory"
     name: rpi4 memory
     unit_of_measurement: "%"
+  - platform: mqtt
+    state_topic: "masoko/rpi4/uptime_days"
+    name: rpi4 uptime
+    unit_of_measurement: "days"
 ```
 
 Add this to your ```customize.yaml``` file to change the icons of the sensors.
@@ -205,7 +216,7 @@ entities:
   - entity: sensor.rpi4_sys_clock_speed
   - entity: sensor.rpi4_swap
   - entity: sensor.rpi4_memory
+  - entity: sensor.rpi4_uptime
 ```
 # To Do
-- add uptime monitoring
-- maybe add network trafic monitoring via some third party software (for now I can't find a way to do it without additinal software)
+- maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software)
