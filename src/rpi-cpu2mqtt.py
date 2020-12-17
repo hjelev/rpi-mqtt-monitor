@@ -24,7 +24,7 @@ def check_cpu_load():
 		# bash command to get cpu load from uptime command
 		p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
 		cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]
-		cpu_load = p.split("average:")[1].split(",")[0].replace(' ', '')
+		cpu_load = str(p).split("average:")[1].split(",")[0].replace(' ', '')
 		cpu_load = float(cpu_load)/int(cores)*100
 		cpu_load = round(float(cpu_load), 1)
 		return cpu_load
@@ -50,7 +50,7 @@ def check_memory():
 def check_cpu_temp():
 		full_cmd = "vcgencmd measure_temp"
 		p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-		cpu_temp = p.replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
+		cpu_temp = str(p).replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
 		return cpu_temp
 
 def check_sys_clock_speed():
@@ -104,7 +104,7 @@ def bulk_publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 
 		# connect to mqtt server
 		client = paho.Client()
 		client.username_pw_set(config.mqtt_user, config.mqtt_password)
-		client.connect(config.mqtt_host, config.mqtt_port)
+		client.connect(config.mqtt_host, int(config.mqtt_port))
 
 		# publish monitored values to MQTT
 		client.publish(config.mqtt_topic_prefix+"/"+hostname, values, qos=1)
