@@ -61,6 +61,19 @@ def check_uptime():
 		full_cmd = "awk '{print int($1/3600/24)}' /proc/uptime"
 		return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
+def config_json(what_config):
+		data = {
+			"state_topic": "",
+			"icon": "",
+			"name": "",
+			"unique_id": "",
+		}
+		data["state_topic"] = config.mqtt_topic_prefix+"/"+hostname+"/"+what_config
+		data["unique_id"] = hostname+"_"+what_config
+		if what_config == "cpu_load":
+			data["icon"] = "mdi:speedometer"
+			data["name"] = hostname + " CPU Usage"
+	
 def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0, uptime_days = 0):
 		# connect to mqtt server
 		client = paho.Client()
@@ -69,6 +82,9 @@ def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sy
 
 		# publish monitored values to MQTT
 		if config.cpu_load:
+			if config.descovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"/cpuload/config", config_json('cpu_load'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
 			time.sleep(config.sleep_time)
 		if config.cpu_temp:
