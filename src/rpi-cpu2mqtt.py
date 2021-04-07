@@ -75,34 +75,37 @@ def config_json(what_config):
 			data["icon"] = "mdi:speedometer"
 			data["name"] = hostname + " CPU Usage"
 			data["unit_of_measurement"] = "%"
-		elsif what_config == "cputemp":
+		elif what_config == "cputemp":
 			data["icon"] = "hass:thermometer"
 			data["name"] = hostname + " CPU Temperature"
 			data["unit_of_measurement"] = "°C"
-		elsif what_config == "diskusage":
+		elif what_config == "diskusage":
 			data["icon"] = "mdi:harddisk"
 			data["name"] = hostname + " Disk Usage"
 			data["unit_of_measurement"] = "%"
-		elsif what_config == "voltage":
+		elif what_config == "voltage":
 			data["icon"] = "mdi:speedometer"
 			data["name"] = hostname + " CPU Voltage"
 			data["unit_of_measurement"] = "V"
-		elsif what_config == "swap":
+		elif what_config == "swap":
 			data["icon"] = "mdi:harddisk"
 			data["name"] = hostname + " Disk Swap"
 			data["unit_of_measurement"] = "%"
-		elsif what_config == "memory":
+		elif what_config == "memory":
 			data["icon"] = "mdi:memory"
 			data["name"] = hostname + " Memory Usage"
 			data["unit_of_measurement"] = "%"
-		elsif what_config == "sys_clock_speed":
+		elif what_config == "sys_clock_speed":
 			data["icon"] = "mdi:speedometer"
 			data["name"] = hostname + " CPU Clock Speed"
 			data["unit_of_measurement"] = "MHz"
-		elsif what_config == "uptime_days":
+		elif what_config == "uptime_days":
 			data["icon"] = "mdi:timer-outline"
 			data["name"] = hostname + " Uptime"
 			data["unit_of_measurement"] = "s"
+		else:
+			return ""
+		# Return our built discovery config
 		return json.dumps(data)
 	
 def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0, uptime_days = 0):
