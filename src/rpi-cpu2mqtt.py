@@ -67,23 +67,26 @@ def config_json(what_config):
 			"icon": "",
 			"name": "",
 			"unique_id": "",
+			"unit_of_measurement": "",
 		}
 		data["state_topic"] = config.mqtt_topic_prefix+"/"+hostname+"/"+what_config
 		data["unique_id"] = hostname+"_"+what_config
-		if what_config == "cpu_load":
+		if what_config == "cpuload":
 			data["icon"] = "mdi:speedometer"
 			data["name"] = hostname + " CPU Usage"
+			data["unit_of_measurement"] = "%"
+		return json.dumps(data)
 	
 def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0, uptime_days = 0):
 		# connect to mqtt server
 		client = paho.Client()
 		client.username_pw_set(config.mqtt_user, config.mqtt_password)
-		client.connect(config.mqtt_host, config.mqtt_port)
+		client.connect(config.mqtt_host, int(config.mqtt_port))
 
 		# publish monitored values to MQTT
 		if config.cpu_load:
-			if config.descovery_messages:
-				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"/cpuload/config", config_json('cpu_load'), qos=0)
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_cpuload/config", config_json('cpuload'), qos=0)
 				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
 			time.sleep(config.sleep_time)
@@ -105,7 +108,7 @@ def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sy
 		if config.sys_clock_speed:
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
 			time.sleep(config.sleep_time)
-		if config.uptime_days:
+		if config.uptime:
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/uptime_days", uptime_days, qos=1)
 			time.sleep(config.sleep_time)
 		# disconect from mqtt server
