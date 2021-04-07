@@ -75,6 +75,34 @@ def config_json(what_config):
 			data["icon"] = "mdi:speedometer"
 			data["name"] = hostname + " CPU Usage"
 			data["unit_of_measurement"] = "%"
+		elsif what_config == "cputemp":
+			data["icon"] = "hass:thermometer"
+			data["name"] = hostname + " CPU Temperature"
+			data["unit_of_measurement"] = "°C"
+		elsif what_config == "diskusage":
+			data["icon"] = "mdi:harddisk"
+			data["name"] = hostname + " Disk Usage"
+			data["unit_of_measurement"] = "%"
+		elsif what_config == "voltage":
+			data["icon"] = "mdi:speedometer"
+			data["name"] = hostname + " CPU Voltage"
+			data["unit_of_measurement"] = "V"
+		elsif what_config == "swap":
+			data["icon"] = "mdi:harddisk"
+			data["name"] = hostname + " Disk Swap"
+			data["unit_of_measurement"] = "%"
+		elsif what_config == "memory":
+			data["icon"] = "mdi:memory"
+			data["name"] = hostname + " Memory Usage"
+			data["unit_of_measurement"] = "%"
+		elsif what_config == "sys_clock_speed":
+			data["icon"] = "mdi:speedometer"
+			data["name"] = hostname + " CPU Clock Speed"
+			data["unit_of_measurement"] = "MHz"
+		elsif what_config == "uptime_days":
+			data["icon"] = "mdi:timer-outline"
+			data["name"] = hostname + " Uptime"
+			data["unit_of_measurement"] = "s"
 		return json.dumps(data)
 	
 def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sys_clock_speed = 0, swap = 0, memory = 0, uptime_days = 0):
@@ -91,24 +119,45 @@ def publish_to_mqtt (cpu_load = 0, cpu_temp = 0, used_space = 0, voltage = 0, sy
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/cpuload", cpu_load, qos=1)
 			time.sleep(config.sleep_time)
 		if config.cpu_temp:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_cputemp/config", config_json('cputemp'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/cputemp", cpu_temp, qos=1)
 			time.sleep(config.sleep_time)
 		if config.used_space:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_diskusage/config", config_json('diskusage'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/diskusage", used_space, qos=1)
 			time.sleep(config.sleep_time)
 		if config.voltage:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_voltage/config", config_json('voltage'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/voltage", voltage, qos=1)
 			time.sleep(config.sleep_time)
 		if config.swap:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_swap/config", config_json('swap'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/swap", swap, qos=1)
 			time.sleep(config.sleep_time)
 		if config.memory:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_memory/config", config_json('memory'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/memory", memory, qos=1)
 			time.sleep(config.sleep_time)
 		if config.sys_clock_speed:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_sys_clock_speed/config", config_json('sys_clock_speed'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/sys_clock_speed", sys_clock_speed, qos=1)
 			time.sleep(config.sleep_time)
 		if config.uptime:
+			if config.discovery_messages:
+				client.publish("homeassistant/sensor/"+config.mqtt_topic_prefix+"/"+hostname+"_uptime_days/config", config_json('uptime_days'), qos=0)
+				time.sleep(config.sleep_time)
 			client.publish(config.mqtt_topic_prefix+"/"+hostname+"/uptime_days", uptime_days, qos=1)
 			time.sleep(config.sleep_time)
 		# disconect from mqtt server
