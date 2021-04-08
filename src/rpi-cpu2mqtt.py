@@ -102,7 +102,7 @@ def config_json(what_config):
 		elif what_config == "uptime_days":
 			data["icon"] = "mdi:timer-outline"
 			data["name"] = hostname + " Uptime"
-			data["unit_of_measurement"] = "s"
+			data["unit_of_measurement"] = "days"
 		else:
 			return ""
 		# Return our built discovery config
