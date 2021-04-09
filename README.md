@@ -51,6 +51,7 @@ This is the default configuration:
 
 ```
 random_delay = randrange(30)
+discovery_messages = False
 group_messages = True
 sleep_time = 0.5
 cpu_load = True
@@ -62,6 +63,8 @@ swap = False
 memory = False
 uptime = True
 ```
+
+If the ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available for when ```group_messages``` is set to False.
 
 If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
@@ -85,7 +88,7 @@ Create a cron entry like this (you might need to update the path in the cron ent
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
 
-
+If you are using ```discovery_messages```, then this step is not required as the sensors are auto discovered by Home Assistant and added.
 
 This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
 ```yaml
