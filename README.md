@@ -51,8 +51,8 @@ This is the default configuration:
 
 ```
 random_delay = randrange(30)
-discovery_messages = False
-group_messages = True
+discovery_messages = True
+group_messages = False
 sleep_time = 0.5
 cpu_load = True
 cpu_temp = True
@@ -223,3 +223,4 @@ entities:
 ```
 # To Do
 - maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software)
+- make it work for Ubuntu 
