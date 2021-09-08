@@ -50,8 +50,11 @@ def check_memory():
 
 def check_cpu_temp():
 		full_cmd = "vcgencmd measure_temp"
-		p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-		cpu_temp = str(p).replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
+		try:
+			p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+			cpu_temp = str(p).replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
+		except:
+			cpu_temp = 0
 		return cpu_temp
 
 def check_sys_clock_speed():
