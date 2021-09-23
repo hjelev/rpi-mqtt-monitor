@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Python (runs on 2 and 3) script to check cpu load, cpu temperature and free space,
+# Python script (runs on 2 and 3) to check cpu load, cpu temperature and free space etc.
 # on a Raspberry Pi computer and publish the data to a MQTT server.
 # RUN pip install paho-mqtt
 # RUN sudo apt-get install python-pip
