@@ -1,7 +1,8 @@
 #script config file
 config.py
 update.sh
-
+rpi-mqtt-monitor.iml
+<
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
