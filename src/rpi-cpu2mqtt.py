@@ -31,10 +31,13 @@ def check_cpu_load():
 		return cpu_load
 
 def check_voltage():
-		full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
-		voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-		voltage = voltage.strip()[:-1]
-		return voltage
+        try:
+            full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
+            voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+            voltage = voltage.strip()[:-1]
+        except:
+            voltage = 0
+        return voltage
 
 def check_swap():
 		full_cmd = "free -t | awk 'NR == 3 {print $3/$2*100}'"
@@ -45,7 +48,7 @@ def check_swap():
 def check_memory():
 		full_cmd = "free -t | awk 'NR == 2 {print $3/$2*100}'"
 		memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-		memory = round(float(memory), 1)
+		memory = round(float(memory.decode("utf-8").replace(",",".")))
 		return memory
 
 def check_cpu_temp():
