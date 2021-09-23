@@ -107,7 +107,7 @@ def config_json(what_config):
 			data["name"] = hostname + " CPU Clock Speed"
 			data["unit_of_measurement"] = "MHz"
 		elif what_config == "uptime_days":
-			data["icon"] = "mdi:timer-outline"
+			data["icon"] = "mdi:timer"
 			data["name"] = hostname + " Uptime"
 			data["unit_of_measurement"] = "days"
 		else:
