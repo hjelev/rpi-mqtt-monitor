@@ -42,7 +42,7 @@ def check_voltage():
 def check_swap():
 		full_cmd = "free -t | awk 'NR == 3 {print $3/$2*100}'"
 		swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-		swap = round(float(swap), 1)
+		swap = round(float(swap.decode("utf-8").replace(",",".")), 1)
 		return swap
 
 def check_memory():
@@ -55,7 +55,7 @@ def check_cpu_temp():
 		full_cmd = "vcgencmd measure_temp"
 		try:
 			p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-			cpu_temp = str(p).replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
+			cpu_temp = p.decode("utf-8").replace('\n', ' ').replace('\r', '').split("=")[1].split("'")[0]
 		except:
 			cpu_temp = 0
 		return cpu_temp
