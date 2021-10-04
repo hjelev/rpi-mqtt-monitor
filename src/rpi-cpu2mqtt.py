@@ -52,7 +52,6 @@ def check_memory():
 		return memory
 
 def check_cpu_temp():
-		#full_cmd = "vcgencmd measure_temp"
 		full_cmd = "cat /sys/class/thermal/thermal_zone*/temp | sed 's/\(.\)..$//' | tail -n 1"
 		try:
 			p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
