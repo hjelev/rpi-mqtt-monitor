@@ -5,10 +5,13 @@
 # RUN sudo apt-get install python-pip
 
 from __future__ import division
-import subprocess, time, socket, os
+import subprocess
+import time
+import socket
 import paho.mqtt.client as paho
 import json
 import config
+import os
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -37,7 +40,7 @@ def check_voltage():
         full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
         voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         voltage = voltage.strip()[:-1]
-    except:
+    except Exception:
         voltage = 0
     return voltage
 
@@ -61,7 +64,7 @@ def check_cpu_temp():
     try:
         p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         cpu_temp = p.decode("utf-8").replace('\n', ' ').replace('\r', '')
-    except:
+    except Exception:
         cpu_temp = 0
     return cpu_temp
 
@@ -189,7 +192,7 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             time.sleep(config.sleep_time)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_days", uptime_days, qos=1)
         time.sleep(config.sleep_time)
-    # disconect from mqtt server
+    # disconnect from mqtt server
     client.disconnect()
 
 
@@ -208,7 +211,7 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=1)
 
-    # disconect from mqtt server
+    # disconnect from mqtt server
     client.disconnect()
 
 
