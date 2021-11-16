@@ -1,11 +1,11 @@
-# Rapsberry Pi MQTT monitor
+# Raspberry Pi MQTT monitor
 Python script to check the cpu load, cpu temperature, free space, used memory, swap usage, voltage and system clock speed
-on a Raspberry Pi computer and publish the data to a MQTT broker.
+on a Raspberry Pi or any computer running Ubuntu and publish this data to a MQTT broker.
 
-I wrote this so I can monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script was written and tested on Python 2 but it should work fine on Python 3.
-The script if very light, it takes 3 seconds as there are 5 half second sleeps in the code - due to mqtt having problems if I shoot the messages with no delay, this is only if you choose to send the messages separately, now the script support a group CSV message that don't have this delay.
+I wrote this to monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script works fine both on Python 2 and 3
+and is if very light, it takes 3 seconds as there are 5 half second sleeps in the code - due to mqtt having problems if I shoot the messages with no delay, this is only if you choose to send the messages separately, now the script support a group CSV message that don't have this delay.
 
-Each value measured by the script is send via a separate message for easier craetion of home assistant sensors.
+Each value measured by the script is sent via a separate message for easier creation of home assistant sensors.
 
 Example message topic if ```group_messages = False ```:
 ```
@@ -37,16 +37,17 @@ $ sudo apt install python-pip
 Then install this module needed for the script:
 ```bash
 $ pip install paho-mqtt
-```
 
-Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choise (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py```
+$ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
+```
+Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choice (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py```
 
 # Configuration
 
 Populate the variables for MQTT host, user, password and main topic in ```config.py```.
 
-You can also choose what messages are send and what is the delay (sleep_time is only used for multiple messages) between them.
-If you are sending a grouped message and you want to delay the execution of the script you need to use the ```random_delay``` variable which is set to 30 by default.
+You can also choose what messages are sent and what is the delay (sleep_time is only used for multiple messages) between them.
+If you are sending a grouped message, and you want to delay the execution of the script you need to use the ```random_delay``` variable which is set to 30 by default.
 This is the default configuration:
 
 ```
@@ -76,7 +77,7 @@ Test the script.
 ```bash
 $ /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
-Once you test the script there will be no output if it run OK but you should get 5 messages via the configured MQTT server (the messages count depends on your configuration).
+Once you test the script there will be no output if it run OK, but you should get 5 messages via the configured MQTT server (the messages count depends on your configuration).
 
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
 ```
@@ -222,5 +223,4 @@ entities:
   - entity: sensor.rpi4_uptime
 ```
 # To Do
-- maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software)
-- make it work for Ubuntu 
+- maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software) 
