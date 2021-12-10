@@ -78,15 +78,27 @@ def check_uptime():
     full_cmd = "awk '{print int($1/3600/24)}' /proc/uptime"
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
+def check_model_name():
+   full_cmd = "cat /proc/cpuinfo | grep Model | sed 's/Model.*: //g'"
+   return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8") 
+
 
 def config_json(what_config):
+    model_name = check_model_name()
     data = {
         "state_topic": "",
         "icon": "",
         "name": "",
         "unique_id": "",
         "unit_of_measurement": "",
+	"device": {
+	    "identifiers": [hostname],
+	    "manufacturer": "Raspberry Pi",
+	    "model": model_name,
+	    "name": hostname
+	}
     }
+
     data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
     data["unique_id"] = hostname + "_" + what_config
     if what_config == "cpuload":
