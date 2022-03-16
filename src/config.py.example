@@ -2,7 +2,7 @@ from random import randrange
 
 # MQTT server configuration
 mqtt_host = "ip address or host"
-mqtt_user = "user"
+mqtt_user = "username"
 mqtt_password = "password"
 mqtt_port = "1883"
 mqtt_topic_prefix = "rpi-MQTT-monitor"
