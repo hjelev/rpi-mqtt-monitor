@@ -8,7 +8,7 @@ echo $line
 git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 cd rpi-mqtt-monitor
 
-echo "MQTT settings"
+
 echo $line
 cwd=$(pwd)
 python=$(which python)
@@ -37,6 +37,8 @@ else
 echo "Paho-mqtt is not installed, installing it."
 pip install paho-mqtt
 fi
+echo $line
+echo "MQTT settings"
 echo $line
 echo "Copy config.py.example to config.py"
 cp src/config.py.example src/config.py
