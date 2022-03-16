@@ -1,11 +1,38 @@
+line="---"
 echo "Raspberry Pi MQTT monitor installer"
-echo "---"
-echo "MQTT settings"
-echo "---"
+echo $line
+echo "Checking if pip and paho-mqtt are installed"
+echo $line
 cwd=$(pwd)
 python=$(which python)
+pip=$(python -m pip --version 2>&1);
+if [[ "$pip" == *"No"* ]]; then
+echo "Pip is not installed, installing it."
+sudo apt install python-pip
+else
+echo $line
+echo "Python pip is installed"
+echo $line
+echo $pip
+fi
+
+pip=$(pip list | grep "paho-mqtt");
+if [[ "$pip" == *"paho-mqtt"* ]]; then
+echo "Paho-mqtt is installed"
+echo $line
+echo $pip
+else
+echo "Paho-mqtt is not installed, installing it."
+pip install paho-mqtt
+fi
+echo $line
+echo "Copy config.py.example to config.py"
 
 cp src/config.py.example src/config.py
+echo $line
+echo "MQTT settings"
+echo "---"
+
 printf "Enter mqtt_host: "
 read HOST
 sed -i "s/ip address or host/${HOST}/" src/config.py
