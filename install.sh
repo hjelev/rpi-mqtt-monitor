@@ -8,16 +8,14 @@ printm(){
 }
 
 print_green(){
-    tput setaf 2; echo "$1"
-    tput sgr 0
+  tput setaf 2; echo "$1"
+  tput sgr 0
 }
 
 print_yellow(){
-    tput setaf 3; printf "$1"
-    tput sgr 0
+  tput setaf 3; printf "$1"
+  tput sgr 0
 }
-
-printm "Raspberry Pi MQTT monitor installer"
 
 check_and_install_pip(){
   cwd=$(pwd)
@@ -80,7 +78,6 @@ set_cron(){
     print_yellow " If you want the cronjob to be automatically created remove the line below from your\n cronjobs list and run the installer again.\n\n"
     echo " ${cronfound}"
   else
-
     printf "How often do you want the script to run in minutes? "
     read MIN
     echo "Adding the line below to your crontab"
@@ -88,11 +85,11 @@ set_cron(){
     echo "*/${MIN} * * * * ${python} ${cwd}/src/rpi-cpu2mqtt.py" >> tempcron
     crontab tempcron
   fi
-
   rm tempcron
 }
 
 main(){
+  printm "Raspberry Pi MQTT monitor installer"
   check_and_install_pip
   install_requirements 
   update_config
