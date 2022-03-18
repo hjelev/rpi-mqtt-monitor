@@ -10,4 +10,4 @@ printm "Cloning rpi-mqtt-monitor git repository"
 
 git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 cd rpi-mqtt-monitor
-bash install.sh
+bash install.sh &
