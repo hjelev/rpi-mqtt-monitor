@@ -14,4 +14,5 @@ main(){
   cd rpi-mqtt-monitor
   bash install.sh
 }
+
 main
