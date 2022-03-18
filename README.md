@@ -1,3 +1,4 @@
+#!/bin/bash
 # Raspberry Pi MQTT monitor
 Python script to check the cpu load, cpu temperature, free space, used memory, swap usage, voltage and system clock speed
 on a Raspberry Pi or any computer running Ubuntu and publish this data to a MQTT broker.

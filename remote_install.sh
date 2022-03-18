@@ -1,3 +1,4 @@
+#!/bin/bash
 printm () {
   line="------"
   length=$(expr length "$1")
