@@ -6,7 +6,6 @@ printm () {
   printf -- '-%.0s' $(seq $length); echo ""
 }
 
-
 printm "Raspberry Pi MQTT monitor installer"
 
 check_and_install_pip () {
