@@ -1,9 +1,20 @@
 printm () {
-  line="------"
   length=$(expr length "$1")
+  length=$(($length + 4))
+  printf "\n"
   printf -- '-%.0s' $(seq $length); echo ""
-  echo "$1"
+  printf "| $1 |\n"
   printf -- '-%.0s' $(seq $length); echo ""
+}
+
+print_green () {
+		tput setaf 2; echo "$1"
+		tput sgr 0
+}
+
+print_yellow () {
+		tput setaf 3; printf "$1"
+		tput sgr 0
 }
 
 printm "Raspberry Pi MQTT monitor installer"
@@ -16,21 +27,13 @@ check_and_install_pip () {
 		echo "- Pip is not installed, installing it."
 		sudo apt install python-pip
 		else
-
-		tput setaf 2; echo "+ Found $pip"
-		tput sgr 0
+		print_green "+ Found $pip"
 	fi
 }
 
-check_and_install_paho () {
-	pip=$(pip list | grep "paho-mqtt");
-	if [[ "$pip" == *"paho-mqtt"* ]]; then
-		echo "+ Found $pip"
-
-	else
-		echo "- Paho-mqtt is not installed, installing it."
-		pip install paho-mqtt
-	fi
+install_requirements () {
+	printm "Installing requirements"
+	pip install -r requirements.txt
 }
 
 update_config () {
@@ -76,9 +79,9 @@ set_cron () {
 	crontab -l > tempcron
 	if grep -q rpi-cpu2mqtt.py tempcron; then
 		cronfound=$(grep rpi-cpu2mqtt.py tempcron)
-		echo " There is already a cronjob running rpi-cpu2mqtt.py - skipping cronjob creation"
-		printf " If you want the cronjob to be automatically created remove the line below from your\n cronjobs list and run the installer again.\n"
-		echo "${cronfound}"
+		print_yellow " There is already a cronjob running rpi-cpu2mqtt.py - skipping cronjob creation\n"
+		print_yellow " If you want the cronjob to be automatically created remove the line below from your\n cronjobs list and run the installer again.\n\n"
+		echo " ${cronfound}"
 	else
 
 		printf "How often do you want the script to run in minutes? "
@@ -94,7 +97,7 @@ set_cron () {
 
 main () {
 	check_and_install_pip
-	check_and_install_paho 
+	install_requirements 
 	update_config
 	set_cron
 	printm "Done"
