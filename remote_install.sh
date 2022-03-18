@@ -1,5 +1,5 @@
 #!/bin/bash
-printm () {
+printm(){
   length=$(expr length "$1")
   length=$(($length + 4))
   printf "\n"
@@ -8,8 +8,10 @@ printm () {
   printf -- '-%.0s' $(seq $length); echo ""
 }
 
-printm "Cloning rpi-mqtt-monitor git repository"
-
-git clone https://github.com/hjelev/rpi-mqtt-monitor.git
-cd rpi-mqtt-monitor
-bash install.sh
+main(){
+  printm "Cloning rpi-mqtt-monitor git repository"
+  git clone https://github.com/hjelev/rpi-mqtt-monitor.git
+  cd rpi-mqtt-monitor
+  bash install.sh
+}
+main

@@ -1,4 +1,4 @@
-printm () {
+printm(){
   length=$(expr length "$1")
   length=$(($length + 4))
   printf "\n"
@@ -7,19 +7,19 @@ printm () {
   printf -- '-%.0s' $(seq $length); echo ""
 }
 
-print_green () {
+print_green(){
 		tput setaf 2; echo "$1"
 		tput sgr 0
 }
 
-print_yellow () {
+print_yellow(){
 		tput setaf 3; printf "$1"
 		tput sgr 0
 }
 
 printm "Raspberry Pi MQTT monitor installer"
 
-check_and_install_pip () {
+check_and_install_pip(){
 	cwd=$(pwd)
 	python=$(which python)
 	pip=$(python -m pip --version 2>&1);
@@ -31,19 +31,16 @@ check_and_install_pip () {
 	fi
 }
 
-install_requirements () {
+install_requirements(){
 	printm "Installing requirements"
 	pip install -r requirements.txt
 }
 
-update_config () {
+update_config(){
 	printf "\nCopy config.py.example to config.py\n"
-
 	cp src/config.py.example src/config.py
-
 	printm "MQTT settings"
-
-
+	
 	printf "Enter mqtt_host: "
 	read HOST
 	sed -i "s/ip address or host/${HOST}/" src/config.py
@@ -73,7 +70,7 @@ update_config () {
 	printf "\nconfig.py is updated with provided settings\n"
 }
 
-set_cron () {
+set_cron(){
 	printm "Setting Cronjob"
 
 	crontab -l > tempcron
@@ -95,7 +92,7 @@ set_cron () {
 	rm tempcron
 }
 
-main () {
+main(){
 	check_and_install_pip
 	install_requirements 
 	update_config
