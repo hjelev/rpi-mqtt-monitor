@@ -73,7 +73,7 @@ memory = False
 uptime = True
 ```
 
-If the ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available for when ```group_messages``` is set to False.
+If the ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is set to False.
 
 If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
