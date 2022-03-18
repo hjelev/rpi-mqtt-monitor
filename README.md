@@ -33,7 +33,7 @@ Disabled sensors are represented with False in the message.
 I have created an automated bash installation, its working but not extensively tested
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
+curl -L https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh | bash
 ```
 
 
