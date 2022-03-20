@@ -1,7 +1,7 @@
 welcome(){
-  echo  "This script will install if not installed: Pip and python module paho-mqtt."
-  echo "Configure Raspberry Pi MQTT monitor and create a cronjob to run it."
-  read -r -p "Do you want to proceed? [y/N] " response
+  echo "  This script will install if not installed: Pip and python module paho-mqtt,"
+  echo "  configure Raspberry Pi MQTT monitor and create a cronjob to run it."
+  read -r -p "  Do you want to proceed? [y/N] " response
   if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     printf ""
   else
@@ -31,9 +31,9 @@ printm(){
   length=$(expr length "$1")
   length=$(($length + 4))
   printf "\n"
-  printf -- '-%.0s' $(seq $length); echo ""
-  printf "| $1 |\n"
-  printf -- '-%.0s' $(seq $length); echo ""
+  #printf -- '-%.0s' $(seq $length); echo ""
+  printf ":: $1 \n\n"
+  #printf -- '-%.0s' $(seq $length); echo ""
 }
 
 print_green(){
@@ -63,7 +63,7 @@ install_requirements(){
 }
 
 update_config(){
-  printf "\nCopy config.py.example to config.py\n"
+  print_green "+ Copy config.py.example to config.py"
   cp src/config.py.example src/config.py
   printm "MQTT settings"
   
@@ -93,7 +93,7 @@ update_config(){
   fi
   sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
 
-  printf "\nconfig.py is updated with provided settings\n"
+  print_green  "+ config.py is updated with provided settings"
 }
 
 set_cron(){
@@ -102,7 +102,7 @@ set_cron(){
   crontab -l > tempcron
   if grep -q rpi-cpu2mqtt.py tempcron; then
     cronfound=$(grep rpi-cpu2mqtt.py tempcron)
-    print_yellow " There is already a cronjob running rpi-cpu2mqtt.py - skipping cronjob creation\n"
+    print_yellow " There is already a cronjob running rpi-cpu2mqtt.py - skipping cronjob creation.\n"
     print_yellow " If you want the cronjob to be automatically created remove the line below from your\n cronjobs list and run the installer again.\n\n"
     echo " ${cronfound}"
   else
