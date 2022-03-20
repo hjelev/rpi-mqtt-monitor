@@ -1,3 +1,32 @@
+welcome(){
+  echo  "This script will install if not installed: Pip and python module paho-mqtt."
+  echo "Configure Raspberry Pi MQTT monitor and create a cronjob to run it."
+  read -r -p "Do you want to proceed? [y/N] " response
+  if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    printf ""
+  else
+    exit
+  fi	
+}
+
+find_python(){
+  if $(python --version); then 
+    python=$(which python)
+    pip="python-pip"
+  else
+    python=$(which python3)
+    pip="python3-pip"
+  fi
+
+  if [[ "$python" == *"python"* ]]; then
+    print_green "+ Found: $python"
+
+  else
+    print_yellow "Python not found!\n Exiting\n"
+    exit
+  fi
+}
+
 printm(){
   length=$(expr length "$1")
   length=$(($length + 4))
@@ -5,17 +34,6 @@ printm(){
   printf -- '-%.0s' $(seq $length); echo ""
   printf "| $1 |\n"
   printf -- '-%.0s' $(seq $length); echo ""
-}
-
-find_python(){
-if $(python --version); then 
-	python=$(which python)
-	pip="python-pip"
-else
-	python=$(which python3)
-	pip="python3-pip"
-fi
-echo "$python"
 }
 
 print_green(){
@@ -36,7 +54,7 @@ check_and_install_pip(){
     echo "- Pip is not installed, installing it."
     sudo apt install $pip
     else
-    print_green "+ Found $pip"
+    print_green "+ Found: $pip"
   fi
 }
 
@@ -101,6 +119,7 @@ set_cron(){
 
 main(){
   printm "Raspberry Pi MQTT monitor installer"
+  welcome
   find_python
   check_and_install_pip
   install_requirements 
