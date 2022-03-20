@@ -7,6 +7,15 @@ printm(){
   printf -- '-%.0s' $(seq $length); echo ""
 }
 
+find_python(){
+if $(python --version); then 
+	python=$(which python)
+else
+	python=$(which python3)
+fi
+echo "$python"
+}
+
 print_green(){
   tput setaf 2; echo "$1"
   tput sgr 0
@@ -19,8 +28,8 @@ print_yellow(){
 
 check_and_install_pip(){
   cwd=$(pwd)
-  python=$(which python)
-  pip=$(python -m pip --version 2>&1);
+  #python=$(which python)
+  pip=$(${python} -m pip --version 2>&1);
   if [[ "$pip" == *"No"* ]]; then
     echo "- Pip is not installed, installing it."
     sudo apt install python-pip
@@ -90,6 +99,7 @@ set_cron(){
 
 main(){
   printm "Raspberry Pi MQTT monitor installer"
+  find_python
   check_and_install_pip
   install_requirements 
   update_config
