@@ -36,16 +36,18 @@ I have created an automated bash installation, its working but not extensively t
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
 
+If you don't like the automated installation here are manuall installation instructions:
 
-
-If you don't have pip installed:
+Install pip if you don't have it:
 ```bash
 $ sudo apt install python-pip
 ```
 Then install this module needed for the script:
 ```bash
 $ pip install paho-mqtt
-
+```
+Clone the repository:
+```bash
 $ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 ```
 Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choice (I am using ```/home/pi/scripts/``` ) and rename ```config.py.example``` to ```config.py```
@@ -97,7 +99,7 @@ Create a cron entry like this (you might need to update the path in the cron ent
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
 
-If you are using ```discovery_messages```, then this step is not required as the sensors are auto discovered by Home Assistant and added.
+If you are using ```discovery_messages```, then this step is not required as the sensors are auto discovered by Home Assistant and all you need to do is display them in the UI.
 
 This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
 ```yaml

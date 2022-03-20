@@ -10,7 +10,7 @@ welcome(){
 }
 
 find_python(){
-  if $(python --version); then 
+  if [[ $(python --version)  ]]; then 
     python=$(which python)
     pip="python-pip"
   else
