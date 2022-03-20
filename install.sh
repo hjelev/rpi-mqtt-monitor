@@ -10,10 +10,10 @@ printm(){
 find_python(){
 if $(python --version); then 
 	python=$(which python)
-	pip="pip"
+	pip="python-pip"
 else
 	python=$(which python3)
-	pip="pip3"
+	pip="python3-pip"
 fi
 echo "$python"
 }
@@ -34,7 +34,7 @@ check_and_install_pip(){
   pip=$(${python} -m pip --version 2>&1);
   if [[ "$pip" == *"No"* ]]; then
     echo "- Pip is not installed, installing it."
-    sudo apt install python-$pip
+    sudo apt install $python-pip
     else
     print_green "+ Found $pip"
   fi
