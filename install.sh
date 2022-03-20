@@ -31,8 +31,8 @@ print_yellow(){
 check_and_install_pip(){
   cwd=$(pwd)
   #python=$(which python)
-  pip=$(${python} -m pip --version 2>&1);
-  if [[ "$pip" == *"No"* ]]; then
+  pip_ver=$(${python} -m pip --version 2>&1);
+  if [[ "$pip_ver" == *"No"* ]]; then
     echo "- Pip is not installed, installing it."
     sudo apt install $pip
     else
