@@ -47,8 +47,7 @@ print_yellow(){
 }
 
 check_and_install_pip(){
-  cwd=$(pwd)
-  #python=$(which python)
+
   pip_ver=$(${python} -m pip --version 2>&1);
   if [[ "$pip_ver" == *"No"* ]]; then
     echo "- Pip is not installed, installing it."
@@ -99,7 +98,7 @@ update_config(){
 
 set_cron(){
   printm "Setting Cronjob"
-
+  cwd=$(pwd)
   crontab -l > tempcron
   if grep -q rpi-cpu2mqtt.py tempcron; then
     cronfound=$(grep rpi-cpu2mqtt.py tempcron)
