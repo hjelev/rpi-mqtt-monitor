@@ -23,7 +23,7 @@ masoko/rpi4
 The csv message looks like this:
 
 ```csv
-9.0, 43.0, 25, 25, 0.85, 1500, False, False, False
+9.0, 43.0, 25, 25, 0.85, 1500, False, False, 73, -60
 ```
 
 Disabled sensors are represented with False in the message.
@@ -74,6 +74,7 @@ swap = False
 memory = False
 uptime = True
 wifi_signal = True
+wifi_signal_dbm = False
 ```
 
 If the ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is set to False.
@@ -81,7 +82,7 @@ If the ```discovery_messages``` is set to true, the script will send MQTT Discov
 If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
 ```
-1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50.0
+1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50, -60
 ```
 
 Test the script.
@@ -158,6 +159,11 @@ This is the sensors configuration if ```group_messages = True``` assuming your s
     name: rpi4 wifi signal
     unit_of_measurement: "%"
 
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[9] }}'
+    name: rpi4 wifi signal
+    unit_of_measurement: "dBm"
 ```
 
 This is the sensors configuration if ```group_messages = False``` assuming your sensors are separated in ```sensors.yaml``` file.
@@ -207,6 +213,11 @@ This is the sensors configuration if ```group_messages = False``` assuming your 
     name: rpi4 wifi signal
     unit_of_measurement: "%"
 
+  - platform: mqtt
+    state_topic: "masoko/rpi4/wifi_signal_dbm"
+    name: rpi4 wifi signal
+    unit_of_measurement: "dBm"
+
 ```
 
 Add this to your ```customize.yaml``` file to change the icons of the sensors.
@@ -247,6 +258,10 @@ entities:
   - entity: sensor.rpi4_memory
   - entity: sensor.rpi4_uptime
   - entity: sensor.rpi4_wifi_signal
+  - entity: sensor.rpi4_wifi_signal_dbm
 ```
 # To Do
 - maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software) 
+
+# Feature request:
+If you want to suggest a new feature or improvement don't hesitate to open an issue or pull request.
