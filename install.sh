@@ -60,6 +60,7 @@ check_and_install_pip(){
 install_requirements(){
   printm "Installing requirements"
   pip install -r requirements.txt
+  sudo pip3 install -r requirements.txt
 }
 
 update_config(){

@@ -1,5 +1,5 @@
 # Raspberry Pi MQTT monitor
-Python script to check the cpu load, cpu temperature, free space, used memory, swap usage, voltage and system clock speed
+Python script to check the cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality voltage and system clock speed
 on a Raspberry Pi or any computer running Ubuntu and publish this data to a MQTT broker.
 
 I wrote this to monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script works fine both on Python 2 and 3
@@ -23,7 +23,7 @@ masoko/rpi4
 The csv message looks like this:
 
 ```csv
-9.0, 43.0, 25, 25, 0.85, 1500, False, False
+9.0, 43.0, 25, 25, 0.85, 1500, False, False, False
 ```
 
 Disabled sensors are represented with False in the message.
@@ -73,6 +73,7 @@ sys_clock_speed = True
 swap = False
 memory = False
 uptime = True
+wifi_signal = True
 ```
 
 If the ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is set to False.
@@ -80,7 +81,7 @@ If the ```discovery_messages``` is set to true, the script will send MQTT Discov
 If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
 ```
-1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12
+1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50.0
 ```
 
 Test the script.
@@ -144,11 +145,18 @@ This is the sensors configuration if ```group_messages = True``` assuming your s
     value_template: '{{ value.split(",")[6] }}'
     name: rpi4 memory
     unit_of_measurement: "%"
+
   - platform: mqtt
     state_topic: 'masoko/rpi4'
     value_template: '{{ value.split(",")[7] }}'
     name: rpi4 uptime
     unit_of_measurement: "days"
+
+  - platform: mqtt
+    state_topic: 'masoko/rpi4'
+    value_template: '{{ value.split(",")[8] }}'
+    name: rpi4 wifi signal
+    unit_of_measurement: "%"
 
 ```
 
@@ -188,10 +196,17 @@ This is the sensors configuration if ```group_messages = False``` assuming your 
     state_topic: "masoko/rpi4/memory"
     name: rpi4 memory
     unit_of_measurement: "%"
+
   - platform: mqtt
     state_topic: "masoko/rpi4/uptime_days"
     name: rpi4 uptime
     unit_of_measurement: "days"
+
+  - platform: mqtt
+    state_topic: "masoko/rpi4/wifi_signal"
+    name: rpi4 wifi signal
+    unit_of_measurement: "%"
+
 ```
 
 Add this to your ```customize.yaml``` file to change the icons of the sensors.
@@ -231,6 +246,7 @@ entities:
   - entity: sensor.rpi4_swap
   - entity: sensor.rpi4_memory
   - entity: sensor.rpi4_uptime
+  - entity: sensor.rpi4_wifi_signal
 ```
 # To Do
 - maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software) 
