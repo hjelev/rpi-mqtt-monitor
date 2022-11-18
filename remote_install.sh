@@ -9,6 +9,12 @@ printm(){
 }
 
 main(){
+  if [[ $(git --version)  ]]; then 
+    git=$(which git)
+  else
+    sudo apt-get install git  
+  fi
+
   printm "Cloning rpi-mqtt-monitor git repository"
   git clone https://github.com/hjelev/rpi-mqtt-monitor.git
   cd rpi-mqtt-monitor

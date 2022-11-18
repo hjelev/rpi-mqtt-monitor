@@ -31,3 +31,4 @@ sys_clock_speed = True
 swap = True
 memory = True
 uptime = True
+wifi_signal = True
