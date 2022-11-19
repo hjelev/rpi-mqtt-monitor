@@ -89,8 +89,13 @@ def check_uptime():
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
 def check_model_name():
-   full_cmd = "cat /proc/cpuinfo | grep -i model | sed 's/[Mm]odel.*: //g'"
-   return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").replace('\n', '')
+   full_cmd = "cat /proc/cpuinfo | grep Model | sed 's/Model.*: //g'"
+   model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8")
+   if model_name == '':
+      # For Raspberry PI Zero, the command to identify the model is different
+      full_cmd = "cat /sys/firmware/devicetree/base/model"
+      model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").strip('\u0000')
+   return model_name
 
 
 def config_json(what_config):
