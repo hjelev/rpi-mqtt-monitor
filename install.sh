@@ -13,9 +13,11 @@ find_python(){
   if [[ $(python --version)  ]]; then 
     python=$(which python)
     pip="python-pip"
+    pip_run='pip'
   else
     python=$(which python3)
     pip="python3-pip"
+    pip_run='pip3'
   fi
 
   if [[ "$python" == *"python"* ]]; then
@@ -59,8 +61,7 @@ check_and_install_pip(){
 
 install_requirements(){
   printm "Installing requirements"
-  pip install -r requirements.txt
-  sudo pip3 install -r requirements.txt
+  $pip_run install -r requirements.txt
 }
 
 update_config(){
