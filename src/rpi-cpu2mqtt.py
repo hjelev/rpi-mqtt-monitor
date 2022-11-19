@@ -89,8 +89,8 @@ def check_uptime():
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
 def check_model_name():
-   full_cmd = "cat /proc/cpuinfo | grep Model | sed 's/Model.*: //g'"
-   return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8") 
+   full_cmd = "cat /proc/cpuinfo | grep -i model | sed 's/[Mm]odel.*: //g'"
+   return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode("utf-8").replace('\n', '')
 
 
 def config_json(what_config):
