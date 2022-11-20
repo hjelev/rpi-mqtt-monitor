@@ -64,7 +64,7 @@ def check_voltage():
 
 
 def check_swap():
-    full_cmd = "free -t | awk 'NR == 3 {print $3/$2*100}'"
+    full_cmd = "free -t |grep -i swap | awk 'NR == 1 {print $3/$2*100}'"
     swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
     return swap
