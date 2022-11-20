@@ -160,7 +160,7 @@ def config_json(what_config):
         data["name"] = hostname + " Disk Usage"
         data["unit_of_measurement"] = "%"
     elif what_config == "voltage":
-        data["icon"] = "mdi:current-dc"
+        data["icon"] = "mdi:flash"
         data["name"] = hostname + " CPU Voltage"
         data["unit_of_measurement"] = "V"
     elif what_config == "swap":
