@@ -58,7 +58,7 @@ def check_cpu_load():
 def check_voltage():
     try:
         full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
-        voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         voltage = voltage.strip()[:-1]
     except Exception:
         voltage = 0
@@ -176,7 +176,7 @@ def config_json(what_config):
         data["name"] = hostname + " CPU Clock Speed"
         data["unit_of_measurement"] = "MHz"
     elif what_config == "uptime_days":
-        data["icon"] = "mdi:timer"
+        data["icon"] = "mdi:calendar"
         data["name"] = hostname + " Uptime"
         data["unit_of_measurement"] = "days"
     elif what_config == "wifi_signal":
