@@ -26,6 +26,7 @@ def check_wifi_signal():
         wifi_signal_calc = 'NA'
     return wifi_signal_calc
 
+
 def check_wifi_signal_dbm():
     try:
         full_cmd = "/sbin/iwconfig wlan0 | grep -i quality"
@@ -34,6 +35,7 @@ def check_wifi_signal_dbm():
     except Exception:
         wifi_signal = 'NA'
     return wifi_signal
+
 
 def check_used_space(path):
     st = os.statvfs(path)
@@ -96,13 +98,38 @@ def check_uptime():
     full_cmd = "awk '{print int($1/3600/24)}' /proc/uptime"
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
+
 def check_model_name():
    full_cmd = "cat /sys/firmware/devicetree/base/model"
-   return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8") 
+   model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+   if model_name == '':
+        full_cmd = "cat /proc/cpuinfo  | grep 'name'| uniq"
+        model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+        model_name = model_name.split(':')[1]
+   return model_name
+
+
+def get_os():
+    full_cmd = 'cat /etc/os-release | grep -i pretty_name'
+    pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    pretty_name = pretty_name.split('=')[1].replace('"', '')
+    return(pretty_name)
+
+
+def get_manufacturer():
+    if 'Raspberry' not in check_model_name():
+        full_cmd = "cat /proc/cpuinfo  | grep 'vendor'| uniq"
+        pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+        pretty_name = pretty_name.split(':')[1]
+    else:
+        pretty_name = 'Raspberry Pi'
+    return(pretty_name)
 
 
 def config_json(what_config):
     model_name = check_model_name()
+    manufacturer = get_manufacturer()
+    os = get_os()
     data = {
         "state_topic": "",
         "icon": "",
@@ -111,9 +138,10 @@ def config_json(what_config):
         "unit_of_measurement": "",
 	"device": {
 	    "identifiers": [hostname],
-	    "manufacturer": "Raspberry Pi",
+	    "manufacturer": manufacturer,
 	    "model": model_name,
-	    "name": hostname
+	    "name": hostname,
+        "sw_version": os
 	}
     }
 
