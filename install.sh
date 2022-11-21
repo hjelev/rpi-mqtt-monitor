@@ -1,5 +1,5 @@
 welcome(){
-  echo "  This script will install if not installed: Pip and python module paho-mqtt,"
+  echo "  This script will install if not installed: python-pip and python module paho-mqtt,"
   echo "  configure Raspberry Pi MQTT monitor and create a cronjob to run it."
   read -r -p "  Do you want to proceed? [y/N] " response
   if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
@@ -108,8 +108,11 @@ set_cron(){
     print_yellow " If you want the cronjob to be automatically created remove the line below from your\n cronjobs list and run the installer again.\n\n"
     echo " ${cronfound}"
   else
-    printf "How often do you want the script to run in minutes? "
+    printf "How often do you want the script to run in minutes? (default is 2): "
     read MIN
+    if [ -z "$MIN" ]; then
+      MIN=2
+    fi
     echo "Adding the line below to your crontab"
     echo "*/${MIN} * * * * ${python} ${cwd}/src/rpi-cpu2mqtt.py"
     echo "*/${MIN} * * * * ${python} ${cwd}/src/rpi-cpu2mqtt.py" >> tempcron

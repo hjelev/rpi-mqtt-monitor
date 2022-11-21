@@ -1,43 +1,26 @@
-# Raspberry Pi MQTT monitor
+# Raspberry Pi MQTT Monitor
 
-Gather system information and send it to MQTT server. Raspberry Pi MQTT monitor is written in python and gathers information about cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed. The script is written for Raspberry Pi but can also be used on Ubuntu based system. 
+Gather system information and send it to MQTT server. Raspberry Pi MQTT monitor is written in python and gathers information about your system cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed. 
+The script is written for Raspberry Pi but can also be used on Ubuntu based system. 
 
-I wrote this to monitor my raspberries at home with [home assistant](https://www.home-assistant.io/). The script works fine both on Python 2 and 3
-and is if very light, it takes 3 seconds as there are 5 half second sleeps in the code - due to mqtt having problems if I shoot the messages with no delay, this is only if you choose to send the messages separately, now the script support a group CSV message that don't have this delay.
+Raspberry Pi MQTT monitor integrates with [home assistant](https://www.home-assistant.io/). The script works fine both on Python 2 and 3
+and is very light on the cpu, there are some sleeps in the code due to mqtt comunication having problems if the messages are shot with out delay.
 
 Each value measured by the script is sent via a separate message for easier creation of home assistant sensors.
-
-Example message topic if ```group_messages = False ```:
-```
-masoko/rpi4/cpuload
-```
-- first part (masoko) is the main topic configurable via the ```config.py``` file.
-- second part (pi4) is the host name of the raspberry which is automatically pulled by the script, so you don't have to configure it for each installation (in case you have many raspberries like me).
-- third part (cpuload) is the name of the value (these are all values published via MQTT - cpuload, cputemp, diskusage, voltage, sys_clock_speed).
-
-Example message topic if ```group_messages = True ```:
-
-```
-masoko/rpi4
-```
-The csv message looks like this:
-
-```csv
-9.0, 43.0, 25, 25, 0.85, 1500, False, False, 73, -60
-```
-
-Disabled sensors are represented with False in the message.
 
 # Installation
 
 ## Automated Installation
-I have created an automated bash installation, its working but not extensively tested (recently updated)
+There is an automated bash installation, its working but not extensively tested (recently updated)
+
+Run this command to use the automated installation
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
+Raspberry Pi MQTT monitor will be intalled in the location from where the auto installer is called inside a folder called rpi-mqtt-monitor.
 
-The auto-installer needs:
+The auto-installer needs the software below and will install it if its not found:
 * python (2 or 3)
 * python-pip
 * git
@@ -61,18 +44,18 @@ Clone the repository:
 ```bash
 $ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 ```
-Copy ```/src/rpi-cpu2mqtt.py``` and ```/src/config.py.example``` to a folder of your choice (automated installer will use the current folder) and rename ```config.py.example``` to ```config.py```
+Rename ```src/config.py.example``` to ```src/config.py```
 
-# Configuration
+## Configuration
 (only needed for manuall installation)
-Populate the variables for MQTT host, user, password and main topic in ```config.py```.
+Populate the variables for MQTT host, user, password and main topic in ```src/config.py```.
 
 You can also choose what messages are sent and what is the delay (sleep_time is only used for multiple messages) between them.
-If you are sending a grouped message, and you want to delay the execution of the script you need to use the ```random_delay``` variable which is set to 30 by default.
+If you are sending a grouped message, and you want to delay the execution of the script you need to use the ```random_delay``` variable which is set to 1 by default.
 This is the default configuration:
 
 ```
-random_delay = randrange(30)
+random_delay = randrange(1)
 discovery_messages = True
 group_messages = False
 sleep_time = 0.5
@@ -81,10 +64,10 @@ cpu_temp = True
 used_space = True
 voltage = True
 sys_clock_speed = True
-swap = False
-memory = False
+swap = True
+memory = True
 uptime = True
-wifi_signal = True
+wifi_signal = False
 wifi_signal_dbm = False
 ```
 
@@ -96,17 +79,18 @@ The group message looks like this:
 1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50, -60
 ```
 
-Test the script.
+## Test the script
 ```bash
 $ /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
-Once you test the script there will be no output if it run OK, but you should get 5 messages via the configured MQTT server (the messages count depends on your configuration).
+Once you test the script there will be no output if it run OK, but you should get 8 or more messages via the configured MQTT server (the messages count depends on your configuration).
 
+## Schedule Raspberry Pi MQTT Monitor execution
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
 ```
 */2 * * * * /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
-# Home Assistant Integration
+## Home Assistant Integration
 
 ![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
 
@@ -271,6 +255,7 @@ entities:
   - entity: sensor.rpi4_wifi_signal
   - entity: sensor.rpi4_wifi_signal_dbm
 ```
+
 # To Do
 - maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software) 
 
