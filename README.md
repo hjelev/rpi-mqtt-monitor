@@ -11,14 +11,14 @@ Each value measured by the script is sent via a separate message for easier crea
 # Installation
 
 ## Automated Installation
-There is an automated bash installation, its working but not extensively tested (recently updated)
+There is an automated bash installation, its working but not extensively tested (recently updated).
 
-Run this command to use the automated installation
+Run this command to use the automated installation:
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
-Raspberry Pi MQTT monitor will be intalled in the location from where the auto installer is called inside a folder called rpi-mqtt-monitor.
+Raspberry Pi MQTT monitor will be intalled in the location where the auto installer is called, inside a folder named rpi-mqtt-monitor.
 
 The auto-installer needs the software below and will install it if its not found:
 * python (2 or 3)
@@ -47,7 +47,7 @@ $ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 Rename ```src/config.py.example``` to ```src/config.py```
 
 ## Configuration
-(only needed for manuall installation)
+(only needed for manual installation)
 Populate the variables for MQTT host, user, password and main topic in ```src/config.py```.
 
 You can also choose what messages are sent and what is the delay (sleep_time is only used for multiple messages) between them.
@@ -71,19 +71,19 @@ wifi_signal = False
 wifi_signal_dbm = False
 ```
 
-If the ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is set to False.
+If ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is set to False.
 
-If the ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
+If ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
 ```
 1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50, -60
 ```
 
-## Test the script
+## Test Raspberry Pi MQTT monitor
 ```bash
 $ /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
-Once you test the script there will be no output if it run OK, but you should get 8 or more messages via the configured MQTT server (the messages count depends on your configuration).
+Once you run Raspberry Pi MQTT monitor there will be no output if it run OK, but you should get 8 or more messages via the configured MQTT server (the messages count depends on your configuration).
 
 ## Schedule Raspberry Pi MQTT Monitor execution
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
@@ -95,8 +95,7 @@ Create a cron entry like this (you might need to update the path in the cron ent
 ![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
-
-If you are using ```discovery_messages```, then this step is not required as the sensors are auto discovered by Home Assistant and all you need to do is display them in the UI.
+If you are using ```discovery_messages```, then this step is not required as the sensors are automatically discovered by Home Assistant and all you need to do is add them from the UI.
 
 This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
 ```yaml
