@@ -1,6 +1,7 @@
 # Raspberry Pi MQTT Monitor
 
- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor) ![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor) ![GitHub issues](https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor) ![GitHub closed issues](https://img.shields.io/github/issues-closed/hjelev/rpi-mqtt-monitor) [![GitHub Activity][commits-shield]][commits] ![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor) ![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor) 
+ ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor) ![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor) ![GitHub issues](https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor) ![GitHub closed issues](https://img.shields.io/github/issues-closed/hjelev/rpi-mqtt-monitor)  ![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor) ![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor) 
+ 
  
 Gather system information and send it to MQTT server. Raspberry Pi MQTT monitor is written in python and gathers information about your system cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed. 
 The script is written for Raspberry Pi but can also be used on Ubuntu based system. 
