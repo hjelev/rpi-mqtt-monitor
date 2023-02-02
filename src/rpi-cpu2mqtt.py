@@ -16,22 +16,20 @@ import os
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
 
-def check_wifi_signal():
+def check_wifi_signal(format):
     try:
-        full_cmd = "/sbin/iwconfig wlan0 | grep -i quality"
+        
+        full_cmd =  "ls /sys/class/ieee80211/*/device/net/"
+        interface = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip().decode("utf-8")
+        full_cmd = f"/sbin/iwconfig {interface} | grep -i quality"
         wifi_signal = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-        wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[1].split('=')[1].split('/')[0]
-        wifi_signal_calc = round((int(wifi_signal) / 70)* 100)
-    except Exception:
-        wifi_signal_calc = 'NA'
-    return wifi_signal_calc
-
-
-def check_wifi_signal_dbm():
-    try:
-        full_cmd = "/sbin/iwconfig wlan0 | grep -i quality"
-        wifi_signal = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-        wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[4].split('=')[1]
+        
+        if format == 'dbm':
+            wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[4].split('=')[1]
+        else:
+            wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[1].split('=')[1].split('/')[0]
+            wifi_signal = round((int(wifi_signal) / 70)* 100)
+            
     except Exception:
         wifi_signal = 'NA'
     return wifi_signal
@@ -321,9 +319,9 @@ if __name__ == '__main__':
     if config.uptime:
         uptime_days = check_uptime()
     if config.wifi_signal:
-        wifi_signal = check_wifi_signal()
+        wifi_signal = check_wifi_signal('')
     if config.wifi_signal_dbm:
-        wifi_signal_dbm = check_wifi_signal_dbm()
+        wifi_signal_dbm = check_wifi_signal('dbm')
     # Publish messages to MQTT
     if config.group_messages:
         bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
