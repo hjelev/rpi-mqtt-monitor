@@ -17,8 +17,7 @@ import os
 hostname = socket.gethostname()
 
 def check_wifi_signal(format):
-    try:
-        
+    try:       
         full_cmd =  "ls /sys/class/ieee80211/*/device/net/"
         interface = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip().decode("utf-8")
         full_cmd = f"/sbin/iwconfig {interface} | grep -i quality"
@@ -60,7 +59,8 @@ def check_voltage():
         voltage = voltage.strip()[:-1]
     except Exception:
         voltage = 0
-    return voltage
+    
+    return voltage.decode('utf8')
 
 
 def check_swap():
@@ -81,7 +81,7 @@ def check_cpu_temp():
     full_cmd = "cat /sys/class/thermal/thermal_zone*/temp 2> /dev/null | sed 's/\(.\)..$//' | tail -n 1"
     try:
         p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-        cpu_temp = p.decode("utf-8").replace('\n', ' ').replace('\r', '')
+        cpu_temp = p.decode("utf-8").strip()
     except Exception:
         cpu_temp = 0
     return cpu_temp
@@ -134,13 +134,13 @@ def config_json(what_config):
         "name": "",
         "unique_id": "",
         "unit_of_measurement": "",
-	"device": {
-	    "identifiers": [hostname],
-	    "manufacturer": manufacturer,
-	    "model": model_name,
-	    "name": hostname,
-        "sw_version": os
-	}
+        "device": {
+            "identifiers": [hostname],
+            "manufacturer": manufacturer,
+            "model": model_name,
+            "name": hostname,
+            "sw_version": os
+        }
     }
 
     data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
@@ -279,7 +279,7 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
                          uptime_days=0, wifi_signal=0, wifi_signal_dbm=0):
     # compose the CSV message containing the measured values
 
-    values = cpu_load, float(cpu_temp), used_space, float(voltage), int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm
+    values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm
     values = str(values)[1:-1]
 
     # connect to mqtt server
