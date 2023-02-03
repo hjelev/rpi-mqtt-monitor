@@ -20,7 +20,7 @@ def check_wifi_signal(format):
     try:       
         full_cmd =  "ls /sys/class/ieee80211/*/device/net/"
         interface = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip().decode("utf-8")
-        full_cmd = f"/sbin/iwconfig {interface} | grep -i quality"
+        full_cmd = f'/sbin/iwconfig {interface} | grep -i quality'
         wifi_signal = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         
         if format == 'dbm':
