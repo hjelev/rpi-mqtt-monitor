@@ -26,6 +26,7 @@ sleep_time = 0.5
 cpu_load = True
 cpu_temp = True
 used_space = True
+used_space_path = '/mnt'
 voltage = True
 sys_clock_speed = True
 swap = True
