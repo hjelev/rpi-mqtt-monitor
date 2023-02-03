@@ -303,10 +303,6 @@ if __name__ == '__main__':
 
     if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
     else: used_space_path = '/'
-<<<<<<< HEAD
-    print(used_space_path)
-=======
->>>>>>> a17e502adc60b844815e23daec93bf3cc9c14afd
     # collect the monitored values
     if config.cpu_load:
         cpu_load = check_cpu_load()
