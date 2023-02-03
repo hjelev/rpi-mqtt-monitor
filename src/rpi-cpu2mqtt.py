@@ -301,13 +301,16 @@ if __name__ == '__main__':
     # delay the execution of the script
     time.sleep(config.random_delay)
 
+    if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
+    else: used_space_path = '/'
+    print(used_space_path)
     # collect the monitored values
     if config.cpu_load:
         cpu_load = check_cpu_load()
     if config.cpu_temp:
         cpu_temp = check_cpu_temp()
     if config.used_space:
-        used_space = check_used_space('/')
+        used_space = check_used_space(used_space_path)
     if config.voltage:
         voltage = check_voltage()
     if config.sys_clock_speed:
