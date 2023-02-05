@@ -35,23 +35,23 @@ It will also help you configure the host and credentials for the mqtt server in 
 ## Manual
 If you don't like the automated installation here are manuall installation instructions:
 
-Install pip if you don't have it:
+1. Install pip if you don't have it:
 ```bash
 $ sudo apt install python-pip
 ```
-Then install this python module needed for the script:
+2. Then install this python module needed for the script:
 ```bash
 $ pip3 install paho-mqtt
 ```
-Install git if you don't have it:
+3. Install git if you don't have it:
 ```bash
 $ apt install git
 ```
-Clone the repository:
+4. Clone the repository:
 ```bash
 $ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 ```
-Rename ```src/config.py.example``` to ```src/config.py```
+5. Rename ```src/config.py.example``` to ```src/config.py```
 
 ## Configuration
 (only needed for manual installation)
