@@ -2,15 +2,15 @@
 
  ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor) ![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor) ![GitHub issues](https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor) ![GitHub closed issues](https://img.shields.io/github/issues-closed/hjelev/rpi-mqtt-monitor)  ![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor) ![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor)
 
-The easiest way to track your Raspberry PI or Ubuntu computer system health and performance with Home Assistant.
+The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance with Home Assistant.
 
-Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed.
+* Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed.
 
-Raspberry Pi MQTT Monitor supports discovery messages so no manuall configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
+* Supports discovery messages so no manuall configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
 
-You can install it with just one command from shell.
+* You can install it with just one command from shell.
 
-Configurable: You can select what is monitored and how the message is sned (separetely or as a bulk csv message)
+* Configurable: You can select what is monitored and how the message is sned (separetely or as a bulk csv message)
 
 # Installation
 
