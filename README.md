@@ -40,15 +40,15 @@ If you don't like the automated installation here are manuall installation instr
 
 1. Install pip if you don't have it:
 
-```bash
-sudo apt install python-pip
-```
+  ```bash
+  sudo apt install python-pip
+  ```
 
 2. Then install this python module needed for the script:
 
-```bash
-pip3 install paho-mqtt
-```
+  ```bash
+  pip3 install paho-mqtt
+  ```
 
 3. Install git if you don't have it:
 
