@@ -12,6 +12,7 @@ import paho.mqtt.client as paho
 import json
 import config
 import os
+import fileinput
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -31,6 +32,7 @@ def check_wifi_signal(format):
             
     except Exception:
         wifi_signal = 'NA'
+        
     return wifi_signal
 
 
@@ -39,16 +41,17 @@ def check_used_space(path):
     free_space = st.f_bavail * st.f_frsize
     total_space = st.f_blocks * st.f_frsize
     used_space = int(100 - ((free_space / total_space) * 100))
+    
     return used_space
 
 
 def check_cpu_load():
-    # bash command to get cpu load from uptime command
     p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
     cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]
     cpu_load = str(p).split("average:")[1].split(", ")[0].replace(' ', '').replace(',', '.')
     cpu_load = float(cpu_load) / int(cores) * 100
     cpu_load = round(float(cpu_load), 1)
+    
     return cpu_load
 
 
@@ -67,6 +70,7 @@ def check_swap():
     full_cmd = "free -t |grep -i swap | awk 'NR == 1 {print $3/$2*100}'"
     swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
+    
     return swap
 
 
@@ -74,6 +78,7 @@ def check_memory():
     full_cmd = "free -t | awk 'NR == 2 {print $3/$2*100}'"
     memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     memory = round(float(memory.decode("utf-8").replace(",", ".")))
+    
     return memory
 
 
@@ -84,16 +89,19 @@ def check_cpu_temp():
         cpu_temp = p.decode("utf-8").strip()
     except Exception:
         cpu_temp = 0
+        
     return cpu_temp
 
 
 def check_sys_clock_speed():
     full_cmd = "awk '{printf (\"%0.0f\",$1/1000); }' </sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+    
     return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 
 def check_uptime():
     full_cmd = "awk '{print int($1/3600/24)}' /proc/uptime"
+    
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
 
@@ -104,6 +112,7 @@ def check_model_name():
         full_cmd = "cat /proc/cpuinfo  | grep 'name'| uniq"
         model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
         model_name = model_name.split(':')[1]
+        
    return model_name
 
 
@@ -111,6 +120,7 @@ def get_os():
     full_cmd = 'cat /etc/os-release | grep -i pretty_name'
     pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
     pretty_name = pretty_name.split('=')[1].replace('"', '')
+    
     return(pretty_name)
 
 
@@ -121,6 +131,7 @@ def get_manufacturer():
         pretty_name = pretty_name.split(':')[1]
     else:
         pretty_name = 'Raspberry Pi'
+        
     return(pretty_name)
 
 
@@ -294,15 +305,26 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     client.disconnect()
 
 
+def single_discovery_message():
+    file_path = os.path.dirname(os.path.abspath(__file__))
+
+    for line in fileinput.input(file_path + "/config.py", inplace=True):
+        if line.strip().replace(' ','') == 'discovery_messages=True': 
+            print('# Auto Disabled\ndiscovery_messages = False')
+        else:
+            print(line, end='')
+    
+    
 if __name__ == '__main__':
     # set all monitored values to False in case they are turned off in the config
     cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm =  False
 
     # delay the execution of the script
-    time.sleep(config.random_delay)
-
+    if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
+    
     if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
     else: used_space_path = '/'
+    
     # collect the monitored values
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -325,7 +347,10 @@ if __name__ == '__main__':
     if config.wifi_signal_dbm:
         wifi_signal_dbm = check_wifi_signal('dbm')
     # Publish messages to MQTT
-    if config.group_messages:
+    if hasattr(config, 'group_messages') and config.group_messages:
         bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
     else:
         publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
+    
+    if hasattr(config, 'single_discovery_message') and config.single_discovery_message and config.discovery_messages:
+        single_discovery_message()

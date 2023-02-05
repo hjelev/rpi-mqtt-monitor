@@ -42,6 +42,10 @@ Then install this module needed for the script:
 ```bash
 $ pip3 install paho-mqtt
 ```
+Install git if you don't have it:
+```bash
+$ apt install git
+```
 Clone the repository:
 ```bash
 $ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
@@ -58,6 +62,7 @@ This is the default configuration:
 
 ```
 random_delay = randrange(1)
+single_discovery_message = True
 discovery_messages = True
 group_messages = False
 sleep_time = 0.5
@@ -73,22 +78,27 @@ wifi_signal = False
 wifi_signal_dbm = False
 ```
 
-If ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is set to False.
+If ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is not used.
+
+If ```single_discovery_message``` is set to true, discovery_messages will be automatically set to False after the first execution of the script. These messages are not needed once the sensors/device is created in Home Assistant.
 
 If ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
+
 ```
 1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50, -60
 ```
 
-## Test Raspberry Pi MQTT monitor
+## Test Raspberry Pi MQTT Monitor
+
+Run Raspberry Pi MQTT Monitor (you might need to update the path in the command below, depending on where you installled it)
 ```bash
-$ /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
+$ /usr/bin/python3 /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
 Once you run Raspberry Pi MQTT monitor there will be no output if it run OK, but you should get 8 or more messages via the configured MQTT server (the messages count depends on your configuration).
 
 ## Schedule Raspberry Pi MQTT Monitor execution
-Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you put the script files):
+Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you installed it):
 ```
 */2 * * * * /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
@@ -97,7 +107,7 @@ Create a cron entry like this (you might need to update the path in the cron ent
 ![Rapsberry Pi MQTT monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
-If you are using ```discovery_messages```, then this step is not required as the sensors are automatically discovered by Home Assistant and all you need to do is add them from the UI.
+If you are using ```discovery_messages```, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
 
 This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
 ```yaml
