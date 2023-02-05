@@ -10,11 +10,11 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 * You can install it with just one command from shell.
 
-* Configurable: You can select what is monitored and how the message is sned (separetely or as a bulk csv message)
+* Configurable: You can select what is monitored and how the message is sned (separately or as one csv message)
 
-# Installation
+## Installation
 
-## Automated
+### Automated
 
 Run this command to use the automated installation:
 
@@ -34,7 +34,7 @@ The auto-installer needs the software below and will install it if its not found
 Only python is not automatically installed, the rest of the dependancies should be handeled by the auto installation.
 It will also help you configure the host and credentials for the mqtt server in config.py and create the cronjob configuration for you.
 
-## Manual
+### Manual
 
 If you don't like the automated installation here are manuall installation instructions:
 
@@ -287,10 +287,10 @@ entities:
   - entity: sensor.rpi4_wifi_signal_dbm
 ```
 
-# To Do
+## To Do
 
 - maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software)
 
-# Feature request
+## Feature request
 
 If you want to suggest a new feature or improvement don't hesitate to open an issue or pull request.
