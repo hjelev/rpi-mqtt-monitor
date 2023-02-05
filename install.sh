@@ -122,7 +122,7 @@ set_cron(){
 }
 
 main(){
-  printm "Raspberry Pi MQTT monitor installer"
+  printm "Raspberry Pi MQTT Monitor installer"
   welcome
   find_python
   check_and_install_pip

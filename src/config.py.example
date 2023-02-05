@@ -9,29 +9,33 @@ mqtt_topic_prefix = "rpi-MQTT-monitor"
 
 # Messages configuration
 
-# If this is set to True the script will send just one message containing all values
-group_messages = False
+# Uncomment the line bellow to send just one CSV message containing all values (this method don't support HA discovery_messages)
+# group_messages = True
+
+# Disable dicovery_messages after the first execution of the script (they are not needed unless you delete the device from HA)
+single_discovery_message = True
 
 # If this is set, then the script will send MQTT discovery messages meaning a config less setup in HA.  Only works
-# when group_messages is set to False
+# when group_messages is not used
+
 discovery_messages = True
 
 # Random delay in seconds before measuring the values
 # - this is used for de-synchronizing message if you run this script on many hosts.
-# - if you want a fix delay or 0 you can remove the randrange function and just set the needed value.
-random_delay = randrange(1)
+# - if you want a fixed delay you can remove the randrange function and just set the needed value.
+# random_delay = randrange(10)
 
 # This is the time  between sending the individual messages
-sleep_time = 0.5
+sleep_time = 0.1
 cpu_load = True
 cpu_temp = True
 used_space = True
 used_space_path = '/'
-voltage = True
-sys_clock_speed = True
-swap = True
+voltage = False
+sys_clock_speed = False
+swap = False
 memory = True
 uptime = True
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
-wifi_signal = False
+wifi_signal = True
 wifi_signal_dbm = False
