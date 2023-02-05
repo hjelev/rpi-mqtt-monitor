@@ -1,26 +1,27 @@
 # Raspberry Pi MQTT Monitor
 
  ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor) ![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor) ![GitHub issues](https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor) ![GitHub closed issues](https://img.shields.io/github/issues-closed/hjelev/rpi-mqtt-monitor)  ![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor) ![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor) 
+
+The easiest way to track your Raspberry PI or Ubuntu computer system health and performance with Home Assistant.
+
+Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed.
+
+Raspberry Pi MQTT Monitor supports discovery messages so no manuall configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
+
+You can install it with just one command from shell.
  
-Gather system information and send it to MQTT server. Raspberry Pi MQTT monitor is written in python and gathers information about your system cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed. 
-The script is written for Raspberry Pi but can also be used on Ubuntu based system. 
-
-Raspberry Pi MQTT monitor integrates with [home assistant](https://www.home-assistant.io/). The script works fine both on Python 2 and 3
-and is very light on the cpu, there are some sleeps in the code due to mqtt comunication having problems if the messages are shot with out delay.
-
-Each value measured by the script is sent via a separate message for easier creation of home assistant sensors.
+Configurable: You can select what is monitored and how the message is sned (separetely or as a bulk csv message)
 
 # Installation
 
-## Automated Installation
-There is an automated bash installation, its working but not extensively tested (recently updated).
+## Automated
 
 Run this command to use the automated installation:
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
-Raspberry Pi MQTT monitor will be intalled in the location where the auto installer is called, inside a folder named rpi-mqtt-monitor.
+Raspberry Pi MQTT monitor will be intalled in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
 
 The auto-installer needs the software below and will install it if its not found:
 * python (2 or 3)
@@ -31,14 +32,14 @@ The auto-installer needs the software below and will install it if its not found
 Only python is not automatically installed, the rest of the dependancies should be handeled by the auto installation.
 It will also help you configure the host and credentials for the mqtt server in config.py and create the cronjob configuration for you.
 
-## Manual Installation
+## Manual
 If you don't like the automated installation here are manuall installation instructions:
 
 Install pip if you don't have it:
 ```bash
 $ sudo apt install python-pip
 ```
-Then install this module needed for the script:
+Then install this python module needed for the script:
 ```bash
 $ pip3 install paho-mqtt
 ```
@@ -110,7 +111,7 @@ Once you installed the script on your raspberry you need to create some sensors 
 If you are using ```discovery_messages```, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
 
 This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
-```yaml
+```yaml{r, attr.source='.numberLines'}
   - platform: mqtt
     name: 'rpi4 cpu load'
     state_topic: 'masoko/rpi4'
