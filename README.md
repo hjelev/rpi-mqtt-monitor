@@ -75,7 +75,6 @@ This is the default configuration:
 
 ```
 random_delay = randrange(1)
-single_discovery_message = True
 discovery_messages = True
 group_messages = False
 sleep_time = 0.5
@@ -92,8 +91,6 @@ wifi_signal_dbm = False
 ```
 
 If ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is not used.
-
-If ```single_discovery_message``` is set to true, discovery_messages will be automatically set to False after the first execution of the script. These messages are not needed once the sensors/device is created in Home Assistant.
 
 If ```group_messages``` is set to true the script will send just one message containing all values in CSV format.
 The group message looks like this:
