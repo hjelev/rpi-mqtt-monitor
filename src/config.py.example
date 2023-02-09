@@ -12,9 +12,6 @@ mqtt_topic_prefix = "rpi-MQTT-monitor"
 # Uncomment the line bellow to send just one CSV message containing all values (this method don't support HA discovery_messages)
 # group_messages = True
 
-# Disable dicovery_messages after the first execution of the script (they are not needed unless you delete the device from HA)
-single_discovery_message = True
-
 # If this is set, then the script will send MQTT discovery messages meaning a config less setup in HA.  Only works
 # when group_messages is not used
 

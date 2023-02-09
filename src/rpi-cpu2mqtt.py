@@ -303,16 +303,6 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
 
     # disconnect from mqtt server
     client.disconnect()
-
-
-def single_discovery_message():
-    file_path = os.path.dirname(os.path.abspath(__file__))
-
-    for line in fileinput.input(file_path + "/config.py", inplace=True):
-        if line.strip().replace(' ','') == 'discovery_messages=True': 
-            print('# Auto Disabled\ndiscovery_messages = False')
-        else:
-            print(line, end='')
     
     
 if __name__ == '__main__':
@@ -351,6 +341,3 @@ if __name__ == '__main__':
         bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
     else:
         publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
-    
-    if hasattr(config, 'single_discovery_message') and config.single_discovery_message and config.discovery_messages:
-        single_discovery_message()
