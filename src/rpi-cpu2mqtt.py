@@ -159,43 +159,53 @@ def config_json(what_config):
     if what_config == "cpuload":
         data["icon"] = "mdi:speedometer"
         data["name"] = hostname + " CPU Usage"
+        data["state_class"] = "measurement"
         data["unit_of_measurement"] = "%"
     elif what_config == "cputemp":
         data["icon"] = "hass:thermometer"
         data["name"] = hostname + " CPU Temperature"
         data["unit_of_measurement"] = "°C"
+        data["state_class"] = "measurement"
     elif what_config == "diskusage":
         data["icon"] = "mdi:harddisk"
         data["name"] = hostname + " Disk Usage"
         data["unit_of_measurement"] = "%"
+        data["state_class"] = "measurement"
     elif what_config == "voltage":
         data["icon"] = "mdi:flash"
         data["name"] = hostname + " CPU Voltage"
         data["unit_of_measurement"] = "V"
+        data["state_class"] = "measurement"
     elif what_config == "swap":
         data["icon"] = "mdi:harddisk"
         data["name"] = hostname + " Disk Swap"
         data["unit_of_measurement"] = "%"
+        data["state_class"] = "measurement"
     elif what_config == "memory":
         data["icon"] = "mdi:memory"
         data["name"] = hostname + " Memory Usage"
         data["unit_of_measurement"] = "%"
+        data["state_class"] = "measurement"
     elif what_config == "sys_clock_speed":
         data["icon"] = "mdi:speedometer"
         data["name"] = hostname + " CPU Clock Speed"
         data["unit_of_measurement"] = "MHz"
+        data["state_class"] = "measurement"
     elif what_config == "uptime_days":
         data["icon"] = "mdi:calendar"
         data["name"] = hostname + " Uptime"
         data["unit_of_measurement"] = "days"
+        data["state_class"] = "measurement"
     elif what_config == "wifi_signal":
         data["icon"] = "mdi:wifi"
         data["name"] = hostname + " Wifi Signal"
         data["unit_of_measurement"] = "%"
+        data["state_class"] = "measurement"
     elif what_config == "wifi_signal_dbm":
         data["icon"] = "mdi:wifi"
         data["name"] = hostname + " Wifi Signal"
         data["unit_of_measurement"] = "dBm"
+        data["state_class"] = "measurement"
     else:
         return ""
     # Return our built discovery config
