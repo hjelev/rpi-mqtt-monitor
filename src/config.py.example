@@ -36,3 +36,9 @@ uptime = True
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
 wifi_signal = True
 wifi_signal_dbm = False
+
+# Retain flag for published topics
+retain = True
+
+# QOS setting for published topics: 0,1,2 are acceptable values
+qos = 0
