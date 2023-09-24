@@ -205,7 +205,7 @@ def config_json(what_config):
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, wifi_signal=0, wifi_signal_dbm=0):
     # connect to mqtt server
-    client = paho.Client()
+    client = paho.Client(client_id="rpi-mqtt-monitor")
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.connect(config.mqtt_host, int(config.mqtt_port))
 
