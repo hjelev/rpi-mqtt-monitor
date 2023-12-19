@@ -10,14 +10,14 @@ welcome(){
 }
 
 find_python(){
-  if [[ $(python --version)  ]]; then 
-    python=$(which python)
-    pip="python-pip"
-    pip_run='pip'
-  else
+  if [[ $(python3 --version)  ]]; then 
     python=$(which python3)
     pip="python3-pip"
     pip_run='pip3'
+  else
+    python=$(which python)
+    pip="python-pip"
+    pip_run='pip'
   fi
 
   if [[ "$python" == *"python"* ]]; then
