@@ -61,7 +61,7 @@ check_and_install_pip(){
 
 install_requirements(){
   printm "Installing requirements"
-  sudo $pip_run install -r requirements.txt
+  sudo $pip_run install --user -r requirements.txt
 }
 
 update_config(){
