@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Python script (runs on 2 and 3) to check cpu load, cpu temperature and free space etc.
+# Python script (runs on 2 and 3) to monitor cpu load, temperature, frequency, free space etc.
 # on a Raspberry Pi or Ubuntu computer and publish the data to a MQTT server.
-# RUN pip install paho-mqtt
 # RUN sudo apt-get install python-pip
+# RUN pip install paho-mqtt
 
 from __future__ import division
 import subprocess
@@ -12,7 +12,7 @@ import paho.mqtt.client as paho
 import json
 import config
 import os
-import fileinput
+# import fileinput
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -116,6 +116,13 @@ def check_model_name():
    return model_name
 
 
+def check_rpi5_fan_speed():
+   full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
+   rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+        
+   return rpi5_fan_speed
+
+
 def get_os():
     full_cmd = 'cat /etc/os-release | grep -i pretty_name'
     pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
@@ -206,6 +213,11 @@ def config_json(what_config):
         data["name"] = hostname + " Wifi Signal"
         data["unit_of_measurement"] = "dBm"
         data["state_class"] = "measurement"
+    elif what_config == "rpi5_fan_speed":
+        data["icon"] = "mdi:fan"
+        data["name"] = hostname + " Fan Speed"
+        data["unit_of_measurement"] = "RPM"
+        data["state_class"] = "measurement"
     else:
         return ""
     # Return our built discovery config
@@ -213,7 +225,7 @@ def config_json(what_config):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0):
+                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
     # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
@@ -291,16 +303,22 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             time.sleep(config.sleep_time)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/wifi_signal_dbm", wifi_signal_dbm, qos=config.qos, retain=config.retain)
         time.sleep(config.sleep_time)
-
+    if config.rpi5_fan_speed:
+        if config.discovery_messages:
+            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi5_fan_speed/config",
+                           config_json('rpi5_fan_speed'), qos=config.qos)
+            time.sleep(config.sleep_time)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
+        time.sleep(config.sleep_time)
     # disconnect from mqtt server
     client.disconnect()
 
 
 def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                         uptime_days=0, wifi_signal=0, wifi_signal_dbm=0):
+                         uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
     # compose the CSV message containing the measured values
 
-    values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm
+    values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed
     values = str(values)[1:-1]
 
     # connect to mqtt server
@@ -317,7 +335,7 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     
 if __name__ == '__main__':
     # set all monitored values to False in case they are turned off in the config
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm =  False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = False
 
     # delay the execution of the script
     if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
@@ -346,8 +364,10 @@ if __name__ == '__main__':
         wifi_signal = check_wifi_signal('')
     if config.wifi_signal_dbm:
         wifi_signal_dbm = check_wifi_signal('dbm')
+    if config.rpi5_fan_speed:
+        rpi5_fan_speed = check_rpi5_fan_speed()
     # Publish messages to MQTT
     if hasattr(config, 'group_messages') and config.group_messages:
-        bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
+        bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
     else:
-        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm)
+        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
