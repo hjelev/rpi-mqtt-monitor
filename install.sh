@@ -114,6 +114,7 @@ update_config(){
 }
 
 set_cron(){
+  python=$(which python)
   printm "Setting Cronjob"
   cwd=$(pwd)
   crontab -l > tempcron
