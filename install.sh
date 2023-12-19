@@ -66,15 +66,19 @@ create_venv(){
   fi
 
   # Create a virtual environment
-  ${python} -m venv env
+  ${python} -m venv rpi_mon_env
 
   # Activate the virtual environment
-  source env/bin/activate
+  source rpi_mon_env/bin/activate
+  python=$(which python)
+
 }
 
 install_requirements(){
   printm "Installing requirements"
   $pip_run install -r requirements.txt
+  # Deactivate the virtual environment
+  deactivate
 }
 
 update_config(){
@@ -112,9 +116,6 @@ update_config(){
 }
 
 set_cron(){
-  python=$(which python)
-  # Deactivate the virtual environment
-  deactivate
   printm "Setting Cronjob"
   cwd=$(pwd)
   crontab -l > tempcron
