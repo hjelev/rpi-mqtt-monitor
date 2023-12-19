@@ -12,7 +12,7 @@ import paho.mqtt.client as paho
 import json
 import config
 import os
-# import fileinput
+
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()

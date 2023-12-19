@@ -33,9 +33,7 @@ printm(){
   length=$(expr length "$1")
   length=$(($length + 4))
   printf "\n"
-  #printf -- '-%.0s' $(seq $length); echo ""
   printf ":: $1 \n\n"
-  #printf -- '-%.0s' $(seq $length); echo ""
 }
 
 print_green(){
@@ -115,6 +113,8 @@ update_config(){
 
 set_cron(){
   python=$(which python)
+  # Deactivate the virtual environment
+  deactivate
   printm "Setting Cronjob"
   cwd=$(pwd)
   crontab -l > tempcron
