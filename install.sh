@@ -29,20 +29,6 @@ find_python(){
   fi
 }
 
-create_venv(){
-  # Check if python3-venv is installed
-  if ! dpkg -l | grep -q python3-venv; then
-    echo "python3-venv is not installed. Installing..."
-    sudo apt-get install -y python3-venv
-  fi
-
-  # Create a virtual environment
-  ${python} -m venv env
-
-  # Activate the virtual environment
-  source env/bin/activate
-}
-
 printm(){
   length=$(expr length "$1")
   length=$(($length + 4))
@@ -73,9 +59,24 @@ check_and_install_pip(){
   fi
 }
 
+create_venv(){
+  printm "Creating virtual environment"
+  # Check if python3-venv is installed
+  if ! dpkg -l | grep -q python3-venv; then
+    echo "python3-venv is not installed. Installing..."
+    sudo apt-get install -y python3-venv
+  fi
+
+  # Create a virtual environment
+  ${python} -m venv env
+
+  # Activate the virtual environment
+  source env/bin/activate
+}
+
 install_requirements(){
   printm "Installing requirements"
-  sudo $pip_run install -r requirements.txt
+  $pip_run install -r requirements.txt
 }
 
 update_config(){
