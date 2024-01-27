@@ -34,8 +34,10 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
-* 2021-01-27: Added a binary sensor for github to monitor for new versions of the script
-* 2021-01-27: Updated the sensors names not to include the device name as per home assistant guidelines
+* 2024-01-27: Now you can run the script as a service (systemd) or as a cron job
+* 2024-01-27: Support for command line arguments
+* 2024-01-27: Added a binary sensor for github to monitor for new versions of the script
+* 2024-01-27: Updated the sensors names not to include the device name as per home assistant guidelines
 * 2024-01-10: Added support for Raspberry Pi 5 fan speed monitoring (only works on Raspberry Pi 5 with stock fan)
 
 ## Installation
