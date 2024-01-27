@@ -143,7 +143,8 @@ def get_manufacturer():
 
 
 def check_git_update():
-    full_cmd = "git remote update && git status -uno"
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    full_cmd = "git -C {} remote update && git -C {} status -uno".format(script_dir, script_dir)
     git_update = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
     if 'Your branch is up to date' in git_update:
         git_update = 'off'
