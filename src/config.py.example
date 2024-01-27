@@ -12,11 +12,18 @@ mqtt_topic_prefix = "rpi-MQTT-monitor"
 # Uncomment the line bellow to send just one CSV message containing all values (this method don't support HA discovery_messages)
 # group_messages = True
 
-# If this is set, then the script will send MQTT discovery messages meaning a config less setup in HA.  Only works
-# when group_messages is not used
-
+# If this is set, then the script will send MQTT discovery messages meaning a config less setup in HA.
+# Only works when group_messages is not used
 discovery_messages = True
+
+# Binary sensor that displays when there are  updates
 git_update = True
+
+# Retain flag for published topics
+retain = True
+
+# QOS setting for published topics: 0,1,2 are acceptable values
+qos = 0
 
 # Random delay in seconds before measuring the values
 # - this is used for de-synchronizing message if you run this script on many hosts.
@@ -25,6 +32,7 @@ git_update = True
 
 # This is the time  between sending the individual messages
 sleep_time = 0.1
+
 cpu_load = True
 cpu_temp = True
 used_space = True
@@ -34,13 +42,10 @@ sys_clock_speed = False
 swap = False
 memory = True
 uptime = True
+
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
 wifi_signal = False
 wifi_signal_dbm = False
+
 # this works only on raspbery pi version 5 with stock fan
 rpi5_fan_speed = False
-# Retain flag for published topics
-retain = True
-
-# QOS setting for published topics: 0,1,2 are acceptable values
-qos = 0
