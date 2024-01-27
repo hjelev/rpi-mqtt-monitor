@@ -59,6 +59,7 @@ The auto-installer needs the software below and will install it if its not found
 Only python is not automatically installed, the rest of the dependancies should be handeled by the auto installation.
 It will also help you configure the host and credentials for the mqtt server in config.py and create the cronjob configuration for you.
 
+
 ### Manual
 
 If you don't like the automated installation here are manuall installation instructions (missing the creation of virtual environment).
@@ -88,6 +89,8 @@ git clone https://github.com/hjelev/rpi-mqtt-monitor.git
 ```
 
 5. Rename ```src/config.py.example``` to ```src/config.py```
+
+
 
 ## Configuration
 
@@ -151,8 +154,25 @@ Wifi Signal dBm: False
 RPI5 Fan Speed: False
 Git Update: on
 ```
+## Schedule Raspberry Pi MQTT Monitor execution as a service
 
-## Schedule Raspberry Pi MQTT Monitor execution
+If you want to run Raspberry Pi MQTT Monitor as a service you can use the provided service file.
+You need to edit the service file and update the path to the script and the user that will run it.
+Then copy the service file to ```/etc/systemd/system/``` and enable it:
+
+```bash
+sudo cp rpi-cpu2mqtt.service /etc/systemd/system/
+sudo systemctl enable rpi-cpu2mqtt.service
+```
+
+To test that the service is working you can run:
+
+```bash
+sudo service rpi-cpu2mqtt start
+sudo service rpi-cpu2mqtt status
+```
+
+## Schedule Raspberry Pi MQTT Monitor execution with a cron
 
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you installed it):
 
