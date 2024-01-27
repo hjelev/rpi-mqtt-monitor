@@ -61,7 +61,7 @@ It will also help you configure the host and credentials for the mqtt server in 
 
 ### Manual
 
-If you don't like the automated installation here are manuall installation instructions:
+If you don't like the automated installation here are manuall installation instructions (missing the creation of virtual environment).
 
 1. Install pip if you don't have it:
 
@@ -131,10 +131,26 @@ The group message looks like this:
 Run Raspberry Pi MQTT Monitor (you might need to update the path in the command below, depending on where you installled it)
 
 ```bash
-/usr/bin/python3 /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
+/usr/bin/python3 /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py -d
 ```
 
-Once you run Raspberry Pi MQTT monitor there will be no output if it run OK, but you should get 8 or more messages via the configured MQTT server (the messages count depends on your configuration).
+Once you run Raspberry Pi MQTT monitor you should see something like this:
+
+```
+Hostname: ubuntu-pc
+CPU Load: 30.8
+CPU Temp: 66
+Used Space: 11
+Voltage: False
+CPU Clock Speed: False
+Swap: False
+Memory: 65
+Uptime: 0
+Wifi Signal: False
+Wifi Signal dBm: False
+RPI5 Fan Speed: False
+Git Update: on
+```
 
 ## Schedule Raspberry Pi MQTT Monitor execution
 

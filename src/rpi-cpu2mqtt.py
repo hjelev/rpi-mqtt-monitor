@@ -12,7 +12,7 @@ import paho.mqtt.client as paho
 import json
 import config
 import os
-
+import argparse
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -358,6 +358,13 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     
     
 if __name__ == '__main__':
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', action='store_true', help='Display values on screen', default=False)
+    args = parser.parse_args()
+
+
+
     # set all monitored values to False in case they are turned off in the config
     cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
 
@@ -392,6 +399,22 @@ if __name__ == '__main__':
         rpi5_fan_speed = check_rpi5_fan_speed()
     if config.git_update:
         git_update = check_git_update()
+
+    if args.d:
+        print("Hostname: " + hostname)
+        print("CPU Load: " + str(cpu_load))
+        print("CPU Temp: " + str(cpu_temp))
+        print("Used Space: " + str(used_space))
+        print("Voltage: " + str(voltage))
+        print("CPU Clock Speed: " + str(sys_clock_speed))
+        print("Swap: " + str(swap))
+        print("Memory: " + str(memory))
+        print("Uptime: " + str(uptime_days))
+        print("Wifi Signal: " + str(wifi_signal))
+        print("Wifi Signal dBm: " + str(wifi_signal_dbm))
+        print("RPI5 Fan Speed: " + str(rpi5_fan_speed))
+        print("Git Update: " + str(git_update))
+
 
     # Publish messages to MQTT
     if hasattr(config, 'group_messages') and config.group_messages:
