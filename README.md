@@ -143,19 +143,26 @@ Run Raspberry Pi MQTT Monitor (you might need to update the path in the command 
 Once you run Raspberry Pi MQTT monitor you should see something like this:
 
 ```
-Hostname: ubuntu-pc
-CPU Load: 30.8
-CPU Temp: 66
-Used Space: 11
-Voltage: False
-CPU Clock Speed: False
-Swap: False
-Memory: 65
-Uptime: 0
-Wifi Signal: False
-Wifi Signal dBm: False
-RPI5 Fan Speed: False
-Git Update: on
+:: Device Information
+   Model Name: Intel(R) Pentium(R) Silver J5040 CPU @ 2.00GHz
+   Manufacturer: GenuineIntel
+   OS: Ubuntu 23.10
+   Hostname: ubuntu-pc
+   IP Address: 192.168.0.200
+
+:: Measured values
+   CPU Load: 71.0
+   CPU Temp: 68
+   Used Space: 11
+   Voltage: False
+   CPU Clock Speed: False
+   Swap: False
+   Memory: 67
+   Uptime: 0
+   Wifi Signal: False
+   Wifi Signal dBm: False
+   RPI5 Fan Speed: False
+   Git Update: off
 ```
 ## Schedule Raspberry Pi MQTT Monitor execution as a service
 

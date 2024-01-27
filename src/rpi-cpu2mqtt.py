@@ -153,6 +153,44 @@ def check_git_update():
         
     return(git_update)
 
+
+def get_network_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+def print_values():
+    print(":: Device Information")
+    print("   Model Name: " + check_model_name().strip())
+    print("   Manufacturer: " + get_manufacturer().strip())
+    print("   OS: " + get_os().strip())
+    print("   Hostname: " + hostname)
+    print("   IP Address: " + get_network_ip())
+    if args.service:
+        print("   Service Sleep Time: " + str(config.service_sleep_time))
+    print("")
+    print(":: Measured values")
+    print("   CPU Load: " + str(cpu_load))
+    print("   CPU Temp: " + str(cpu_temp))
+    print("   Used Space: " + str(used_space))
+    print("   Voltage: " + str(voltage))
+    print("   CPU Clock Speed: " + str(sys_clock_speed))
+    print("   Swap: " + str(swap))
+    print("   Memory: " + str(memory))
+    print("   Uptime: " + str(uptime_days))
+    print("   Wifi Signal: " + str(wifi_signal))
+    print("   Wifi Signal dBm: " + str(wifi_signal_dbm))
+    print("   RPI5 Fan Speed: " + str(rpi5_fan_speed))
+    print("   Git Update: " + str(git_update))
+    print("")
+
 def config_json(what_config):
     model_name = check_model_name()
     manufacturer = get_manufacturer()
@@ -355,7 +393,8 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
 
     # disconnect from mqtt server
     client.disconnect()
-    
+
+
     
 if __name__ == '__main__':
     # parse arguments
@@ -399,22 +438,10 @@ if __name__ == '__main__':
             rpi5_fan_speed = check_rpi5_fan_speed()
         if config.git_update:
             git_update = check_git_update()
-
+            
+        # Display collected values on screen if --display option is used    
         if args.display:
-            print("Hostname: " + hostname)
-            print("CPU Load: " + str(cpu_load))
-            print("CPU Temp: " + str(cpu_temp))
-            print("Used Space: " + str(used_space))
-            print("Voltage: " + str(voltage))
-            print("CPU Clock Speed: " + str(sys_clock_speed))
-            print("Swap: " + str(swap))
-            print("Memory: " + str(memory))
-            print("Uptime: " + str(uptime_days))
-            print("Wifi Signal: " + str(wifi_signal))
-            print("Wifi Signal dBm: " + str(wifi_signal_dbm))
-            print("RPI5 Fan Speed: " + str(rpi5_fan_speed))
-            print("Git Update: " + str(git_update))
-            print("")
+            print_values()
             
         # Publish messages to MQTT
         if hasattr(config, 'group_messages') and config.group_messages:
