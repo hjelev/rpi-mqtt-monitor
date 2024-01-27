@@ -88,6 +88,8 @@ memory = True
 uptime = True
 wifi_signal = False
 wifi_signal_dbm = False
+# this works only on raspbery pi version 5 with stock fan
+rpi5_fan_speed = False
 ```
 
 If ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is not used.
