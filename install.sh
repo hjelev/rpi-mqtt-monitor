@@ -145,16 +145,23 @@ set_cron(){
 
 set_service(){
   printm "Setting systemd service"
-    printf "How often do you want the script to run in seconds? (default is 120): "
-    read MIN
-    if [ -z "$MIN" ]; then
-      MIN=120
-    fi
+  printf "How often do you want the script to run in seconds? (default is 120): "
+  read MIN
+  if [ -z "$MIN" ]; then
+    MIN=120
+  fi
   sed -i "s/120/${MIN}/" src/config.py
   cwd=$(pwd)
   user=$(whoami)
   exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
-  
+  if [ -f /etc/systemd/system/rpi-mqtt-monitor.service ]; then
+    read -p "Service file already exists. Do you want to remove it? (y/n) " yn
+    case $yn in
+        [Yy]* ) sudo rm /etc/systemd/system/rpi-mqtt-monitor.service; break;;
+        [Nn]* ) return;;
+        * ) echo "Please answer y for yes or n for no.";;
+    esac
+  fi
   print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
