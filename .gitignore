@@ -13,6 +13,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+rpi_mon_env/
 build/
 develop-eggs/
 dist/
