@@ -11,6 +11,11 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * You can install it with just one command from shell.
 
 * Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message)
+## What is new
+
+* 2021-01-27: Added a binary sensor for github to monitor for new versions of the script
+* 2021-01-27: Updated the sensors names not to include the device name as per home assistant guidelines
+* 2024-01-10: Added support for Raspberry Pi 5 fan speed monitoring (only works on Raspberry Pi 5 with stock fan)
 
 ## Installation
 
@@ -291,6 +296,7 @@ entities:
   - entity: sensor.rpi4_uptime
   - entity: sensor.rpi4_wifi_signal
   - entity: sensor.rpi4_wifi_signal_dbm
+  ...
 ```
 
 ## To Do
