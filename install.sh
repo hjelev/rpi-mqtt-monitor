@@ -157,7 +157,7 @@ set_service(){
   if [ -f /etc/systemd/system/rpi-mqtt-monitor.service ]; then
     read -p "Service file already exists. Do you want to remove it? (y/n) " yn
     case $yn in
-        [Yy]* ) sudo rm /etc/systemd/system/rpi-mqtt-monitor.service; break;;
+        [Yy]* ) sudo rm /etc/systemd/system/rpi-mqtt-monitor.service;;
         [Nn]* ) return;;
         * ) echo "Please answer y for yes or n for no.";;
     esac
