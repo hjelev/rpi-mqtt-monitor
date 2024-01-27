@@ -63,21 +63,26 @@ create_venv(){
   if ! dpkg -l | grep -q python3-venv; then
     echo "python3-venv is not installed. Installing..."
     sudo apt-get install -y python3-venv
+    else
+    print_green "+ Found: python3-venv"
   fi
 
   # Create a virtual environment
   ${python} -m venv rpi_mon_env
+  print_green "+ Virtual environment created"
 
   # Activate the virtual environment
   source rpi_mon_env/bin/activate
   python=$(which python)
-
+  print_green "+ Activated virtual environment"
 }
 
 install_requirements(){
   printm "Installing requirements"
   $pip_run install -r requirements.txt
   # Deactivate the virtual environment
+  print_green "+ Requirements installed"
+  print_green "+ Deactivating virtual environment"
   deactivate
 }
 
@@ -149,6 +154,7 @@ set_service(){
   cwd=$(pwd)
   user=$(whoami)
   exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
+  
   print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
