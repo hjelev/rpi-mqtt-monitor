@@ -34,10 +34,10 @@ swap = False
 memory = True
 uptime = True
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
-wifi_signal = True
+wifi_signal = False
 wifi_signal_dbm = False
 # this works only on raspbery pi version 5 with stock fan
-rpi5_fan_speed = True
+rpi5_fan_speed = False
 # Retain flag for published topics
 retain = True
 
