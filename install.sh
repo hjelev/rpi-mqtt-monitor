@@ -142,8 +142,8 @@ set_service(){
   printm "Setting systemd service"
   cwd=$(pwd)
   user=$(whoami)
-  exec_start="${cwd}/venv/bin/python ${cwd}/src/rpi-cpu2mqtt.py --service"
-  sudo cp rpi-mqtt-monitor.service /etc/systemd/system/
+  exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
+  sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|User=YOUR_USER|User=${user}|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|ExecStart=YOUR_EXEC_START|ExecStart=${exec_start}|" /etc/systemd/system/rpi-mqtt-monitor.service
