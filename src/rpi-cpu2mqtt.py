@@ -360,64 +360,70 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
 if __name__ == '__main__':
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', action='store_true', help='Display values on screen', default=False)
+    parser.add_argument('--display', '-d', action='store_true', help='Display values on screen', default=False)
+    parser.add_argument('--service', '-s', action='store_true', help='Run script as a service', default=False)
     args = parser.parse_args()
 
+    while True:
+        # set all monitored values to False in case they are turned off in the config
+        cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
 
+        # delay the execution of the script
+        if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
+        
+        if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
+        else: used_space_path = '/'
+        
+        # collect the monitored values
+        if config.cpu_load:
+            cpu_load = check_cpu_load()
+        if config.cpu_temp:
+            cpu_temp = check_cpu_temp()
+        if config.used_space:
+            used_space = check_used_space(used_space_path)
+        if config.voltage:
+            voltage = check_voltage()
+        if config.sys_clock_speed:
+            sys_clock_speed = check_sys_clock_speed()
+        if config.swap:
+            swap = check_swap()
+        if config.memory:
+            memory = check_memory()
+        if config.uptime:
+            uptime_days = check_uptime()
+        if config.wifi_signal:
+            wifi_signal = check_wifi_signal('')
+        if config.wifi_signal_dbm:
+            wifi_signal_dbm = check_wifi_signal('dbm')
+        if config.rpi5_fan_speed:
+            rpi5_fan_speed = check_rpi5_fan_speed()
+        if config.git_update:
+            git_update = check_git_update()
 
-    # set all monitored values to False in case they are turned off in the config
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
+        if args.display:
+            print("Hostname: " + hostname)
+            print("CPU Load: " + str(cpu_load))
+            print("CPU Temp: " + str(cpu_temp))
+            print("Used Space: " + str(used_space))
+            print("Voltage: " + str(voltage))
+            print("CPU Clock Speed: " + str(sys_clock_speed))
+            print("Swap: " + str(swap))
+            print("Memory: " + str(memory))
+            print("Uptime: " + str(uptime_days))
+            print("Wifi Signal: " + str(wifi_signal))
+            print("Wifi Signal dBm: " + str(wifi_signal_dbm))
+            print("RPI5 Fan Speed: " + str(rpi5_fan_speed))
+            print("Git Update: " + str(git_update))
+            print("")
+            
+        # Publish messages to MQTT
+        if hasattr(config, 'group_messages') and config.group_messages:
+            bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+        else:
+            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
 
-    # delay the execution of the script
-    if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
-    
-    if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
-    else: used_space_path = '/'
-    
-    # collect the monitored values
-    if config.cpu_load:
-        cpu_load = check_cpu_load()
-    if config.cpu_temp:
-        cpu_temp = check_cpu_temp()
-    if config.used_space:
-        used_space = check_used_space(used_space_path)
-    if config.voltage:
-        voltage = check_voltage()
-    if config.sys_clock_speed:
-        sys_clock_speed = check_sys_clock_speed()
-    if config.swap:
-        swap = check_swap()
-    if config.memory:
-        memory = check_memory()
-    if config.uptime:
-        uptime_days = check_uptime()
-    if config.wifi_signal:
-        wifi_signal = check_wifi_signal('')
-    if config.wifi_signal_dbm:
-        wifi_signal_dbm = check_wifi_signal('dbm')
-    if config.rpi5_fan_speed:
-        rpi5_fan_speed = check_rpi5_fan_speed()
-    if config.git_update:
-        git_update = check_git_update()
-
-    if args.d:
-        print("Hostname: " + hostname)
-        print("CPU Load: " + str(cpu_load))
-        print("CPU Temp: " + str(cpu_temp))
-        print("Used Space: " + str(used_space))
-        print("Voltage: " + str(voltage))
-        print("CPU Clock Speed: " + str(sys_clock_speed))
-        print("Swap: " + str(swap))
-        print("Memory: " + str(memory))
-        print("Uptime: " + str(uptime_days))
-        print("Wifi Signal: " + str(wifi_signal))
-        print("Wifi Signal dBm: " + str(wifi_signal_dbm))
-        print("RPI5 Fan Speed: " + str(rpi5_fan_speed))
-        print("Git Update: " + str(git_update))
-
-
-    # Publish messages to MQTT
-    if hasattr(config, 'group_messages') and config.group_messages:
-        bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
-    else:
-        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+        # if not running as a service, break the loop after one iteration
+        if not args.service:
+            break
+        # if running as a service, sleep for 2 minutes before the next iteration
+        time.sleep(config.service_sleep_time)

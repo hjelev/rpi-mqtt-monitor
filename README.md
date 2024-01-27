@@ -96,13 +96,14 @@ Populate the variables for MQTT host, user, password and main topic in ```src/co
 
 You can also choose what messages are sent and what is the delay (sleep_time is only used for multiple messages) between them.
 If you are sending a grouped message, and you want to delay the execution of the script you need to use the ```random_delay``` variable which is set to 1 by default.
-This is the default configuration:
+This is the default configuration (check the example file for more info):
 
 ```
 random_delay = randrange(1)
 discovery_messages = True
 group_messages = False
 sleep_time = 0.5
+service_sleep_time = 120
 cpu_load = True
 cpu_temp = True
 used_space = True
@@ -113,7 +114,6 @@ memory = True
 uptime = True
 wifi_signal = False
 wifi_signal_dbm = False
-# this works only on raspbery pi version 5 with stock fan
 rpi5_fan_speed = False
 ```
 
