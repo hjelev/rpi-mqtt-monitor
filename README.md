@@ -1,6 +1,11 @@
 # Raspberry Pi MQTT Monitor
 
- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor) ![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor) ![GitHub issues](https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor) ![GitHub closed issues](https://img.shields.io/github/issues-closed/hjelev/rpi-mqtt-monitor)  ![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor) ![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor/releases)
+[![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
+[![GitHub issues](https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
+[![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
 
 The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant.
 
@@ -11,6 +16,18 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * You can install it with just one command from shell.
 
 * Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message)
+
+## Table of Contents
+
+- [What is new](#what-is-new)
+- [Installation](#installation)
+  - [Automated](#automated)
+  - [Manual](#manual)
+- [Configuration](#configuration)
+- [Test Raspberry Pi MQTT Monitor](#test-raspberry-pi-mqtt-monitor)
+- [Schedule Raspberry Pi MQTT Monitor execution](#schedule-raspberry-pi-mqtt-monitor-execution)
+- [How to update](#how-to-update)
+
 ## What is new
 
 * 2021-01-27: Added a binary sensor for github to monitor for new versions of the script
@@ -130,6 +147,7 @@ Navigate to the folder where Rapsberry Pi MQTT Monitor is installed and pull the
 ```bash
 git pull
 ```
+* Note that sometimes you might need to add new variables to our src/config.py file, so make sure you check the example file and update your config.py file accordingly.
 
 ## Home Assistant Integration
 
