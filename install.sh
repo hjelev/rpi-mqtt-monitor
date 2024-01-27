@@ -131,8 +131,8 @@ set_cron(){
       MIN=2
     fi
     echo "Adding the line below to your crontab"
-    echo "*/${MIN} * * * * ${python} ${cwd}/src/rpi-cpu2mqtt.py"
-    echo "*/${MIN} * * * * ${python} ${cwd}/src/rpi-cpu2mqtt.py" >> tempcron
+    echo "*/${MIN} * * * * cd ${cwd}; ${python} ${cwd}/src/rpi-cpu2mqtt.py"
+    echo "*/${MIN} * * * * cd ${cwd}; ${python} ${cwd}/src/rpi-cpu2mqtt.py" >> tempcron
     crontab tempcron
   fi
   rm tempcron
