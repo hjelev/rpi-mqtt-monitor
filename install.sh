@@ -138,6 +138,20 @@ set_cron(){
   rm tempcron
 }
 
+set_service(){
+  printm "Setting systemd service"
+  cwd=$(pwd)
+  user=$(whoami)
+  exec_start="${cwd}/venv/bin/python ${cwd}/src/rpi-cpu2mqtt.py --service"
+  sudo cp rpi-mqtt-monitor.service /etc/systemd/system/
+  sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  sudo sed -i "s|User=YOUR_USER|User=${user}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  sudo sed -i "s|ExecStart=YOUR_EXEC_START|ExecStart=${exec_start}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  sudo systemctl daemon-reload
+  sudo systemctl enable rpi-mqtt-monitor.service
+  sudo systemctl start rpi-mqtt-monitor.service
+}
+
 main(){
   printm "Raspberry Pi MQTT Monitor installer"
   welcome
@@ -146,7 +160,16 @@ main(){
   create_venv
   install_requirements 
   update_config
-  set_cron
+
+  while true; do
+    read -p "Do you want to set up a (c)ron job or a (s)ervice? " cs
+    case $cs in
+        [Cc]* ) set_cron; break;;
+        [Ss]* ) set_service; break;;
+        * ) echo "Please answer c for cron or s for service.";;
+    esac
+  done
+  
   printm "Done"
 }
 
