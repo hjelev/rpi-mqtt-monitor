@@ -232,6 +232,8 @@ def config_json(what_config):
         data["icon"] = "mdi:git"
         data["name"] = "Git Update Status"
         data["state_class"] = "measurement"
+        data["payload_on"] = "on"
+        data["payload_off"] = "off"
     else:
         return ""
     # Return our built discovery config
