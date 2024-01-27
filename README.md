@@ -27,6 +27,9 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 - [Test Raspberry Pi MQTT Monitor](#test-raspberry-pi-mqtt-monitor)
 - [Schedule Raspberry Pi MQTT Monitor execution](#schedule-raspberry-pi-mqtt-monitor-execution)
 - [How to update](#how-to-update)
+- [Home Assistant Integration](#home-assistant-integration)
+- [To Do](#to-do)
+- [Feature request](#feature-request)
 
 ## What is new
 
@@ -151,10 +154,11 @@ git pull
 
 ## Home Assistant Integration
 
+If you are using ```discovery_messages```, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
+
 ![Rapsberry Pi MQTT Monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
 
 Once you installed the script on your raspberry you need to create some sensors in home assistant.
-If you are using ```discovery_messages```, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
 
 This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
 
