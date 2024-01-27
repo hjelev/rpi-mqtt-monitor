@@ -153,6 +153,12 @@ def check_git_update():
         
     return(git_update)
 
+def check_git_version():
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    full_cmd = "git -C {} describe --tags `git -C {} rev-list --tags --max-count=1`".format(script_dir, script_dir)
+    git_version = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    
+    return(git_version)
 
 def get_network_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -401,7 +407,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--display', '-d', action='store_true', help='Display values on screen', default=False)
     parser.add_argument('--service', '-s', action='store_true', help='Run script as a service', default=False)
+    parser.add_argument('--version', '-v', action='store_true', help='Display version', default=False)
     args = parser.parse_args()
+
+    if args.version:
+        print("rpi-mqtt-monitor version: " + check_git_version().strip())
+        exit()
 
     while True:
         # set all monitored values to False in case they are turned off in the config
