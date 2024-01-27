@@ -141,7 +141,7 @@ Once you run Raspberry Pi MQTT monitor there will be no output if it run OK, but
 Create a cron entry like this (you might need to update the path in the cron entry below, depending on where you installed it):
 
 ```
-*/2 * * * * /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
+*/2 * * * * cd /home/pi/rpi-mqtt-monitor; /usr/bin/python /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py
 ```
 ## How to update
 
