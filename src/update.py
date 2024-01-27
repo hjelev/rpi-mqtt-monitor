@@ -3,9 +3,6 @@ import os
 import subprocess
 
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
-os.chdir(script_dir)
-
 def get_assignments(filename):
     with open(filename) as f:
         tree = ast.parse(f.read(), filename)
@@ -38,13 +35,16 @@ def display_config_differences(current_config, example_config):
     else:
         return False
 
-repo_path = os.path.dirname(os.path.realpath(__file__))
 
-result = subprocess.run(['git', '-C', repo_path, 'pull'], check=True, text=True, capture_output=True)
+script_dir = os.path.dirname(os.path.realpath(__file__))
+os.chdir(script_dir)
+
+print(":: Updating git repository")
+result = subprocess.run(['git', '-C', script_dir, 'pull'], check=True, text=True, capture_output=True)
 print(result.stdout)
 
 if display_config_differences('config.py', 'config.py.example'):
-    print("Updating config.py")
+    print(":: Updating config.py")
     update_config('config.py', 'config.py.example')
 else:
-    print("No config.py updates needed")
+    print(":: No config.py updates needed")
