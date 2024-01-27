@@ -364,7 +364,7 @@ if __name__ == '__main__':
         wifi_signal = check_wifi_signal('')
     if config.wifi_signal_dbm:
         wifi_signal_dbm = check_wifi_signal('dbm')
-    if config.rpi5_fan_speed and hasattr(config, 'rpi5_fan_speed'):
+    if hasattr(config, 'rpi5_fan_speed') and config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
 
     # Publish messages to MQTT
