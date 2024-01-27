@@ -160,6 +160,18 @@ def check_git_version():
     
     return(git_version)
 
+
+def check_git_version_remote():
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    cmd = ['git', '-C', script_dir, 'ls-remote', '--tags', '--sort=-version:refname']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    lines = result.stdout.splitlines()
+    if lines:
+        latest_tag = lines[0].split('/')[-1]
+        return latest_tag
+    else:
+        return None
+
 def get_network_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -412,6 +424,7 @@ if __name__ == '__main__':
 
     if args.version:
         print("rpi-mqtt-monitor version: " + check_git_version().strip())
+        print("rpi-mqtt-monitor remote version: " + check_git_version_remote().strip())
         exit()
 
     while True:
