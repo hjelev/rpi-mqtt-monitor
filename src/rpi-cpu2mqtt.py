@@ -239,7 +239,7 @@ def config_json(what_config):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0):
+                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
     # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
@@ -326,7 +326,7 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         time.sleep(config.sleep_time)
     if config.git_update:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
+            client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
                            config_json('git_update'), qos=config.qos)
             time.sleep(config.sleep_time)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
