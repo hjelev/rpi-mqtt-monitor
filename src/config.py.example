@@ -16,6 +16,7 @@ mqtt_topic_prefix = "rpi-MQTT-monitor"
 # when group_messages is not used
 
 discovery_messages = True
+git_update = True
 
 # Random delay in seconds before measuring the values
 # - this is used for de-synchronizing message if you run this script on many hosts.

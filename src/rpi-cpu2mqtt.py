@@ -142,6 +142,16 @@ def get_manufacturer():
     return(pretty_name)
 
 
+def check_git_update():
+    full_cmd = "git remote update && git status -uno"
+    git_update = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    if 'Your branch is up to date' in git_update:
+        git_update = 0
+    else:
+        git_update = 1
+        
+    return(git_update)
+
 def config_json(what_config):
     model_name = check_model_name()
     manufacturer = get_manufacturer()
@@ -218,6 +228,10 @@ def config_json(what_config):
         data["name"] = "Fan Speed"
         data["unit_of_measurement"] = "RPM"
         data["state_class"] = "measurement"
+    elif what_config == "git_update":
+        data["icon"] = "mdi:git"
+        data["name"] = "Git Update Status"
+        data["state_class"] = "measurement"
     else:
         return ""
     # Return our built discovery config
@@ -225,7 +239,7 @@ def config_json(what_config):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
+                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0):
     # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
@@ -310,15 +324,22 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             time.sleep(config.sleep_time)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
         time.sleep(config.sleep_time)
+    if config.git_update:
+        if config.discovery_messages:
+            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
+                           config_json('git_update'), qos=config.qos)
+            time.sleep(config.sleep_time)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
+        time.sleep(config.sleep_time)
     # disconnect from mqtt server
     client.disconnect()
 
 
 def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                         uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
+                         uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0):
     # compose the CSV message containing the measured values
 
-    values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed
+    values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
     values = str(values)[1:-1]
 
     # connect to mqtt server
@@ -335,7 +356,7 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     
 if __name__ == '__main__':
     # set all monitored values to False in case they are turned off in the config
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
 
     # delay the execution of the script
     if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
@@ -366,9 +387,11 @@ if __name__ == '__main__':
         wifi_signal_dbm = check_wifi_signal('dbm')
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
-        
+    if config.git_update:
+        git_update = check_git_update()
+
     # Publish messages to MQTT
     if hasattr(config, 'group_messages') and config.group_messages:
-        bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
+        bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
     else:
-        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
+        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
