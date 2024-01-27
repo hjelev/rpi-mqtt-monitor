@@ -25,6 +25,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
   - [Manual](#manual)
 - [Configuration](#configuration)
 - [Test Raspberry Pi MQTT Monitor](#test-raspberry-pi-mqtt-monitor)
+- [Schedule Raspberry Pi MQTT Monitor execution as a service](#schedule-raspberry-pi-mqtt-monitor-execution-as-a-service)
 - [Schedule Raspberry Pi MQTT Monitor execution](#schedule-raspberry-pi-mqtt-monitor-execution)
 - [How to update](#how-to-update)
 - [Home Assistant Integration](#home-assistant-integration)
