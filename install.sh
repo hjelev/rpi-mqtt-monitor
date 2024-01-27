@@ -143,6 +143,7 @@ set_service(){
   cwd=$(pwd)
   user=$(whoami)
   exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
+  print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|User=YOUR_USER|User=${user}|" /etc/systemd/system/rpi-mqtt-monitor.service
@@ -150,6 +151,9 @@ set_service(){
   sudo systemctl daemon-reload
   sudo systemctl enable rpi-mqtt-monitor.service
   sudo systemctl start rpi-mqtt-monitor.service
+  sudo service rpi-mqtt-monitor status
+  print_green "+ Service is enabled and started"
+
 }
 
 main(){
@@ -170,7 +174,7 @@ main(){
     esac
   done
   
-  printm "Done"
+  printm "Installation is complete."
 }
 
 main
