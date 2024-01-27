@@ -140,6 +140,12 @@ set_cron(){
 
 set_service(){
   printm "Setting systemd service"
+    printf "How often do you want the script to run in seconds? (default is 120): "
+    read MIN
+    if [ -z "$MIN" ]; then
+      MIN=120
+    fi
+  sed -i "s/120/${MIN}/" src/config.py
   cwd=$(pwd)
   user=$(whoami)
   exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
