@@ -16,6 +16,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ### Automated
 
+
 Run this command to use the automated installation:
 
 ```bash
