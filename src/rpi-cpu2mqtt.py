@@ -476,5 +476,5 @@ if __name__ == '__main__':
         # if not running as a service, break the loop after one iteration
         if not args.service:
             break
-        # if running as a service, sleep for 2 minutes before the next iteration
+        # if running as a service, sleep before the next iteration
         time.sleep(config.service_sleep_time)
