@@ -40,7 +40,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 os.chdir(script_dir)
 
 print(":: Updating git repository")
-result = subprocess.run(['git', '-C', script_dir, 'pull'], check=True, text=True, capture_output=True)
+result = subprocess.run(['git', '-C', script_dir, 'pull'], check=True, universal_newlines=True, stdout=subprocess.PIPE)
 print(result.stdout)
 
 if display_config_differences('config.py', 'config.py.example'):
