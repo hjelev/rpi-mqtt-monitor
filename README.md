@@ -7,6 +7,8 @@
 [![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
 [![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
 
+<p align="center">
+  <img src="./images/rpi-mqtt-monitor.jpg" alt="Your Image Description" width="200" style="float: left; margin-right: 10px;" />
 The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant.
 
 * Start monitoring your system in just a few minutes.
@@ -20,6 +22,9 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message)
 
 * Easy update: You can update the script by calling it with command line argument --update
+</p>
+
+
 
 ## Table of Contents
 
