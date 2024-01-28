@@ -289,7 +289,7 @@ def config_json(what_config):
         data["state_class"] = "measurement"
     elif what_config == "git_update":
         data["icon"] = "mdi:git"
-        data["name"] = "Script version"
+        data["name"] = "RPi MQTT Monitor"
         data["device_class"] = "update"
         data["state_class"] = "measurement"
         data["payload_on"] = "on"
