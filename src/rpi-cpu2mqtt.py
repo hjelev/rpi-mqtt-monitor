@@ -163,14 +163,10 @@ def check_git_version():
 
 def check_git_version_remote():
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    cmd = ['git', '-C', script_dir, 'ls-remote', '--tags', '--sort=-version:refname']
-    result = subprocess.run(cmd, capture_output=True, universal_newlines=True)
-    lines = result.stdout.splitlines()
-    if lines:
-        latest_tag = lines[0].split('/')[-1]
-        return latest_tag
-    else:
-        return None
+    full_cmd = "git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
+    result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    latest_tag = result.strip()
+    return latest_tag if latest_tag else None
 
 def get_network_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
