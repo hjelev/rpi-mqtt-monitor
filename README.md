@@ -7,22 +7,8 @@
 [![GitHub language count](https://img.shields.io/github/languages/count/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
 [![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
 
-<p align="center">
-  <img src="./images/rpi-mqtt-monitor.jpg" alt="Your Image Description" width="200" style="float: left; margin-right: 10px;" />
-The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant.
-
-* Start monitoring your system in just a few minutes.
-
-* Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed.
-
-* Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
-
-* Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell.
-
-* Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message)
-
-* Easy update: You can update the script by calling it with command line argument --update
-</p>
+| <img src="./images/rpi-mqtt-monitor.jpg" alt="Raspberry Pi MQTT Monitor" width="200" /> | The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant. <br><br> * Start monitoring your system in just a few minutes. <br><br> * Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed. <br><br> * Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed. <br><br> * Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell. <br><br> * Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message) <br><br> * Easy update: You can update the script by calling it with command line argument --update |
+|:---:|:---|
 
 
 
