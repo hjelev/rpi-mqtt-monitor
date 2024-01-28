@@ -127,7 +127,7 @@ def check_rpi5_fan_speed():
 def get_os():
     full_cmd = 'cat /etc/os-release | grep -i pretty_name'
     pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-    pretty_name = pretty_name.split('=')[1].replace('"', '')
+    pretty_name = pretty_name.split('=')[1].replace('"', '').replace('\n', '')
     
     return(pretty_name)
 
