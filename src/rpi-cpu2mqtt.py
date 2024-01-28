@@ -206,7 +206,7 @@ def print_values():
     print("   Wifi Signal: " + str(wifi_signal))
     print("   Wifi Signal dBm: " + str(wifi_signal_dbm))
     print("   RPI5 Fan Speed: " + str(rpi5_fan_speed))
-    print("   Git Update: " + str(git_update))
+    print("   Update Available: " + str(git_update))
     print("")
 
 def config_json(what_config):
@@ -287,7 +287,7 @@ def config_json(what_config):
         data["state_class"] = "measurement"
     elif what_config == "git_update":
         data["icon"] = "mdi:git"
-        data["name"] = "Git Update Status"
+        data["name"] = "Update Available"
         data["state_class"] = "measurement"
         data["payload_on"] = "on"
         data["payload_off"] = "off"
