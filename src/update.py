@@ -19,7 +19,7 @@ def update_config(current_config, example_config):
     if missing_assignments:
         with open(current_config, 'a') as f:
             for var, value in missing_assignments.items():
-                f.write(f'\n{var} = {value!r}')
+                f.write('\n{} = {!r}'.format(var, value))
 
 def display_config_differences(current_config, example_config):
     current_assignments = get_assignments(current_config)
