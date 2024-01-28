@@ -20,6 +20,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 ## Table of Contents
 
 - [What is new](#what-is-new)
+- [CLI arguments](#cli-arguments)
 - [Installation](#installation)
   - [Automated](#automated)
   - [Manual](#manual)
@@ -34,6 +35,8 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-01-28: Script version is displayed in home assistant device information
+* 2024-01-28: Update the script by calling it with command line argument --update
 * 2024-01-27: Now you can run the script as a service (systemd) or as a cron job
 * 2024-01-27: Support for command line arguments
 * 2024-01-27: Added a binary sensor for github to monitor for new versions of the script
