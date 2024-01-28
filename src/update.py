@@ -30,7 +30,7 @@ def display_config_differences(current_config, example_config):
     if missing_assignments:
         print("Missing variables:")
         for var, value in missing_assignments.items():
-            print(f'{var} = {value!r}')
+            print('\n{} = {!r}'.format(var, value))
         return True
     else:
         return False
