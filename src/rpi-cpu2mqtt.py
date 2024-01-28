@@ -10,7 +10,7 @@ import time
 import socket
 import paho.mqtt.client as paho
 import json
-import config
+import config 
 import os
 import argparse
 import update
