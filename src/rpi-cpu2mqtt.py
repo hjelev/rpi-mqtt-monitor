@@ -164,7 +164,7 @@ def check_git_version():
 def check_git_version_remote():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     cmd = ['git', '-C', script_dir, 'ls-remote', '--tags', '--sort=-version:refname']
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, universal_newlines=True)
     lines = result.stdout.splitlines()
     if lines:
         latest_tag = lines[0].split('/')[-1]
