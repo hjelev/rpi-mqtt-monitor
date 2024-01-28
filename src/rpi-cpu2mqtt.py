@@ -119,7 +119,7 @@ def check_model_name():
 
 def check_rpi5_fan_speed():
    full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
-   rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+   rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").strip()
         
    return rpi5_fan_speed
 
