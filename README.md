@@ -40,6 +40,21 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * 2024-01-27: Updated the sensors names not to include the device name as per home assistant guidelines
 * 2024-01-10: Added support for Raspberry Pi 5 fan speed monitoring (only works on Raspberry Pi 5 with stock fan)
 
+## CLI arguments
+
+```
+usage: rpi-cpu2mqtt.py [-h] [--display] [--service] [--version] [--update]
+
+options:
+  -h, --help     show this help message and exit
+  --display, -d  display values on screen
+  --service, -s  run script as a service
+  --version, -v  display version
+  --update,  -u  update script and config
+```
+
+
+
 ## Installation
 
 ### Automated

@@ -13,6 +13,7 @@ import json
 import config
 import os
 import argparse
+import update
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -142,8 +143,7 @@ def get_manufacturer():
     return(pretty_name)
 
 
-def check_git_update():
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+def check_git_update(script_dir):
     full_cmd = "git -C {} remote update && git -C {} status -uno".format(script_dir, script_dir)
     try:
         git_update = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
@@ -157,16 +157,14 @@ def check_git_update():
         
     return(git_update)
 
-def check_git_version():
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+def check_git_version(script_dir):
     full_cmd = "git -C {} describe --tags `git -C {} rev-list --tags --max-count=1`".format(script_dir, script_dir)
     git_version = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
     
     return(git_version)
 
 
-def check_git_version_remote():
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+def check_git_version_remote(script_dir):
     full_cmd = "git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
     result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
     latest_tag = result.strip()
@@ -184,7 +182,7 @@ def get_network_ip():
         s.close()
     return IP
 
-def print_values():
+def print_measured_values():
     print(":: rpi-mqtt-monitor")
     print("   Version: " + config.version)
     print("")
@@ -417,19 +415,43 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     client.disconnect()
 
 
-    
-if __name__ == '__main__':
-    # parse arguments
+def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--display', '-d', action='store_true', help='Display values on screen', default=False)
-    parser.add_argument('--service', '-s', action='store_true', help='Run script as a service', default=False)
-    parser.add_argument('--version', '-v', action='store_true', help='Display version', default=False)
+    parser.add_argument('--display', '-d', action='store_true', help='display values on screen', default=False)
+    parser.add_argument('--service', '-s', action='store_true', help='run script as a service, sleep interval is configurable in config.py', default=False)
+    parser.add_argument('--version', '-v', action='store_true', help='display installed version and exit', default=False)
+    parser.add_argument('--update', '-u', action='store_true', help='update script and config then exit', default=False)
     args = parser.parse_args()
 
-    if args.version:
-        print("rpi-mqtt-monitor version: " + check_git_version().strip())
-        print("rpi-mqtt-monitor remote version: " + check_git_version_remote().strip())
+    if args.update:
+        version = check_git_version_remote(script_dir).strip()
+        git_update = check_git_update(script_dir)
+        
+        if git_update == 'on':
+            git_update = True
+        else:
+            git_update = False
+
+        update.do_update(version, git_update)
+
         exit()
+
+    if args.version:
+        installed_version = check_git_version(script_dir).strip()
+        latest_versino = check_git_version_remote(script_dir).strip()
+        print("Installed version: " + installed_version)
+        print("Latest version: " + latest_versino)
+        if installed_version != latest_versino:
+            print("Update available")
+        else:
+            print("No update available")
+        exit()
+    return args
+    
+
+if __name__ == '__main__':
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    args = parse_arguments();
 
     while True:
         # set all monitored values to False in case they are turned off in the config
@@ -465,11 +487,11 @@ if __name__ == '__main__':
         if config.rpi5_fan_speed:
             rpi5_fan_speed = check_rpi5_fan_speed()
         if config.git_update:
-            git_update = check_git_update()
+            git_update = check_git_update(script_dir)
             
         # Display collected values on screen if --display option is used    
         if args.display:
-            print_values()
+            print_measured_values()
             
         # Publish messages to MQTT
         if hasattr(config, 'group_messages') and config.group_messages:
