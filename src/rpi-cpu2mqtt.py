@@ -185,6 +185,9 @@ def get_network_ip():
     return IP
 
 def print_values():
+    print(":: rpi-mqtt-monitor")
+    print("   Version: " + config.version)
+    print("")
     print(":: Device Information")
     print("   Model Name: " + check_model_name().strip())
     print("   Manufacturer: " + get_manufacturer().strip())
@@ -195,17 +198,17 @@ def print_values():
         print("   Service Sleep Time: " + str(config.service_sleep_time))
     print("")
     print(":: Measured values")
-    print("   CPU Load: " + str(cpu_load))
-    print("   CPU Temp: " + str(cpu_temp))
-    print("   Used Space: " + str(used_space))
-    print("   Voltage: " + str(voltage))
-    print("   CPU Clock Speed: " + str(sys_clock_speed))
-    print("   Swap: " + str(swap))
-    print("   Memory: " + str(memory))
-    print("   Uptime: " + str(uptime_days))
-    print("   Wifi Signal: " + str(wifi_signal))
-    print("   Wifi Signal dBm: " + str(wifi_signal_dbm))
-    print("   RPI5 Fan Speed: " + str(rpi5_fan_speed))
+    print("   CPU Load: " + str(cpu_load) + " %")
+    print("   CPU Temp: " + str(cpu_temp) + " °C")
+    print("   Used Space: " + str(used_space) + " %")
+    print("   Voltage: " + str(voltage) + " V")
+    print("   CPU Clock Speed: " + str(sys_clock_speed) + " MHz")
+    print("   Swap: " + str(swap) + " %")
+    print("   Memory: " + str(memory) + " %")
+    print("   Uptime: " + str(uptime_days) + " days")
+    print("   Wifi Signal: " + str(wifi_signal) + " %")
+    print("   Wifi Signal dBm: " + str(wifi_signal_dbm) +  " dBm")
+    print("   RPI5 Fan Speed: " + str(rpi5_fan_speed) + " RPM")
     print("   Update Available: " + str(git_update))
     print("")
 
@@ -224,7 +227,8 @@ def config_json(what_config):
             "manufacturer": manufacturer,
             "model": model_name,
             "name": hostname,
-            "sw_version": os
+            "sw_version": "rpi-mqtt-monitor " + config.version + " on " + os,
+            "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor"
         }
     }
 
