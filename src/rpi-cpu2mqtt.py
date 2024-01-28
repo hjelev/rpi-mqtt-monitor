@@ -289,11 +289,11 @@ def config_json(what_config):
         data["state_class"] = "measurement"
     elif what_config == "git_update":
         data["icon"] = "mdi:git"
-        data["name"] = "Update Available"
+        data["name"] = "Script version"
+        data["device_class"] = "update"
         data["state_class"] = "measurement"
         data["payload_on"] = "on"
         data["payload_off"] = "off"
-        data["device_class"] = "update"
     else:
         return ""
     # Return our built discovery config
