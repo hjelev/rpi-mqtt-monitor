@@ -54,16 +54,15 @@ def update_config_version(version):
 
 def do_update(version=config.version, git_update=True, config_update=True):
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(script_dir)
     print("Current version: {}".format(config.version))
     if git_update:
         print(":: Updating git repository")
         result = subprocess.run(['git', '-C', script_dir, 'pull'], check=True, universal_newlines=True, stdout=subprocess.PIPE)
         print(result.stdout)
 
-    if display_config_differences('config.py', 'config.py.example') and config_update:
+    if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
         print(":: Updating config.py")
-        update_config('config.py', 'config.py.example')
+        update_config(script_dir + 'config.py',script_dir + 'config.py.example')
 
     if version != config.version:
         update_config_version(version)
