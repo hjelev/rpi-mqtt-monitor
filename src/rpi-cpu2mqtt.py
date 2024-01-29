@@ -19,21 +19,21 @@ import update
 hostname = socket.gethostname()
 
 def check_wifi_signal(format):
-    try:       
+    try:
         full_cmd =  "ls /sys/class/ieee80211/*/device/net/"
         interface = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip().decode("utf-8")
         full_cmd = "/sbin/iwconfig {} | grep -i quality".format(interface)
         wifi_signal = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-        
+
         if format == 'dbm':
             wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[4].split('=')[1]
         else:
             wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[1].split('=')[1].split('/')[0]
             wifi_signal = round((int(wifi_signal) / 70)* 100)
-            
+
     except Exception:
         wifi_signal = 0
-        
+
     return wifi_signal
 
 
@@ -42,7 +42,7 @@ def check_used_space(path):
     free_space = st.f_bavail * st.f_frsize
     total_space = st.f_blocks * st.f_frsize
     used_space = int(100 - ((free_space / total_space) * 100))
-    
+
     return used_space
 
 
@@ -52,7 +52,7 @@ def check_cpu_load():
     cpu_load = str(p).split("average:")[1].split(", ")[0].replace(' ', '').replace(',', '.')
     cpu_load = float(cpu_load) / int(cores) * 100
     cpu_load = round(float(cpu_load), 1)
-    
+
     return cpu_load
 
 
@@ -63,7 +63,7 @@ def check_voltage():
         voltage = voltage.strip()[:-1]
     except Exception:
         voltage = 0
-    
+
     return voltage.decode('utf8')
 
 
@@ -71,7 +71,7 @@ def check_swap():
     full_cmd = "free -t |grep -i swap | awk 'NR == 1 {print $3/$2*100}'"
     swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
-    
+
     return swap
 
 
@@ -79,7 +79,7 @@ def check_memory():
     full_cmd = "free -t | awk 'NR == 2 {print $3/$2*100}'"
     memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     memory = round(float(memory.decode("utf-8").replace(",", ".")))
-    
+
     return memory
 
 
@@ -90,19 +90,19 @@ def check_cpu_temp():
         cpu_temp = p.decode("utf-8").strip()
     except Exception:
         cpu_temp = 0
-        
+
     return cpu_temp
 
 
 def check_sys_clock_speed():
     full_cmd = "awk '{printf (\"%0.0f\",$1/1000); }' </sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
-    
+
     return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 
 def check_uptime():
     full_cmd = "awk '{print int($1/3600/24)}' /proc/uptime"
-    
+
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
 
@@ -113,14 +113,14 @@ def check_model_name():
         full_cmd = "cat /proc/cpuinfo  | grep 'name'| uniq"
         model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
         model_name = model_name.split(':')[1]
-        
+
    return model_name
 
 
 def check_rpi5_fan_speed():
    full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
    rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").strip()
-        
+
    return rpi5_fan_speed
 
 
@@ -128,7 +128,7 @@ def get_os():
     full_cmd = 'cat /etc/os-release | grep -i pretty_name'
     pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
     pretty_name = pretty_name.split('=')[1].replace('"', '').replace('\n', '')
-    
+
     return(pretty_name)
 
 
@@ -139,7 +139,7 @@ def get_manufacturer():
         pretty_name = pretty_name.split(':')[1]
     else:
         pretty_name = 'Raspberry Pi'
-        
+
     return(pretty_name)
 
 
@@ -154,13 +154,13 @@ def check_git_update(script_dir):
         git_update = 'off'
     else:
         git_update = 'on'
-        
+
     return(git_update)
 
 def check_git_version(script_dir):
     full_cmd = "git -C {} describe --tags `git -C {} rev-list --tags --max-count=1`".format(script_dir, script_dir)
     git_version = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-    
+
     return(git_version)
 
 
@@ -427,7 +427,7 @@ def parse_arguments():
     if args.update:
         version = check_git_version_remote(script_dir).strip()
         git_update = check_git_update(script_dir)
-        
+
         if git_update == 'on':
             git_update = True
         else:
@@ -448,7 +448,7 @@ def parse_arguments():
             print("No update available")
         exit()
     return args
-    
+
 
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -460,10 +460,10 @@ if __name__ == '__main__':
 
         # delay the execution of the script
         if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
-        
+
         if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
         else: used_space_path = '/'
-        
+
         # collect the monitored values
         if config.cpu_load:
             cpu_load = check_cpu_load()
@@ -489,11 +489,11 @@ if __name__ == '__main__':
             rpi5_fan_speed = check_rpi5_fan_speed()
         if config.git_update:
             git_update = check_git_update(script_dir)
-            
-        # Display collected values on screen if --display option is used    
+
+        # Display collected values on screen if --display option is used
         if args.display:
             print_measured_values()
-            
+
         # Publish messages to MQTT
         if hasattr(config, 'group_messages') and config.group_messages:
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
