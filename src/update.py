@@ -62,7 +62,7 @@ def do_update(version=config.version, git_update=True, config_update=True):
 
     if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
         print(":: Updating config.py")
-        update_config(script_dir + 'config.py',script_dir + 'config.py.example')
+        update_config(script_dir + '/config.py',script_dir + '/config.py.example')
 
     if version != config.version:
         update_config_version(version, script_dir)
