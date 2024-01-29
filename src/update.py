@@ -31,7 +31,7 @@ def display_config_differences(current_config, example_config, display=True):
     missing_assignments = {var: value for var, value in example_assignments.items() if var not in current_assignments}
 
     if missing_assignments:
-        if display: 
+        if display:
             print("Missing variables:")
             for var, value in missing_assignments.items():
                 print('\n{} = {!r}'.format(var, value))
@@ -68,5 +68,5 @@ def do_update(version=config.version, git_update=True, config_update=True):
         update_config_version(version)
 
 
-if __name__ == '__main__':   
+if __name__ == '__main__':
     do_update()
