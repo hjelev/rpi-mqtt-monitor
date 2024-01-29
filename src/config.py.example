@@ -47,6 +47,7 @@ sys_clock_speed = False
 swap = False
 memory = True
 uptime = True
+uptime_seconds = True
 
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
 wifi_signal = False
