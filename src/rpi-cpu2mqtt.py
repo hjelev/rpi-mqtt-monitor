@@ -300,12 +300,28 @@ def config_json(what_config):
     return json.dumps(data)
 
 
+def on_log(client, userdata, level, buf):
+    if level == paho.MQTT_LOG_ERR:
+        print("MQTT error: ", buf)
+
+def on_connect(client, userdata, flags, rc):
+    if rc != 0:
+        print("Error: Unable to connect to MQTT broker, return code:", rc)
+
+
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
     # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
-    client.connect(config.mqtt_host, int(config.mqtt_port))
+    client.on_log = on_log
+    client.on_connect = on_connect
+
+    try:
+        client.connect(config.mqtt_host, int(config.mqtt_port))
+    except Exception as e:
+        print("Error connecting to MQTT broker:", e)
+        return
 
     # publish monitored values to MQTT
     if config.cpu_load:
@@ -404,10 +420,16 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
     values = str(values)[1:-1]
 
-    # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
-    client.connect(config.mqtt_host, int(config.mqtt_port))
+    client.on_log = on_log
+    client.on_connect = on_connect
+
+    try:
+        client.connect(config.mqtt_host, int(config.mqtt_port))
+    except Exception as e:
+        print("Error connecting to MQTT broker:", e)
+        return
 
     # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
