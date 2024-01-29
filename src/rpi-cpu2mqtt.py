@@ -278,7 +278,7 @@ def config_json(what_config):
         data["name"] = "Uptime"
         data["unit_of_measurement"] = "s"
         data["device_class"] = "duration"
-        data["state_class"] = "measurement"
+        data["state_class"] = "total_increasing"
     elif what_config == "wifi_signal":
         data["icon"] = "mdi:wifi"
         data["name"] = "Wifi Signal"
