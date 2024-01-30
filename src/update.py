@@ -39,11 +39,11 @@ def display_config_differences(current_config, example_config, display=True):
     else:
         return False
 
-def update_config_version(version):
-    with open('config.py', 'r') as f:
+def update_config_version(version, script_dir):
+    with open(script_dir + '/config.py', 'r') as f:
         lines = f.readlines()
 
-    with open('config.py', 'w') as f:
+    with open(script_dir + '/config.py', 'w') as f:
         print(":: Updating config version to {}".format(version))
         for line in lines:
             if 'version = ' in line:
@@ -62,10 +62,10 @@ def do_update(version=config.version, git_update=True, config_update=True):
 
     if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
         print(":: Updating config.py")
-        update_config(script_dir + 'config.py',script_dir + 'config.py.example')
+        update_config(script_dir + '/config.py',script_dir + '/config.py.example')
 
     if version != config.version:
-        update_config_version(version)
+        update_config_version(version, script_dir)
 
 
 if __name__ == '__main__':   
