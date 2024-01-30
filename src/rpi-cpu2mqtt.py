@@ -150,7 +150,7 @@ def check_git_update(script_dir):
     except subprocess.CalledProcessError as e:
         print("Error updating git repository:", e.output)
 
-    if any(s in git_update for s in ('Your branch is up to date', 'Your branch is up-to-date')):
+    if any(s in git_update for s in ('Your branch is up to date', 'Your branch is up-to-date', 'Votre branche est à jour')):
         git_update = 'off'
     else:
         git_update = 'on'
