@@ -21,6 +21,9 @@ discovery_messages = True
 # Binary sensor that displays when there are  updates
 git_update = True
 
+# Enable remote update of the script via Home Assistant
+update = True
+
 # Retain flag for published topics
 retain = True
 
