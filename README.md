@@ -21,7 +21,6 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Easy update: You can update the script by calling it with command line argument --update
 
 
-
 ## Table of Contents
 
 - [What is new](#what-is-new)
