@@ -538,7 +538,7 @@ def gather_and_send_info():
         if config.git_update:
             git_update = check_git_update(script_dir)
         if config.update:
-            update = "on"
+            update = check_git_update(script_dir)
 
         # Display collected values on screen if --display option is used
         if args.display:
