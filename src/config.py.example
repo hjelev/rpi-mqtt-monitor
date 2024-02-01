@@ -38,9 +38,6 @@ qos = 0
 # this is the time between executiuons if the script is used as service (--service option)
 service_sleep_time = 120
 
-# This is the time  between sending the individual messages
-sleep_time = 0.1
-
 cpu_load = True
 cpu_temp = True
 used_space = True
