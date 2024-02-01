@@ -146,18 +146,11 @@ def get_manufacturer():
 
 
 def check_git_update(script_dir):
-    full_cmd = "git -C {} remote update && git -C {} status -uno".format(script_dir, script_dir)
-    try:
-        git_update = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        print("Error updating git repository:", e.output)
-
-    if any(s in git_update for s in ('Your branch is up to date', 'Your branch is up-to-date', 'Votre branche est à jour')):
+    if config.version == update.check_git_version_remote(script_dir):
         git_update = {
                     "installed_ver": config.version,
                     "new_ver": config.version,
                     }
-            
     else:
         git_update = {
                     "installed_ver": config.version,
@@ -193,9 +186,9 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
     print("   Version: " + config.version)
     print("")
     print(":: Device Information")
-    print("   Model Name: " + check_model_name().strip())
-    print("   Manufacturer: " + get_manufacturer().strip())
-    print("   OS: " + get_os().strip())
+    print("   Model Name: " + check_model_name())
+    print("   Manufacturer: " + get_manufacturer())
+    print("   OS: " + get_os())
     print("   Hostname: " + hostname)
     print("   IP Address: " + get_network_ip())
     if args.service:
@@ -228,10 +221,11 @@ def config_json(what_config):
         "unit_of_measurement": "",
         "device": {
             "identifiers": [hostname],
-            "manufacturer": manufacturer,
-            "model": model_name,
+            "manufacturer": 'github.com/hjelev',
+            "model": 'RPi MQTT Monitor ' + config.version,
             "name": hostname,
-            "sw_version": config.version,
+            "sw_version": os,
+            "hw_version": model_name + " by " + manufacturer,
             "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor"
         }
     }
@@ -306,7 +300,7 @@ def config_json(what_config):
         version = check_git_version(script_dir).strip()
         data["icon"] = "mdi:update"
         data["name"] = "RPi MQTT Monitor Update"
-        data["title"] = "RPi MQTT Monitor v" + version
+        data["title"] = "Version"
         data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
         data["device_class"] = "firmware"
@@ -486,7 +480,7 @@ def parse_arguments():
         exit()
 
     if args.version:
-        installed_version = check_git_version(script_dir).strip()
+        installed_version = config.version
         latest_versino = update.check_git_version_remote(script_dir).strip()
         print("Installed version: " + installed_version)
         print("Latest version: " + latest_versino)
