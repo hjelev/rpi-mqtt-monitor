@@ -332,8 +332,32 @@ def on_connect(client, userdata, flags, rc):
         print("Error: Unable to connect to MQTT broker, return code:", rc)
 
 
+def publish_update_status_to_mqtt(git_update):
+
+    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
+    client.username_pw_set(config.mqtt_user, config.mqtt_password)
+    client.on_log = on_log
+    client.on_connect = on_connect
+    try:
+        client.connect(config.mqtt_host, int(config.mqtt_port))
+    except Exception as e:
+        print("Error connecting to MQTT broker:", e)
+        return
+      
+    client.loop_start()
+    if config.git_update:
+        if config.discovery_messages:
+            client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
+                           config_json('git_update'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
+    client.loop_stop()
+    if config.update:
+        if config.discovery_messages:
+            client.publish("homeassistant/update/" + hostname + "/config",
+                           config_json('update'), qos=config.qos)
+
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
+                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
     # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
@@ -409,16 +433,7 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi5_fan_speed/config",
                            config_json('rpi5_fan_speed'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
-    if config.git_update:
-        if config.discovery_messages:
-            client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
-                           config_json('git_update'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
-    client.loop_stop()
-    if config.update:
-        if config.discovery_messages:
-            client.publish("homeassistant/update/" + hostname + "/config",
-                           config_json('update'), qos=config.qos)
+
         # client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
     # disconnect from mqtt server
     client.disconnect()
@@ -484,7 +499,7 @@ def parse_arguments():
 
 
 def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = update = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -511,7 +526,7 @@ def collect_monitored_values():
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
 
-    git_update = update = check_git_update(script_dir)
+    git_update = check_git_update(script_dir)
 
     return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
 
@@ -542,12 +557,12 @@ def gather_and_send_info():
 
 def update_status():
     while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
-
-        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+        git_update = check_git_update(script_dir)
+        publish_update_status_to_mqtt(git_update)
         stop_event.wait(config.update_check_interval)
         if stop_event.is_set():
             break
+
 
 def on_message(client, userdata, msg):
     global exit_flag
