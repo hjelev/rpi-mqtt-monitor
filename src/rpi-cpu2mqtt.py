@@ -17,6 +17,7 @@ import threading
 import update
 import config
 
+
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
 
@@ -146,7 +147,8 @@ def get_manufacturer():
 
 
 def check_git_update(script_dir):
-    if config.version == update.check_git_version_remote(script_dir):
+    remote_version = update.check_git_version_remote(script_dir)
+    if config.version == remote_version:
         git_update = {
                     "installed_ver": config.version,
                     "new_ver": config.version,
@@ -154,18 +156,17 @@ def check_git_update(script_dir):
     else:
         git_update = {
                     "installed_ver": config.version,
-                    "new_ver": update.check_git_version_remote(script_dir),
+                    "new_ver": remote_version,
                     }
 
     return(json.dumps(git_update))
+
 
 def check_git_version(script_dir):
     full_cmd = "git -C {} describe --tags `git -C {} rev-list --tags --max-count=1`".format(script_dir, script_dir)
     git_version = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").replace('\n', '')
 
     return(git_version)
-
-
 
 
 def get_network_ip():
@@ -179,6 +180,7 @@ def get_network_ip():
     finally:
         s.close()
     return IP
+
 
 def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, uptime_seconds = 0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
@@ -209,6 +211,7 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
     print("   RPI5 Fan Speed: " + str(rpi5_fan_speed) + " RPM")
     print("   Update Available: " + str(git_update))
     print("")
+
 
 def config_json(what_config):
     model_name = check_model_name()
@@ -322,6 +325,7 @@ def config_json(what_config):
 def on_log(client, userdata, level, buf):
     if level == paho.MQTT_LOG_ERR:
         print("MQTT error: ", buf)
+
 
 def on_connect(client, userdata, flags, rc):
     if rc != 0:
@@ -478,6 +482,7 @@ def parse_arguments():
         exit()
     return args
 
+
 def gather_and_send_info():
     while True:
         # set all monitored values to False in case they are turned off in the config
@@ -514,26 +519,31 @@ def gather_and_send_info():
             wifi_signal_dbm = check_wifi_signal('dbm')
         if config.rpi5_fan_speed:
             rpi5_fan_speed = check_rpi5_fan_speed()
-        if config.git_update:
-            git_update = check_git_update(script_dir)
-        if config.update:
-            update = check_git_update(script_dir)
 
         # Display collected values on screen if --display option is used
         if args.display:
+            if config.git_update: git_update = check_git_update(script_dir)
             print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
 
         # Publish messages to MQTT
         if hasattr(config, 'group_messages') and config.group_messages:
-            bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+            bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
         else:
-            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, update)
+            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
 
         # if not running as a service, break the loop after one iteration
         if not args.service:
             break
         # if running as a service, sleep before the next iteration
         time.sleep(config.service_sleep_time)
+
+
+def update_status():
+    while True:
+        git_update = update = check_git_update(script_dir)
+        publish_to_mqtt(update, git_update)
+        time.sleep(config.update_check_interval)
+
 
 def on_message(client, userdata, msg):
     global exit_flag
@@ -545,6 +555,7 @@ def on_message(client, userdata, msg):
         exit_flag = True
 
 exit_flag = False
+
 
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -563,10 +574,17 @@ if __name__ == '__main__':
 
         client.subscribe("homeassistant/update/" + hostname + "/command")  # Replace with your MQTT topic
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
+
         # Start the gather_and_send_info function in a new thread
-        thread = threading.Thread(target=gather_and_send_info)
-        thread.daemon = True  # Set the daemon attribute to True
-        thread.start()
+        thread1 = threading.Thread(target=gather_and_send_info)
+        thread1.daemon = True  # Set the daemon attribute to True
+        thread1.start()
+
+        if config.update:
+            # Start the update_status function in a new thread
+            thread2 = threading.Thread(target=update_status)
+            thread2.daemon = True  # Set the daemon attribute to True
+            thread2.start()
 
         client.loop_start()  # Start the MQTT client loop in a new thread
 

@@ -50,7 +50,12 @@ def display_config_differences(current_config, example_config, display=True):
 
 def check_git_version_remote(script_dir):
     full_cmd = "git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
-    result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    try:
+        result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print("Error: {}".format(e))
+        return None
+    
     latest_tag = result.strip()
     return latest_tag if latest_tag else None
 
