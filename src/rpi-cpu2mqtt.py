@@ -303,9 +303,7 @@ def config_json(what_config):
         data["title"] = "Device Update"
         data["device_class"] = "update"
         data["state_class"] = "measurement"
-        data["payload_on"] = "on"
-        data["payload_off"] = "off"
-        data["value_template"] = "{{ 'on' if value_json.installed_ver != value_json.new_ver else 'off' }}"
+        data["value_template"] = "{{ 'ON' if value_json.installed_ver != value_json.new_ver else 'OFF' }}"
     elif what_config == "update":
         version = check_git_version(script_dir).strip()
         data["icon"] = "mdi:update"
