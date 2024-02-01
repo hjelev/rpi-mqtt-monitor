@@ -18,9 +18,19 @@ def update_config(current_config, example_config):
     missing_assignments = {var: value for var, value in example_assignments.items() if var not in current_assignments}
 
     if missing_assignments:
+        with open(current_config, 'ab+') as f:  # Open the file in binary mode
+            f.seek(-1, os.SEEK_END)  # Move the cursor to the last character
+            last_char = f.read(1)  # Read the last character
+
+        # If the last character is not a newline, write a newline
+        if last_char != b'\n':
+            with open(current_config, 'a') as f:  # Open the file in text mode
+                f.write('\n')
+
+        # Write the missing assignments
         with open(current_config, 'a') as f:
             for var, value in missing_assignments.items():
-                f.write('\n{} = {!r}'.format(var, value))
+                f.write('{} = {!r}\n'.format(var, value))
 
 
 def display_config_differences(current_config, example_config, display=True):
