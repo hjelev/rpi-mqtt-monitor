@@ -141,6 +141,7 @@ sys_clock_speed = True
 swap = True
 memory = True
 uptime = True
+uptime_seconds = False
 wifi_signal = False
 wifi_signal_dbm = False
 rpi5_fan_speed = False
