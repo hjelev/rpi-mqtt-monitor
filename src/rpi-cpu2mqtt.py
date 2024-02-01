@@ -332,8 +332,7 @@ def on_connect(client, userdata, flags, rc):
         print("Error: Unable to connect to MQTT broker, return code:", rc)
 
 
-def publish_update_status_to_mqtt(git_update):
-
+def create_mqtt_client():
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
@@ -342,6 +341,14 @@ def publish_update_status_to_mqtt(git_update):
         client.connect(config.mqtt_host, int(config.mqtt_port))
     except Exception as e:
         print("Error connecting to MQTT broker:", e)
+        return None
+    return client
+
+
+def publish_update_status_to_mqtt(git_update):
+
+    client = create_mqtt_client()
+    if client is None:
         return
       
     client.loop_start()
@@ -355,19 +362,14 @@ def publish_update_status_to_mqtt(git_update):
         if config.discovery_messages:
             client.publish("homeassistant/update/" + hostname + "/config",
                            config_json('update'), qos=config.qos)
+    client.disconnect()        
+
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
     # connect to mqtt server
-    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
-    client.username_pw_set(config.mqtt_user, config.mqtt_password)
-    client.on_log = on_log
-    client.on_connect = on_connect
-
-    try:
-        client.connect(config.mqtt_host, int(config.mqtt_port))
-    except Exception as e:
-        print("Error connecting to MQTT broker:", e)
+    client = create_mqtt_client()
+    if client is None:
         return
       
     client.loop_start()
