@@ -562,9 +562,9 @@ def on_message(client, userdata, msg):
         exit_flag = True
 
 exit_flag = False
-script_dir = os.path.dirname(os.path.realpath(__file__))
-if __name__ == '__main__':
 
+if __name__ == '__main__':
+    script_dir = os.path.dirname(os.path.realpath(__file__))
     args = parse_arguments();
 
     if args.service:
