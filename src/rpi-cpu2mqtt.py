@@ -305,13 +305,14 @@ def config_json(what_config):
         version = check_git_version(script_dir).strip()
         data["icon"] = "mdi:update"
         data["name"] = "RPi MQTT Monitor"
-        data["title"] = "Version"
+        data["title"] = "New Version"
         data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
         data["device_class"] = "firmware"
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
+        data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
     else:
         return ""
     # Return our built discovery config
