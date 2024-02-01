@@ -21,7 +21,6 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Easy update: You can update the script by calling it with command line argument --update
 
 
-
 ## Table of Contents
 
 - [What is new](#what-is-new)
@@ -215,12 +214,16 @@ Create a cron entry like this (you might need to update the path in the cron ent
 ```
 ## How to update
 
-Navigate to the folder where Rapsberry Pi MQTT Monitor is installed and pull the git repository:
+Remote updates via Home Assistant are now available. 
+
+To use these you need to have the script running as a service. (the installer now supports this)
+
+Manual update:
 
 ```bash
-git pull
+cd rpi-mqtt-monitor
+python3 src/update.py
 ```
-* Note that sometimes you might need to add new variables to our src/config.py file, so make sure you check the example file and update your config.py file accordingly.
 
 ## Home Assistant Integration
 
