@@ -305,7 +305,7 @@ def config_json(what_config):
         data["state_class"] = "measurement"
         data["value_template"] = "{{ 'ON' if value_json.installed_ver != value_json.new_ver else 'OFF' }}"
     elif what_config == "update":
-        version = check_git_version(script_dir).strip()
+        version = update.check_git_version_remote(script_dir).strip()
         data["icon"] = "mdi:update"
         data["name"] = "RPi MQTT Monitor"
         data["title"] = "New Version"
@@ -333,7 +333,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False, update=False):
+                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
     # connect to mqtt server
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
@@ -483,67 +483,66 @@ def parse_arguments():
     return args
 
 
+def collect_monitored_values():
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = update = False
+
+    if config.cpu_load:
+        cpu_load = check_cpu_load()
+    if config.cpu_temp:
+        cpu_temp = check_cpu_temp()
+    if config.used_space:
+        used_space = check_used_space(config.used_space_path)
+    if config.voltage:
+        voltage = check_voltage()
+    if config.sys_clock_speed:
+        sys_clock_speed = check_sys_clock_speed()
+    if config.swap:
+        swap = check_swap()
+    if config.memory:
+        memory = check_memory()
+    if config.uptime:
+        uptime_days = check_uptime('/3600/24')
+    if config.uptime_seconds:
+        uptime_seconds = check_uptime('')
+    if config.wifi_signal:
+        wifi_signal = check_wifi_signal('')
+    if config.wifi_signal_dbm:
+        wifi_signal_dbm = check_wifi_signal('dbm')
+    if config.rpi5_fan_speed:
+        rpi5_fan_speed = check_rpi5_fan_speed()
+
+    git_update = update = check_git_update(script_dir)
+
+    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
+
+
 def gather_and_send_info():
     while True:
-        # set all monitored values to False in case they are turned off in the config
-        cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = update = False
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
 
-        # delay the execution of the script
-        if hasattr(config, 'random_delay'): time.sleep(config.random_delay)
+        if hasattr(config, 'random_delay'):
+            time.sleep(config.random_delay)
 
-        if hasattr(config, 'used_space_path'): used_space_path = config.used_space_path
-        else: used_space_path = '/'
-
-        # collect the monitored values
-        if config.cpu_load:
-            cpu_load = check_cpu_load()
-        if config.cpu_temp:
-            cpu_temp = check_cpu_temp()
-        if config.used_space:
-            used_space = check_used_space(used_space_path)
-        if config.voltage:
-            voltage = check_voltage()
-        if config.sys_clock_speed:
-            sys_clock_speed = check_sys_clock_speed()
-        if config.swap:
-            swap = check_swap()
-        if config.memory:
-            memory = check_memory()
-        if config.uptime:
-            uptime_days = check_uptime('/3600/24')
-        if config.uptime_seconds:
-            uptime_seconds = check_uptime('')
-        if config.wifi_signal:
-            wifi_signal = check_wifi_signal('')
-        if config.wifi_signal_dbm:
-            wifi_signal_dbm = check_wifi_signal('dbm')
-        if config.rpi5_fan_speed:
-            rpi5_fan_speed = check_rpi5_fan_speed()
-
-        # Display collected values on screen if --display option is used
         if args.display:
-            if config.git_update: git_update = check_git_update(script_dir)
             print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
 
-        # Publish messages to MQTT
         if hasattr(config, 'group_messages') and config.group_messages:
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
         else:
             publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
 
-        # if not running as a service, break the loop after one iteration
         if not args.service:
             break
-        # if running as a service, sleep before the next iteration
+
         time.sleep(config.service_sleep_time)
 
 
 def update_status():
     while True:
-        git_update = update = check_git_update(script_dir)
-        publish_to_mqtt(update, git_update)
-        time.sleep(config.update_check_interval)
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
 
+        publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+        time.sleep(config.update_check_interval)
 
 def on_message(client, userdata, msg):
     global exit_flag
