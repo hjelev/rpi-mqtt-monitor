@@ -161,7 +161,7 @@ def check_git_update(script_dir):
     else:
         git_update = {
                     "installed_ver": config.version,
-                    "new_ver": check_git_version_remote(script_dir),
+                    "new_ver": update.check_git_version_remote(script_dir),
                     }
 
     return(json.dumps(git_update))
@@ -173,11 +173,7 @@ def check_git_version(script_dir):
     return(git_version)
 
 
-def check_git_version_remote(script_dir):
-    full_cmd = "git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
-    result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-    latest_tag = result.strip()
-    return latest_tag if latest_tag else None
+
 
 def get_network_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -477,7 +473,7 @@ def parse_arguments():
     args = parser.parse_args()
 
     if args.update:
-        version = check_git_version_remote(script_dir).strip()
+        version = update.check_git_version_remote(script_dir).strip()
         git_update = check_git_update(script_dir)
 
         if git_update == 'on':
@@ -485,13 +481,13 @@ def parse_arguments():
         else:
             git_update = False
 
-        update.do_update(version, git_update)
+        update.do_update(script_dir, version, git_update)
 
         exit()
 
     if args.version:
         installed_version = check_git_version(script_dir).strip()
-        latest_versino = check_git_version_remote(script_dir).strip()
+        latest_versino = update.check_git_version_remote(script_dir).strip()
         print("Installed version: " + installed_version)
         print("Latest version: " + latest_versino)
         if installed_version != latest_versino:
@@ -560,8 +556,8 @@ def on_message(client, userdata, msg):
     global exit_flag
     print("Received message: ", msg.payload.decode())
     if msg.payload.decode() == "install":
-        version = check_git_version_remote(script_dir).strip()
-        update.do_update(version, git_update=True, config_update=True)
+        version = update.check_git_version_remote(script_dir).strip()
+        update.do_update(script_dir, version, git_update=True, config_update=True)
         print("Update completed. Setting exit flag...")
         exit_flag = True
 
