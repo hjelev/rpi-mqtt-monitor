@@ -21,7 +21,6 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Easy update: You can update the script by calling it with command line argument --update
 
 
-
 ## Table of Contents
 
 - [What is new](#what-is-new)
@@ -40,6 +39,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-01-28: Improved error handling for the MQTT connection
 * 2024-01-28: Script version is displayed in home assistant device information
 * 2024-01-28: Update the script by calling it with command line argument --update
 * 2024-01-27: Now you can run the script as a service (systemd) or as a cron job
