@@ -181,7 +181,7 @@ def get_network_ip():
     return IP
 
 def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
+                    uptime_days=0, uptime_seconds = 0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
     print(":: rpi-mqtt-monitor")
     print("   Version: " + config.version)
     print("")
@@ -548,7 +548,7 @@ def gather_and_send_info():
 
         # Display collected values on screen if --display option is used
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
 
         # Publish messages to MQTT
         if hasattr(config, 'group_messages') and config.group_messages:
