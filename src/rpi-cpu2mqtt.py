@@ -517,7 +517,7 @@ def collect_monitored_values():
 
 
 def gather_and_send_info():
-    while True:
+    while not stop_event.is_set():
         cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
@@ -533,16 +533,21 @@ def gather_and_send_info():
 
         if not args.service:
             break
-
-        time.sleep(config.service_sleep_time)
+        # Break the sleep into 1-second intervals and check stop_event after each interval
+        for _ in range(config.service_sleep_time):
+            if stop_event.is_set():
+                break
+            time.sleep(1)
 
 
 def update_status():
-    while True:
+    while not stop_event.is_set():
         cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
 
         publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
-        time.sleep(config.update_check_interval)
+        stop_event.wait(config.update_check_interval)
+        if stop_event.is_set():
+            break
 
 def on_message(client, userdata, msg):
     global exit_flag
@@ -552,9 +557,15 @@ def on_message(client, userdata, msg):
         update.do_update(script_dir, version, git_update=True, config_update=True)
         print("Update completed. Setting exit flag...")
         exit_flag = True
+        stop_event.set()  # Signal the threads to stop
+        thread1.join()  # Wait for thread1 to finish
+        thread2.join()  # Wait for thread2 to finish
+        sys.exit(0)  # Exit the script
 
 exit_flag = False
 
+# Create a stop event
+stop_event = threading.Event()
 
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -591,6 +602,9 @@ if __name__ == '__main__':
         while True:
             if exit_flag:
                 print("Exit flag set. Exiting the application...")
+                stop_event.set()  # Signal the threads to stop
+                thread1.join()  # Wait for thread1 to finish
+                thread2.join()  # Wait for thread2 to finish
                 sys.exit(0)
             time.sleep(1)  # Check the exit flag every second
     else:
