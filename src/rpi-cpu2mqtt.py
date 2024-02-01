@@ -309,7 +309,7 @@ def config_json(what_config):
     elif what_config == "update":
         version = check_git_version(script_dir).strip()
         data["icon"] = "mdi:update"
-        data["name"] = "RPi MQTT Monitor Update"
+        data["name"] = "RPi MQTT Monitor"
         data["title"] = "RPi MQTT Monitor v" + version
         data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
