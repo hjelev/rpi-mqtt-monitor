@@ -320,6 +320,7 @@ def config_json(what_config):
         data["icon"] = "mdi:restart"
         data["name"] = "System Restart"
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["payload_press"] = "restart"
     else:
         return ""
     # Return our built discovery config
@@ -587,7 +588,7 @@ def on_message(client, userdata, msg):
         thread1.join()  # Wait for thread1 to finish
         thread2.join()  # Wait for thread2 to finish
         sys.exit(0)  # Exit the script
-    elif msg.payload.decode() == "PRESS":
+    elif msg.payload.decode() == "restart":
         print("Restarting the application...")
         # restart the system
         print("Restarting the system...")
