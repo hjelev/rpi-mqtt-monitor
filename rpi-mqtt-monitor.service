@@ -1,6 +1,7 @@
 [Unit]
 Description=RPI MQTT Monitor
-After=network.target
+After=network-online.target
+Wants=network-online.targetcat 
 
 [Service]
 ExecStart=/home/username/git/rpi-mqtt-monitor/rpi_mon_env/bin/python /home/username/git/rpi-mqtt-monitor/src/rpi-cpu2mqtt.py --service
@@ -8,6 +9,7 @@ WorkingDirectory=/home/username/git/rpi-mqtt-monitor/
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
+RestartSec=1
 User=YOUR_USER
 
 [Install]

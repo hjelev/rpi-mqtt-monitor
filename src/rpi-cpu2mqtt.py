@@ -362,11 +362,12 @@ def publish_update_status_to_mqtt(git_update):
             client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
                            config_json('git_update'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
-    client.loop_stop()
+    
     if config.update:
         if config.discovery_messages:
             client.publish("homeassistant/update/" + hostname + "/config",
                            config_json('update'), qos=config.qos)
+    client.loop_stop()
     client.disconnect()        
 
 
