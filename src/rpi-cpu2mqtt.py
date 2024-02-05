@@ -316,6 +316,10 @@ def config_json(what_config):
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
         data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
+    elif what_config == "restart_button":
+        data["icon"] = "mdi:restart"
+        data["name"] = "System Restart"
+        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
     else:
         return ""
     # Return our built discovery config
@@ -435,7 +439,11 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi5_fan_speed/config",
                            config_json('rpi5_fan_speed'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
-
+    if config.restart_button:
+        if config.discovery_messages:
+            client.publish("homeassistant/button/" + hostname + "/config",
+                           config_json('restart_button'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
         # client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
     # disconnect from mqtt server
     client.disconnect()
@@ -497,6 +505,7 @@ def parse_arguments():
         else:
             print("No update available")
         exit()
+
     return args
 
 
@@ -578,6 +587,11 @@ def on_message(client, userdata, msg):
         thread1.join()  # Wait for thread1 to finish
         thread2.join()  # Wait for thread2 to finish
         sys.exit(0)  # Exit the script
+    elif msg.payload.decode() == "PRESS":
+        print("Restarting the application...")
+        # restart the system
+        print("Restarting the system...")
+        os.system("sudo reboot")
 
 exit_flag = False
 

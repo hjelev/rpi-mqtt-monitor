@@ -39,6 +39,8 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-02-05: System Restart button added (only works when running as service)
+* 2024-01-28: Remote updates via Home Assistant are now available
 * 2024-01-28: Improved error handling for the MQTT connection
 * 2024-01-28: Script version is displayed in home assistant device information
 * 2024-01-28: Update the script by calling it with command line argument --update
