@@ -623,6 +623,7 @@ if __name__ == '__main__':
         thread1.start()
 
         if config.update:
+            update_status()
             # Start the update_status function in a new thread
             thread2 = threading.Thread(target=update_status)
             thread2.daemon = True  # Set the daemon attribute to True
