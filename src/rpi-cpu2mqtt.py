@@ -423,8 +423,8 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_days", uptime_days, qos=config.qos, retain=config.retain)
     if config.uptime_seconds:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime/config",
-                           config_json('uptime'), qos=config.qos)
+            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_seconds/config",
+                           config_json('uptime_seconds'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_seconds", uptime_seconds, qos=config.qos, retain=config.retain)
     if config.wifi_signal:
         if config.discovery_messages:
