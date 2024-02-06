@@ -443,10 +443,11 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
     if config.restart_button:
         if config.discovery_messages:
-            client.publish("homeassistant/button/" + hostname + "/config",
+            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
                            config_json('restart_button'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
+        # client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
         # client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
+    client.loop_stop()
     # disconnect from mqtt server
     client.disconnect()
 
