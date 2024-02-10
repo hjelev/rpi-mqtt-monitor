@@ -1,7 +1,7 @@
 [Unit]
 Description=RPI MQTT Monitor
 After=network-online.target
-Wants=network-online.targetcat 
+Wants=network-online.target
 
 [Service]
 ExecStart=/home/username/git/rpi-mqtt-monitor/rpi_mon_env/bin/python /home/username/git/rpi-mqtt-monitor/src/rpi-cpu2mqtt.py --service
