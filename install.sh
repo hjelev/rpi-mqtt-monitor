@@ -118,6 +118,12 @@ update_config(){
   sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
 
   print_green  "+ config.py is updated with provided settings"
+
+  # Get the local version
+  local_version=$(git describe --tags)
+  # Update the version in config.py
+  sed -i "s/version = .*/version = '${local_version}'/" src/config.py
+
 }
 
 set_cron(){
@@ -183,7 +189,7 @@ main(){
   create_venv
   install_requirements 
   update_config
-
+  
   while true; do
     read -p "Do you want to set up a (c)ron job or a (s)ervice? " cs
     case $cs in
