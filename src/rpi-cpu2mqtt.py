@@ -304,8 +304,8 @@ def config_json(what_config):
         data["device_class"] = "update"
         data["state_class"] = "measurement"
         data["value_template"] = "{{ 'ON' if value_json.installed_ver != value_json.new_ver else 'OFF' }}"
-    elif what_config == "update":
-        version = update.check_git_version_remote(script_dir).strip()
+    elif what_config == "update":       
+        version = update.check_git_version_remote(script_dir)
         data["icon"] = "mdi:update"
         data["name"] = "RPi MQTT Monitor"
         data["title"] = "New Version"
@@ -321,6 +321,7 @@ def config_json(what_config):
         data["name"] = "System Restart"
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_press"] = "restart"
+        data["device_class"] = "restart"
     else:
         return ""
     # Return our built discovery config
@@ -599,9 +600,9 @@ exit_flag = False
 
 # Create a stop event
 stop_event = threading.Event()
-
+script_dir = os.path.dirname(os.path.realpath(__file__))
 if __name__ == '__main__':
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+    
     args = parse_arguments();
 
     if args.service:

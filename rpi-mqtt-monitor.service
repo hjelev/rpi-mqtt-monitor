@@ -9,8 +9,9 @@ WorkingDirectory=/home/username/git/rpi-mqtt-monitor/
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
-RestartSec=1
+RestartSec=5
 User=YOUR_USER
 
 [Install]
 WantedBy=multi-user.target
+ 

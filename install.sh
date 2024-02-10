@@ -165,7 +165,7 @@ set_service(){
   print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
-  sudo sed -i "s|User=YOUR_USER|User=${user}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  sudo sed -i "s|User=YOUR_USER|User=root|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|ExecStart=.*|ExecStart=${exec_start}|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo systemctl daemon-reload
   sudo systemctl enable rpi-mqtt-monitor.service
