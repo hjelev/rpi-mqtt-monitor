@@ -49,15 +49,15 @@ def display_config_differences(current_config, example_config, display=True):
         return False
 
 def check_git_version_remote(script_dir):
-    full_cmd = "git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
+    full_cmd = "/usr/bin/git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
     try:
         result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
     except subprocess.CalledProcessError as e:
         print("Error: {}".format(e))
-        return None
+        return "0"
     
     latest_tag = result.strip()
-    return latest_tag if latest_tag else None
+    return latest_tag if latest_tag else "0"
 
 
 def update_config_version(version, script_dir):

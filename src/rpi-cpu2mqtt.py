@@ -304,8 +304,8 @@ def config_json(what_config):
         data["device_class"] = "update"
         data["state_class"] = "measurement"
         data["value_template"] = "{{ 'ON' if value_json.installed_ver != value_json.new_ver else 'OFF' }}"
-    elif what_config == "update":
-        version = update.check_git_version_remote(script_dir).strip()
+    elif what_config == "update":       
+        version = update.check_git_version_remote(script_dir)
         data["icon"] = "mdi:update"
         data["name"] = "RPi MQTT Monitor"
         data["title"] = "New Version"
@@ -321,6 +321,7 @@ def config_json(what_config):
         data["name"] = "System Restart"
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_press"] = "restart"
+        data["device_class"] = "restart"
     else:
         return ""
     # Return our built discovery config
@@ -445,8 +446,7 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         if config.discovery_messages:
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
                            config_json('restart_button'), qos=config.qos)
-        # client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
-        # client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
+
     client.loop_stop()
     # disconnect from mqtt server
     client.disconnect()
@@ -600,9 +600,9 @@ exit_flag = False
 
 # Create a stop event
 stop_event = threading.Event()
-
+script_dir = os.path.dirname(os.path.realpath(__file__))
 if __name__ == '__main__':
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+    
     args = parse_arguments();
 
     if args.service:
