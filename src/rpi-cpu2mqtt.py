@@ -339,7 +339,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def create_mqtt_client():
-    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
+    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname + str(int(time.time())))
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
     client.on_connect = on_connect
@@ -368,6 +368,13 @@ def publish_update_status_to_mqtt(git_update):
         if config.discovery_messages:
             client.publish("homeassistant/update/" + hostname + "/config",
                            config_json('update'), qos=config.qos)
+            print("Update config published")
+
+    # Wait for all messages to be delivered
+    while len(client._out_messages) > 0:
+        time.sleep(0.1)
+        client.loop()
+
     client.loop_stop()
     client.disconnect()        
 
@@ -446,6 +453,9 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         if config.discovery_messages:
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
                            config_json('restart_button'), qos=config.qos)
+    while len(client._out_messages) > 0:
+        time.sleep(0.1)
+        client.loop()
 
     client.loop_stop()
     # disconnect from mqtt server
@@ -467,6 +477,10 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
 
     # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
+    while len(client._out_messages) > 0:
+        time.sleep(0.1)
+        client.loop()
+    
     client.loop_stop()
     # disconnect from mqtt server
     client.disconnect()
@@ -613,7 +627,7 @@ if __name__ == '__main__':
 
         client.subscribe("homeassistant/update/" + hostname + "/command")  # Replace with your MQTT topic
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
-
+        client.loop_start()  # Start the MQTT client loop in a new thread
         # Start the gather_and_send_info function in a new thread
         thread1 = threading.Thread(target=gather_and_send_info)
         thread1.daemon = True  # Set the daemon attribute to True
@@ -625,8 +639,6 @@ if __name__ == '__main__':
             thread2 = threading.Thread(target=update_status)
             thread2.daemon = True  # Set the daemon attribute to True
             thread2.start()
-
-        client.loop_start()  # Start the MQTT client loop in a new thread
 
         # Check the exit flag in the main thread
         while True:
