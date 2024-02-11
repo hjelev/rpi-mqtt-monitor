@@ -16,7 +16,6 @@ import argparse
 import threading
 import update
 import config
-import logging
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -148,7 +147,6 @@ def get_manufacturer():
 
 def check_git_update(script_dir):
     remote_version = update.check_git_version_remote(script_dir)
-    logging.info("git_update value:" + remote_version)
     if config.version == remote_version:
         git_update = {
                     "installed_ver": config.version,
@@ -612,7 +610,6 @@ exit_flag = False
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     args = parse_arguments();
 
     if args.service:

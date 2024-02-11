@@ -2,7 +2,6 @@ import ast
 import os
 import subprocess
 import config
-import logging
 
 def get_assignments(filename):
     with open(filename) as f:
@@ -58,7 +57,6 @@ def check_git_version_remote(script_dir):
         return config.version
     
     latest_tag = result.strip()
-    logging.info("git update:" + result + script_dir)
     return latest_tag if latest_tag else "0"
 
 
