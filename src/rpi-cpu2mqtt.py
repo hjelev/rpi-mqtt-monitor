@@ -339,7 +339,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def create_mqtt_client():
-    client = paho.Client(protocol=paho.MQTTv311, client_id="rpi-mqtt-monitor-" + hostname)
+    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
     client.on_connect = on_connect
