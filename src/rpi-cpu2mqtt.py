@@ -339,7 +339,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def create_mqtt_client():
-    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
+    client = paho.Client(protocol=paho.MQTTv311, client_id="rpi-mqtt-monitor-" + hostname)
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
     client.on_connect = on_connect
@@ -459,16 +459,11 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
     values = str(values)[1:-1]
 
-    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname)
-    client.username_pw_set(config.mqtt_user, config.mqtt_password)
-    client.on_log = on_log
-    client.on_connect = on_connect
-
-    try:
-        client.connect(config.mqtt_host, int(config.mqtt_port))
-    except Exception as e:
-        print("Error connecting to MQTT broker:", e)
+    client = create_mqtt_client()
+    if client is None:
         return
+      
+    client.loop_start()
 
     # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
@@ -606,15 +601,12 @@ if __name__ == '__main__':
     args = parse_arguments();
 
     if args.service:
-        client = paho.Client()
-        client.username_pw_set(config.mqtt_user, config.mqtt_password)
-        client.on_message = on_message
-
-        try:
-            client.connect(config.mqtt_host, int(config.mqtt_port))
-        except Exception as e:
-            print("Error connecting to MQTT broker:", e)
-            sys.exit(1)  # Exit the script
+        client = create_mqtt_client()
+        if client is None:
+            print("Error: Unable to connect to MQTT broker")
+            sys.exit(1)
+        
+        client.loop_start()
 
         client.subscribe("homeassistant/update/" + hostname + "/command")  # Replace with your MQTT topic
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")

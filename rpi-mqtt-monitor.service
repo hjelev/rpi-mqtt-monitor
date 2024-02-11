@@ -14,4 +14,3 @@ User=YOUR_USER
 
 [Install]
 WantedBy=multi-user.target
- 
