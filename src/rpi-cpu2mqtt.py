@@ -225,12 +225,30 @@ def get_release_notes():
     data = json.loads(response.text)
 
     # Get the release notes
-    release_notes = data["body"][:255]
-    if "**Full Changelog" in release_notes:
-        release_notes = release_notes.split("**Full")[0]
-    else:
-        release_notes = release_notes + " ..."
+    release_notes = data["body"]
 
+    # Split the string into lines
+    lines = release_notes.split('\n')
+
+    # Process each line
+    for i in range(len(lines)):
+        # Find the position of the character 'X'
+        pos = lines[i].find('by @')
+
+        # If 'X' is found, delete everything after it
+        if pos != -1:
+            lines[i] = lines[i][:pos]
+
+    # Join the lines back together
+    release_notes = '\n'.join(lines)
+
+    if "**Full Changelog" in release_notes and len(release_notes) > 252:
+        release_notes = release_notes.split("**Full")[0]
+        
+    if len(release_notes) > 255:
+        release_notes = release_notes[:250] + " ..."
+
+    print(release_notes, len(release_notes))
     return release_notes
 
 def config_json(what_config):
