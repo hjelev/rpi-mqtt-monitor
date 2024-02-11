@@ -182,6 +182,7 @@ set_service(){
   sudo systemctl daemon-reload
   sudo systemctl enable rpi-mqtt-monitor.service
   sudo systemctl start rpi-mqtt-monitor.service
+  sudo service rpi-mqtt-monitor restart
   sudo service rpi-mqtt-monitor status
   print_green "+ Service is enabled and started"
   git config --global --add safe.directory ${cwd}
