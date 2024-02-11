@@ -367,8 +367,7 @@ def publish_update_status_to_mqtt(git_update):
     if config.update:
         if config.discovery_messages:
             client.publish("homeassistant/update/" + hostname + "/config",
-                           config_json('update'), qos=config.qos)
-            print("Update config published")
+                           config_json('update'), qos=1)
 
     # Wait for all messages to be delivered
     while len(client._out_messages) > 0:

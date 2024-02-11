@@ -31,7 +31,7 @@ update = True
 retain = True
 
 # QOS setting for published topics: 0,1,2 are acceptable values
-qos = 1
+qos = 0
 
 # Random delay in seconds before measuring the values
 # - this is used for de-synchronizing message if you run this script on many hosts.
