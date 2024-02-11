@@ -16,7 +16,6 @@ import argparse
 import threading
 import update
 import config
-import requests
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -214,10 +213,11 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
 
 
 
+
 def get_release_notes():
     url = "https://api.github.com/repos/hjelev/rpi-mqtt-monitor/releases/latest"
-    response = requests.get(url)
-    data = json.loads(response.text)
+    response = subprocess.run(['curl', '-s', url], capture_output=True)
+    data = json.loads(response.stdout)
     release_notes = data["body"]
 
     lines = release_notes.split('\n')
@@ -234,7 +234,6 @@ def get_release_notes():
     if len(release_notes) > 255:
         release_notes = release_notes[:250] + " ..."
 
-    print(release_notes, len(release_notes))
     return release_notes
 
 def config_json(what_config):
