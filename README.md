@@ -230,6 +230,8 @@ python3 src/update.py
 
 ## Home Assistant Integration
 
+If you are using discovery_messages, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
+
 [moved to wiki](../../wiki/Home-Assistant-Integration-(outdated))
 
 ## To Do
