@@ -77,7 +77,7 @@ def do_update(script_dir, version=config.version, git_update=True, config_update
     print("Current version: {}".format(config.version))
     if git_update:
         print(":: Updating git repository", script_dir)
-        result = subprocess.run(['git', '-C', script_dir, 'pull'], check=True, universal_newlines=True, stdout=subprocess.PIPE)
+        result = subprocess.run(['/usr/bin/git', '-C', script_dir, 'pull'], check=True, universal_newlines=True, stdout=subprocess.PIPE)
         print(result.stdout)
 
     if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
