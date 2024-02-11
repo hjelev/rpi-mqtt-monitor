@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 ExecStart=/home/username/git/rpi-mqtt-monitor/rpi_mon_env/bin/python /home/username/git/rpi-mqtt-monitor/src/rpi-cpu2mqtt.py --service
+Environment="HOME=/home/username"
 WorkingDirectory=/home/username/git/rpi-mqtt-monitor/
 StandardOutput=inherit
 StandardError=inherit
