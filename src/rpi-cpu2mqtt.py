@@ -16,6 +16,7 @@ import argparse
 import threading
 import update
 import config
+import requests
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -212,6 +213,26 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
     print("")
 
 
+
+def get_release_notes():
+    # Define the URL of the GitHub API for the latest release
+    url = "https://api.github.com/repos/hjelev/rpi-mqtt-monitor/releases/latest"
+
+    # Send a GET request to the GitHub API
+    response = requests.get(url)
+
+    # Parse the response as JSON
+    data = json.loads(response.text)
+
+    # Get the release notes
+    release_notes = data["body"][:255]
+    if "**Full Changelog" in release_notes:
+        release_notes = release_notes.split("**Full")[0]
+    else:
+        release_notes = release_notes + " ..."
+
+    return release_notes
+
 def config_json(what_config):
     model_name = check_model_name()
     manufacturer = get_manufacturer()
@@ -315,6 +336,7 @@ def config_json(what_config):
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
         data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
+        data['release_summary'] = get_release_notes()
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
         data["name"] = "System Restart"
@@ -609,9 +631,9 @@ exit_flag = False
 # Create a stop event
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
+
 if __name__ == '__main__':
     args = parse_arguments();
-
     if args.service:
         client = paho.Client()
         client.username_pw_set(config.mqtt_user, config.mqtt_password)
