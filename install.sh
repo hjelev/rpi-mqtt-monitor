@@ -184,7 +184,7 @@ set_service(){
   sudo systemctl start rpi-mqtt-monitor.service
   sudo service rpi-mqtt-monitor status
   print_green "+ Service is enabled and started"
-
+  git config --global --add safe.directory ${cwd}
 }
 
 main(){
