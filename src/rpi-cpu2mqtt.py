@@ -16,7 +16,7 @@ import argparse
 import threading
 import update
 import config
-
+import logging
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -148,6 +148,7 @@ def get_manufacturer():
 
 def check_git_update(script_dir):
     remote_version = update.check_git_version_remote(script_dir)
+    logging.info("git_update value:" + remote_version)
     if config.version == remote_version:
         git_update = {
                     "installed_ver": config.version,
@@ -352,17 +353,18 @@ def create_mqtt_client():
 
 
 def publish_update_status_to_mqtt(git_update):
-
+    
     client = create_mqtt_client()
     if client is None:
         print("Error: Unable to connect to MQTT broker")
-      
+        return
+    
     client.loop_start()
     if config.git_update:
         if config.discovery_messages:
             client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
                            config_json('git_update'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=config.qos, retain=config.retain)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=1, retain=config.retain)
     
     if config.update:
         if config.discovery_messages:
@@ -610,7 +612,7 @@ exit_flag = False
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 if __name__ == '__main__':
-    
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     args = parse_arguments();
 
     if args.service:
@@ -629,14 +631,14 @@ if __name__ == '__main__':
         client.loop_start()  # Start the MQTT client loop in a new thread
         # Start the gather_and_send_info function in a new thread
         thread1 = threading.Thread(target=gather_and_send_info)
-        thread1.daemon = True  # Set the daemon attribute to True
+        # thread1.daemon = True  # Set the daemon attribute to True
         thread1.start()
 
 
         if config.update:
             # Start the update_status function in a new thread
             thread2 = threading.Thread(target=update_status)
-            thread2.daemon = True  # Set the daemon attribute to True
+            # thread2.daemon = True  # Set the daemon attribute to True
             thread2.start()
 
         # Check the exit flag in the main thread

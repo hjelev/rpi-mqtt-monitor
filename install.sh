@@ -73,7 +73,11 @@ create_venv(){
 
   # Activate the virtual environment
   source rpi_mon_env/bin/activate
-  python=$(which python)
+  if [[ $(python3 --version)  ]]; then 
+    python=$(which python3)
+  else
+    python=$(which python)
+  fi
   print_green "+ Activated virtual environment"
 }
 
@@ -173,6 +177,8 @@ set_service(){
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|User=YOUR_USER|User=root|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|ExecStart=.*|ExecStart=${exec_start}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  home_dir=$(eval echo ~$user)
+  sudo sed -i "s|Environment=\"HOME=/home/username\"|Environment=\"HOME=${home_dir}\"|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo systemctl daemon-reload
   sudo systemctl enable rpi-mqtt-monitor.service
   sudo systemctl start rpi-mqtt-monitor.service
