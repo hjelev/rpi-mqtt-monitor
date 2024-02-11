@@ -396,6 +396,8 @@ entities:
   - entity: sensor.rpi4_wifi_signal_dbm
   ...
 ```
+## Home Assistant Integration
+[moved to wiki](../../wiki/Home-Assistant-Integration-(outdated))
 
 ## To Do
 
