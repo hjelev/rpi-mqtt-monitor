@@ -215,36 +215,22 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
 
 
 def get_release_notes():
-    # Define the URL of the GitHub API for the latest release
     url = "https://api.github.com/repos/hjelev/rpi-mqtt-monitor/releases/latest"
-
-    # Send a GET request to the GitHub API
     response = requests.get(url)
-
-    # Parse the response as JSON
     data = json.loads(response.text)
-
-    # Get the release notes
     release_notes = data["body"]
 
-    # Split the string into lines
     lines = release_notes.split('\n')
-
-    # Process each line
     for i in range(len(lines)):
-        # Find the position of the character 'X'
         pos = lines[i].find('by @')
-
-        # If 'X' is found, delete everything after it
         if pos != -1:
             lines[i] = lines[i][:pos]
 
-    # Join the lines back together
     release_notes = '\n'.join(lines)
 
     if "**Full Changelog" in release_notes and len(release_notes) > 252:
         release_notes = release_notes.split("**Full")[0]
-        
+
     if len(release_notes) > 255:
         release_notes = release_notes[:250] + " ..."
 
