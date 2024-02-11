@@ -355,7 +355,7 @@ def publish_update_status_to_mqtt(git_update):
 
     client = create_mqtt_client()
     if client is None:
-        return
+        print("Error: Unable to connect to MQTT broker")
       
     client.loop_start()
     if config.git_update:
@@ -467,7 +467,7 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
 
     # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
-
+    client.loop_stop()
     # disconnect from mqtt server
     client.disconnect()
 
@@ -601,12 +601,15 @@ if __name__ == '__main__':
     args = parse_arguments();
 
     if args.service:
-        client = create_mqtt_client()
-        if client is None:
-            print("Error: Unable to connect to MQTT broker")
-            sys.exit(1)
-        
-        client.loop_start()
+        client = paho.Client()
+        client.username_pw_set(config.mqtt_user, config.mqtt_password)
+        client.on_message = on_message
+
+        try:
+            client.connect(config.mqtt_host, int(config.mqtt_port))
+        except Exception as e:
+            print("Error connecting to MQTT broker:", e)
+            sys.exit(1)  # Exit the script
 
         client.subscribe("homeassistant/update/" + hostname + "/command")  # Replace with your MQTT topic
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
@@ -615,6 +618,7 @@ if __name__ == '__main__':
         thread1 = threading.Thread(target=gather_and_send_info)
         thread1.daemon = True  # Set the daemon attribute to True
         thread1.start()
+
 
         if config.update:
             # Start the update_status function in a new thread
