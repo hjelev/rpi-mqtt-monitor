@@ -18,8 +18,14 @@ mqtt_topic_prefix = "rpi-MQTT-monitor"
 # Only works when group_messages is not used
 discovery_messages = True
 
+# Enable remote restart button in Home Assistant
+restart_button = True
+
 # Binary sensor that displays when there are  updates
 git_update = True
+
+# Enable remote update of the script via Home Assistant
+update = True
 
 # Retain flag for published topics
 retain = True
@@ -34,10 +40,7 @@ qos = 0
 
 # this is the time between executiuons if the script is used as service (--service option)
 service_sleep_time = 120
-
-# This is the time  between sending the individual messages
-sleep_time = 0.1
-
+update_check_interval = 3600 # 1 hour
 cpu_load = True
 cpu_temp = True
 used_space = True
@@ -47,6 +50,7 @@ sys_clock_speed = False
 swap = False
 memory = True
 uptime = True
+uptime_seconds = False
 
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
 wifi_signal = False

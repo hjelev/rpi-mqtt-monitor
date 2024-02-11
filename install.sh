@@ -73,7 +73,11 @@ create_venv(){
 
   # Activate the virtual environment
   source rpi_mon_env/bin/activate
-  python=$(which python)
+  if [[ $(python3 --version)  ]]; then 
+    python=$(which python3)
+  else
+    python=$(which python)
+  fi
   print_green "+ Activated virtual environment"
 }
 
@@ -118,6 +122,12 @@ update_config(){
   sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
 
   print_green  "+ config.py is updated with provided settings"
+
+  # Get the local version
+  local_version=$(git describe --tags)
+  # Update the version in config.py
+  sed -i "s/version = .*/version = '${local_version}'/" src/config.py
+
 }
 
 set_cron(){
@@ -165,14 +175,17 @@ set_service(){
   print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
-  sudo sed -i "s|User=YOUR_USER|User=${user}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  sudo sed -i "s|User=YOUR_USER|User=root|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo sed -i "s|ExecStart=.*|ExecStart=${exec_start}|" /etc/systemd/system/rpi-mqtt-monitor.service
+  home_dir=$(eval echo ~$user)
+  sudo sed -i "s|Environment=\"HOME=/home/username\"|Environment=\"HOME=${home_dir}\"|" /etc/systemd/system/rpi-mqtt-monitor.service
   sudo systemctl daemon-reload
   sudo systemctl enable rpi-mqtt-monitor.service
   sudo systemctl start rpi-mqtt-monitor.service
+  sudo service rpi-mqtt-monitor restart
   sudo service rpi-mqtt-monitor status
   print_green "+ Service is enabled and started"
-
+  git config --global --add safe.directory ${cwd}
 }
 
 main(){
@@ -183,7 +196,7 @@ main(){
   create_venv
   install_requirements 
   update_config
-
+  
   while true; do
     read -p "Do you want to set up a (c)ron job or a (s)ervice? " cs
     case $cs in

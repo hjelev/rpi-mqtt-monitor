@@ -21,7 +21,6 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Easy update: You can update the script by calling it with command line argument --update
 
 
-
 ## Table of Contents
 
 - [What is new](#what-is-new)
@@ -40,6 +39,9 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-02-05: System Restart button added (only works when running as service)
+* 2024-01-28: Remote updates via Home Assistant are now available
+* 2024-01-28: Improved error handling for the MQTT connection
 * 2024-01-28: Script version is displayed in home assistant device information
 * 2024-01-28: Update the script by calling it with command line argument --update
 * 2024-01-27: Now you can run the script as a service (systemd) or as a cron job
@@ -141,6 +143,7 @@ sys_clock_speed = True
 swap = True
 memory = True
 uptime = True
+uptime_seconds = False
 wifi_signal = False
 wifi_signal_dbm = False
 rpi5_fan_speed = False
@@ -214,181 +217,22 @@ Create a cron entry like this (you might need to update the path in the cron ent
 ```
 ## How to update
 
-Navigate to the folder where Rapsberry Pi MQTT Monitor is installed and pull the git repository:
+Remote updates via Home Assistant are now available. 
+
+To use these you need to have the script running as a service. (the installer now supports this)
+
+Manual update:
 
 ```bash
-git pull
+cd rpi-mqtt-monitor
+python3 src/update.py
 ```
-* Note that sometimes you might need to add new variables to our src/config.py file, so make sure you check the example file and update your config.py file accordingly.
 
 ## Home Assistant Integration
 
-If you are using ```discovery_messages```, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
+If you are using discovery_messages, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
 
-![Rapsberry Pi MQTT Monitor in Home Assistant](images/rpi-cpu2mqtt-hass.jpg)
-
-Once you installed the script on your raspberry you need to create some sensors in home assistant.
-
-This is the sensors configuration if ```group_messages = True``` assuming your sensors are separated in ```sensors.yaml``` file.
-
-```yaml
-  - platform: mqtt
-    name: 'rpi4 cpu load'
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[0] }}'
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[1] }}'
-    name: rpi4 cpu temp
-    unit_of_measurement: "°C"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[2] }}'
-    name: rpi4 diskusage
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[3] }}'
-    name: rpi4 voltage
-    unit_of_measurement: "V"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[4] }}'
-    name: rpi4 sys clock speed
-    unit_of_measurement: "MHz"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[5] }}'
-    name: rpi4 swap
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[6] }}'
-    name: rpi4 memory
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[7] }}'
-    name: rpi4 uptime
-    unit_of_measurement: "days"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[8] }}'
-    name: rpi4 wifi signal
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: 'masoko/rpi4'
-    value_template: '{{ value.split(",")[9] }}'
-    name: rpi4 wifi signal
-    unit_of_measurement: "dBm"
-```
-
-This is the sensors configuration if ```group_messages = False``` assuming your sensors are separated in ```sensors.yaml``` file.
-
-```yaml
-  - platform: mqtt
-    state_topic: "masoko/rpi4/cpuload"
-    name: rpi4 cpu load
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/cputemp"
-    name: rpi4 cpu temp
-    unit_of_measurement: "°C"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/diskusage"
-    name: rpi4 diskusage
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/voltage"
-    name: rpi4 voltage
-    unit_of_measurement: "V"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/sys_clock_speed"
-    name: rpi4 sys clock speed
-    unit_of_measurement: "hz"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/swap"
-    name: rpi4 swap
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/memory"
-    name: rpi4 memory
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/uptime_days"
-    name: rpi4 uptime
-    unit_of_measurement: "days"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/wifi_signal"
-    name: rpi4 wifi signal
-    unit_of_measurement: "%"
-
-  - platform: mqtt
-    state_topic: "masoko/rpi4/wifi_signal_dbm"
-    name: rpi4 wifi signal
-    unit_of_measurement: "dBm"
-
-```
-
-Add this to your ```customize.yaml``` file to change the icons of the sensors.
-
-```yaml
-sensor.rpi4_voltage:
-  friendly_name: rpi 4 voltage
-  icon: mdi:flash
-sensor.rpi4_cpu_load:
-  friendly_name: rpi4 cpu load
-  icon: mdi:chip
-sensor.rpi4_diskusage:
-  friendly_name: rpi4 diskusage
-  icon: mdi:harddisk
-sensor.rpi4_sys_clock_speed:
-  icon: mdi:clock
-sensor.rpi4_cpu_temp:
-  friendly_name: rpi4 cpu temperature
-sensor.rpi4_swap:
-  icon: mdi:folder-swap
-sensor.rpi4_memory:
-  icon: mdi:memory
-```
-
-After that you need to create entities list via the home assistant GUI.
-You can use this code or compose it via the GUI.
-
-```yaml
-type: entities
-title: Rapsberry Pi MQTT monitor
-entities:
-  - entity: sensor.rpi4_cpu_load
-  - entity: sensor.rpi4_cpu_temp
-  - entity: sensor.rpi4_diskusage
-  - entity: sensor.rpi4_voltage
-  - entity: sensor.rpi4_sys_clock_speed
-  - entity: sensor.rpi4_swap
-  - entity: sensor.rpi4_memory
-  - entity: sensor.rpi4_uptime
-  - entity: sensor.rpi4_wifi_signal
-  - entity: sensor.rpi4_wifi_signal_dbm
-  ...
-```
+[moved to wiki](../../wiki/Home-Assistant-Integration-(outdated))
 
 ## To Do
 
