@@ -215,13 +215,11 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
 
 
 def extract_text(html_string):
-    # Unescape HTML entities
     html_string = html.unescape(html_string)
-
-    # Use regular expressions to remove HTML tags
     text = re.sub('<[^<]+?>', '', html_string)
 
     return text
+
 
 def get_release_notes(version):
     url = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
@@ -249,6 +247,7 @@ def get_release_notes(version):
         release_notes = release_notes[:250] + " ..."
 
     return release_notes
+
 
 def config_json(what_config):
     model_name = check_model_name()
@@ -359,6 +358,12 @@ def config_json(what_config):
         data["name"] = "System Restart"
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_press"] = "restart"
+        data["device_class"] = "restart"
+    elif what_config == "shutdown_button":
+        data["icon"] = "mdi:power"
+        data["name"] = "System Shutdown"
+        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["payload_press"] = "shutdown"
         data["device_class"] = "restart"
     else:
         return ""
@@ -491,6 +496,10 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         if config.discovery_messages:
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
                            config_json('restart_button'), qos=config.qos)
+    if config.shutdown_button:
+        if config.discovery_messages:
+            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_shutdown/config",
+                           config_json('shutdown_button'), qos=config.qos)            
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
@@ -560,7 +569,7 @@ def parse_arguments():
 
 
 def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = False
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -587,20 +596,20 @@ def collect_monitored_values():
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
 
-    git_update = check_git_update(script_dir)
+    # git_update = check_git_update(script_dir)
 
-    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
+    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed
 
 
 def gather_and_send_info():
     while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
             time.sleep(config.random_delay)
 
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
 
         if hasattr(config, 'group_messages') and config.group_messages:
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
@@ -638,10 +647,11 @@ def on_message(client, userdata, msg):
         thread2.join()  # Wait for thread2 to finish
         sys.exit(0)  # Exit the script
     elif msg.payload.decode() == "restart":
-        print("Restarting the application...")
-        # restart the system
         print("Restarting the system...")
         os.system("sudo reboot")
+    elif msg.payload.decode() == "shutdown":
+        print("Shutting down the system...")
+        os.system("sudo shutdown now")
 
 exit_flag = False
 

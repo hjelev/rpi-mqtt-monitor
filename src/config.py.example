@@ -21,6 +21,9 @@ discovery_messages = True
 # Enable remote restart button in Home Assistant
 restart_button = True
 
+# Enable remote shutdiwb button in Home Assistant
+shutdown_button = True
+
 # Binary sensor that displays when there are  updates
 git_update = True
 
