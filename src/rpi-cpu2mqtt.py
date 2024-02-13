@@ -424,13 +424,12 @@ def publish_update_status_to_mqtt(git_update):
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
-    # connect to mqtt server
     client = create_mqtt_client()
     if client is None:
         return
       
     client.loop_start()
-    # publish monitored values to MQTT
+
     if config.cpu_load:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpuload/config",
@@ -505,7 +504,6 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         client.loop()
 
     client.loop_stop()
-    # disconnect from mqtt server
     client.disconnect()
 
 
@@ -521,15 +519,13 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
         return
       
     client.loop_start()
-
-    # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
+    
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
     
     client.loop_stop()
-    # disconnect from mqtt server
     client.disconnect()
 
 
@@ -596,8 +592,6 @@ def collect_monitored_values():
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
 
-    # git_update = check_git_update(script_dir)
-
     return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed
 
 
@@ -653,9 +647,8 @@ def on_message(client, userdata, msg):
         print("Shutting down the system...")
         os.system("sudo shutdown now")
 
-exit_flag = False
 
-# Create a stop event
+exit_flag = False
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -670,24 +663,18 @@ if __name__ == '__main__':
             client.connect(config.mqtt_host, int(config.mqtt_port))
         except Exception as e:
             print("Error connecting to MQTT broker:", e)
-            sys.exit(1)  # Exit the script
+            sys.exit(1)
 
-        client.subscribe("homeassistant/update/" + hostname + "/command")  # Replace with your MQTT topic
+        client.subscribe("homeassistant/update/" + hostname + "/command")
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
-        client.loop_start()  # Start the MQTT client loop in a new thread
-        # Start the gather_and_send_info function in a new thread
+        client.loop_start()
         thread1 = threading.Thread(target=gather_and_send_info)
-        # thread1.daemon = True  # Set the daemon attribute to True
         thread1.start()
 
-
         if config.update:
-            # Start the update_status function in a new thread
             thread2 = threading.Thread(target=update_status)
-            # thread2.daemon = True  # Set the daemon attribute to True
             thread2.start()
 
-        # Check the exit flag in the main thread
         while True:
             if exit_flag:
                 print("Exit flag set. Exiting the application...")
