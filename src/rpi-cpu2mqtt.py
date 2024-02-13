@@ -18,6 +18,7 @@ import update
 import config
 import re
 import html
+import uuid
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -183,35 +184,48 @@ def get_network_ip():
     return IP
 
 
-def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds = 0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=False):
-    print(":: rpi-mqtt-monitor")
-    print("   Version: " + config.version)
-    print("")
-    print(":: Device Information")
-    print("   Model Name: " + check_model_name())
-    print("   Manufacturer: " + get_manufacturer())
-    print("   OS: " + get_os())
-    print("   Hostname: " + hostname)
-    print("   IP Address: " + get_network_ip())
+def get_mac_address():
+    mac_num = uuid.getnode()
+    mac = '-'.join((('%012X' % mac_num)[i:i+2] for i in range(0, 12, 2)))
+    return mac
+
+
+def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
+                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
+    output = """
+:: rpi-mqtt-monitor
+   Version: {}
+
+:: Device Information
+   Model Name: {}
+   Manufacturer: {}
+   OS: {}
+   Hostname: {}
+   IP Address: {}
+   MAC Address: {}
+""".format(config.version, check_model_name(), get_manufacturer(), get_os(), hostname, get_network_ip(), get_mac_address())
+
     if args.service:
-        print("   Service Sleep Time: " + str(config.service_sleep_time))
-    print("")
-    print(":: Measured values")
-    print("   CPU Load: " + str(cpu_load) + " %")
-    print("   CPU Temp: " + str(cpu_temp) + " °C")
-    print("   Used Space: " + str(used_space) + " %")
-    print("   Voltage: " + str(voltage) + " V")
-    print("   CPU Clock Speed: " + str(sys_clock_speed) + " MHz")
-    print("   Swap: " + str(swap) + " %")
-    print("   Memory: " + str(memory) + " %")
-    print("   Uptime: " + str(uptime_days) + " days")
-    print("   Uptime: " + str(uptime_seconds) + " seconds")
-    print("   Wifi Signal: " + str(wifi_signal) + " %")
-    print("   Wifi Signal dBm: " + str(wifi_signal_dbm) +  " dBm")
-    print("   RPI5 Fan Speed: " + str(rpi5_fan_speed) + " RPM")
-    print("   Update Available: " + str(git_update))
-    print("")
+        output += "   Service Sleep Time: {} seconds\n".format(config.service_sleep_time)
+    if config.update:
+        output += "   Update Check Interval: {} seconds\n".format(config.update_check_interval)
+    output += """
+:: Measured values
+   CPU Load: {} %
+   CPU Temp: {} °C
+   Used Space: {} %
+   Voltage: {} V
+   CPU Clock Speed: {} MHz
+   Swap: {} %
+   Memory: {} %
+   Uptime: {} days
+   Wifi Signal: {} %
+   Wifi Signal dBm: {}
+   RPI5 Fan Speed: {} RPM
+   Update Available: {} 
+    """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, check_git_update(script_dir))
+
+    print(output)
 
 
 def extract_text(html_string):
@@ -368,17 +382,18 @@ def config_json(what_config):
     return json.dumps(data)
 
 
-def on_log(client, userdata, level, buf):
-    if level == paho.MQTT_LOG_ERR:
-        print("MQTT error: ", buf)
-
-
-def on_connect(client, userdata, flags, rc):
-    if rc != 0:
-        print("Error: Unable to connect to MQTT broker, return code:", rc)
-
-
 def create_mqtt_client():
+
+    def on_log(client, userdata, level, buf):
+        if level == paho.MQTT_LOG_ERR:
+            print("MQTT error: ", buf)
+
+
+    def on_connect(client, userdata, flags, rc):
+        if rc != 0:
+            print("Error: Unable to connect to MQTT broker, return code:", rc)
+
+
     client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname + str(int(time.time())))
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
@@ -625,18 +640,28 @@ def update_status():
             break
 
 
+
+
 def on_message(client, userdata, msg):
-    global exit_flag
+    global exit_flag, thread1, thread2
     print("Received message: ", msg.payload.decode())
     if msg.payload.decode() == "install":
-        version = update.check_git_version_remote(script_dir).strip()
-        update.do_update(script_dir, version, git_update=True, config_update=True)
-        print("Update completed. Setting exit flag...")
-        exit_flag = True
-        stop_event.set()  # Signal the threads to stop
-        thread1.join()  # Wait for thread1 to finish
-        thread2.join()  # Wait for thread2 to finish
-        sys.exit(0)  # Exit the script
+        def update_and_exit():
+            version = update.check_git_version_remote(script_dir).strip()
+            update.do_update(script_dir, version, git_update=True, config_update=True)
+            print("Update completed. Stopping MQTT client loop...")
+            client.loop_stop()  # Stop the MQTT client loop
+            print("Setting exit flag...")
+            exit_flag = True
+            stop_event.set()  # Signal the threads to stop
+            if thread1 is not None:
+                thread1.join()  # Wait for thread1 to finish
+            if thread2 is not None:
+                thread2.join()  # Wait for thread2 to finish
+            os._exit(0)  # Exit the script immediately
+
+        update_thread = threading.Thread(target=update_and_exit)
+        update_thread.start()
     elif msg.payload.decode() == "restart":
         print("Restarting the system...")
         os.system("sudo reboot")
@@ -666,19 +691,22 @@ if __name__ == '__main__':
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
         client.loop_start()
         thread1 = threading.Thread(target=gather_and_send_info)
+        thread1.daemon = True  # Set thread1 as a daemon thread
         thread1.start()
 
         if config.update:
             thread2 = threading.Thread(target=update_status)
+            thread2.daemon = True  # Set thread2 as a daemon thread
             thread2.start()
 
-        while True:
-            if exit_flag:
-                print("Exit flag set. Exiting the application...")
-                stop_event.set()  # Signal the threads to stop
-                thread1.join()  # Wait for thread1 to finish
-                thread2.join()  # Wait for thread2 to finish
-                sys.exit(0)
-            time.sleep(1)  # Check the exit flag every second
+        try:
+            while True:
+                time.sleep(1)  # Check the exit flag every second
+        except KeyboardInterrupt:
+            print(" Ctrl+C pressed. Setting exit flag...")
+            client.loop_stop() 
+            exit_flag = True
+            stop_event.set()  # Signal the threads to stop
+            sys.exit(0)  # Exit the script
     else:
         gather_and_send_info()
