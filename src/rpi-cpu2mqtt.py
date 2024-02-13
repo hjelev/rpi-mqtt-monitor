@@ -230,22 +230,19 @@ def get_release_notes(version):
     except Exception:
         release_notes = "No release notes available"
 
-    release_notes = "### What's Changed\n" + extract_text(release_notes)
+    lines = extract_text(release_notes).split('\n')
 
-    lines = release_notes.split('\n')
     for i in range(len(lines)):
-        pos = lines[i].find('by @')
-        if pos != -1:
-            lines[i] = "* " + lines[i][:pos]
+        if lines[i].strip() != "":
+            lines[i] = "* " + lines[i]
 
     release_notes = '\n'.join(lines)
-
-    if "**Full Changelog" in release_notes and len(release_notes) > 252:
-        release_notes = release_notes.split("**Full")[0]
 
     if len(release_notes) > 255:
         release_notes = release_notes[:250] + " ..."
 
+    release_notes = "### What's Changed" + release_notes
+    
     return release_notes
 
 
