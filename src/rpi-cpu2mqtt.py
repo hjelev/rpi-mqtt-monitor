@@ -16,6 +16,8 @@ import argparse
 import threading
 import update
 import config
+import re
+import html
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -212,19 +214,29 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
     print("")
 
 
+def extract_text(html_string):
+    html_string = html.unescape(html_string)
+    text = re.sub('<[^<]+?>', '', html_string)
+
+    return text
 
 
-def get_release_notes():
-    url = "https://api.github.com/repos/hjelev/rpi-mqtt-monitor/releases/latest"
-    response = subprocess.run(['curl', '-s', url], capture_output=True)
-    data = json.loads(response.stdout)
-    release_notes = data["body"]
+def get_release_notes(version):
+    url = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
+    
+    try:
+        response = subprocess.run(['curl', '-s', url], capture_output=True)
+        release_notes = response.stdout.decode('utf-8').split("What's Changed")[1].split("</div>")[0].replace("</h2>","").split("<p>")[0]
+    except Exception:
+        release_notes = "No release notes available"
+
+    release_notes = "### What's Changed\n" + extract_text(release_notes)
 
     lines = release_notes.split('\n')
     for i in range(len(lines)):
         pos = lines[i].find('by @')
         if pos != -1:
-            lines[i] = lines[i][:pos]
+            lines[i] = "* " + lines[i][:pos]
 
     release_notes = '\n'.join(lines)
 
@@ -235,6 +247,7 @@ def get_release_notes():
         release_notes = release_notes[:250] + " ..."
 
     return release_notes
+
 
 def config_json(what_config):
     model_name = check_model_name()
@@ -339,12 +352,18 @@ def config_json(what_config):
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
         data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
-        data['release_summary'] = get_release_notes()
+        data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
         data["name"] = "System Restart"
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_press"] = "restart"
+        data["device_class"] = "restart"
+    elif what_config == "shutdown_button":
+        data["icon"] = "mdi:power"
+        data["name"] = "System Shutdown"
+        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["payload_press"] = "shutdown"
         data["device_class"] = "restart"
     else:
         return ""
@@ -405,13 +424,12 @@ def publish_update_status_to_mqtt(git_update):
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
-    # connect to mqtt server
     client = create_mqtt_client()
     if client is None:
         return
       
     client.loop_start()
-    # publish monitored values to MQTT
+
     if config.cpu_load:
         if config.discovery_messages:
             client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpuload/config",
@@ -477,12 +495,15 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         if config.discovery_messages:
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
                            config_json('restart_button'), qos=config.qos)
+    if config.shutdown_button:
+        if config.discovery_messages:
+            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_shutdown/config",
+                           config_json('shutdown_button'), qos=config.qos)            
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
 
     client.loop_stop()
-    # disconnect from mqtt server
     client.disconnect()
 
 
@@ -498,15 +519,13 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
         return
       
     client.loop_start()
-
-    # publish monitored values to MQTT
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
+    
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
     
     client.loop_stop()
-    # disconnect from mqtt server
     client.disconnect()
 
 
@@ -546,7 +565,7 @@ def parse_arguments():
 
 
 def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = git_update = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = False
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -573,20 +592,18 @@ def collect_monitored_values():
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
 
-    git_update = check_git_update(script_dir)
-
-    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update
+    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed
 
 
 def gather_and_send_info():
     while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update = collect_monitored_values()
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
             time.sleep(config.random_delay)
 
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update)
+            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
 
         if hasattr(config, 'group_messages') and config.group_messages:
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
@@ -624,14 +641,14 @@ def on_message(client, userdata, msg):
         thread2.join()  # Wait for thread2 to finish
         sys.exit(0)  # Exit the script
     elif msg.payload.decode() == "restart":
-        print("Restarting the application...")
-        # restart the system
         print("Restarting the system...")
         os.system("sudo reboot")
+    elif msg.payload.decode() == "shutdown":
+        print("Shutting down the system...")
+        os.system("sudo shutdown now")
+
 
 exit_flag = False
-
-# Create a stop event
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -646,24 +663,18 @@ if __name__ == '__main__':
             client.connect(config.mqtt_host, int(config.mqtt_port))
         except Exception as e:
             print("Error connecting to MQTT broker:", e)
-            sys.exit(1)  # Exit the script
+            sys.exit(1)
 
-        client.subscribe("homeassistant/update/" + hostname + "/command")  # Replace with your MQTT topic
+        client.subscribe("homeassistant/update/" + hostname + "/command")
         print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
-        client.loop_start()  # Start the MQTT client loop in a new thread
-        # Start the gather_and_send_info function in a new thread
+        client.loop_start()
         thread1 = threading.Thread(target=gather_and_send_info)
-        # thread1.daemon = True  # Set the daemon attribute to True
         thread1.start()
 
-
         if config.update:
-            # Start the update_status function in a new thread
             thread2 = threading.Thread(target=update_status)
-            # thread2.daemon = True  # Set the daemon attribute to True
             thread2.start()
 
-        # Check the exit flag in the main thread
         while True:
             if exit_flag:
                 print("Exit flag set. Exiting the application...")
