@@ -16,6 +16,8 @@ import argparse
 import threading
 import update
 import config
+import re
+import html
 
 # get device host name - used in mqtt topic
 hostname = socket.gethostname()
@@ -212,19 +214,31 @@ def print_measured_values( cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_
     print("")
 
 
+def extract_text(html_string):
+    # Unescape HTML entities
+    html_string = html.unescape(html_string)
 
+    # Use regular expressions to remove HTML tags
+    text = re.sub('<[^<]+?>', '', html_string)
 
-def get_release_notes():
-    url = "https://api.github.com/repos/hjelev/rpi-mqtt-monitor/releases/latest"
-    response = subprocess.run(['curl', '-s', url], capture_output=True)
-    data = json.loads(response.stdout)
-    release_notes = data["body"]
+    return text
+
+def get_release_notes(version):
+    url = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
+    
+    try:
+        response = subprocess.run(['curl', '-s', url], capture_output=True)
+        release_notes = response.stdout.decode('utf-8').split("What's Changed")[1].split("</div>")[0].replace("</h2>","").split("<p>")[0]
+    except Exception:
+        release_notes = "No release notes available"
+
+    release_notes = "### What's Changed\n" + extract_text(release_notes)
 
     lines = release_notes.split('\n')
     for i in range(len(lines)):
         pos = lines[i].find('by @')
         if pos != -1:
-            lines[i] = lines[i][:pos]
+            lines[i] = "* " + lines[i][:pos]
 
     release_notes = '\n'.join(lines)
 
@@ -339,7 +353,7 @@ def config_json(what_config):
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
         data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
-        data['release_summary'] = get_release_notes()
+        data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
         data["name"] = "System Restart"
