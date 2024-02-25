@@ -1,0 +1,29 @@
+[MAIN]
+
+[MESSAGES CONTROL]
+disable=
+    line-too-long,
+    too-many-arguments,
+    too-many-branches,
+    too-many-statements,
+    # fix later
+    no-member,
+    consider-using-f-string,
+    missing-function-docstring,
+    missing-module-docstring,
+    unspecified-encoding,
+    no-else-return,
+    invalid-name,
+    redefined-outer-name,
+    wrong-import-order,
+    multiple-statements,
+    consider-using-with,
+    broad-exception-caught,
+    anomalous-backslash-in-string,
+    consider-using-sys-exit,
+    unnecessary-semicolon,
+    unused-argument,
+    superfluous-parens,
+    redefined-builtin,
+    simplifiable-if-statement,
+    duplicate-string-formatting-argument,
