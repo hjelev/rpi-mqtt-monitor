@@ -71,7 +71,7 @@ def check_voltage():
 
 
 def check_swap():
-    full_cmd = "free -t |grep -i swap | awk 'NR == 1 {print $3/$2*100}'"
+    full_cmd = "free | grep -i swap | awk 'NR == 1 {print $3/$2*100}'"
     swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
 
@@ -79,7 +79,7 @@ def check_swap():
 
 
 def check_memory():
-    full_cmd = "free -t | awk 'NR == 2 {print $3/$2*100}'"
+    full_cmd = "free | grep -i mem | awk 'NR == 1 {print $3/$2*100}'"
     memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     memory = round(float(memory.decode("utf-8").replace(",", ".")))
 
@@ -220,7 +220,7 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    Wifi Signal: {} %
    Wifi Signal dBm: {}
    RPI5 Fan Speed: {} RPM
-   Update Available: {} 
+   Update Available: {}
     """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, check_git_update(script_dir))
 
     print(output)
@@ -235,7 +235,7 @@ def extract_text(html_string):
 
 def get_release_notes(version):
     url = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
-    
+
     try:
         response = subprocess.run(['curl', '-s', url], capture_output=True)
         release_notes = response.stdout.decode('utf-8').split("What's Changed")[1].split("</div>")[0].replace("</h2>","").split("<p>")[0]
@@ -254,7 +254,7 @@ def get_release_notes(version):
         release_notes = release_notes[:250] + " ..."
 
     release_notes = "### What's Changed" + release_notes
-    
+
     return release_notes
 
 
@@ -349,7 +349,7 @@ def config_json(what_config):
         data["device_class"] = "update"
         data["state_class"] = "measurement"
         data["value_template"] = "{{ 'ON' if value_json.installed_ver != value_json.new_ver else 'OFF' }}"
-    elif what_config == "update":       
+    elif what_config == "update":
         version = update.check_git_version_remote(script_dir)
         data["icon"] = "mdi:update"
         data["name"] = "RPi MQTT Monitor"
@@ -405,19 +405,19 @@ def create_mqtt_client():
 
 
 def publish_update_status_to_mqtt(git_update):
-    
+
     client = create_mqtt_client()
     if client is None:
         print("Error: Unable to connect to MQTT broker")
         return
-    
+
     client.loop_start()
     if config.git_update:
         if config.discovery_messages:
             client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
                            config_json('git_update'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=1, retain=config.retain)
-    
+
     if config.update:
         if config.discovery_messages:
             client.publish("homeassistant/update/" + hostname + "/config",
@@ -429,7 +429,7 @@ def publish_update_status_to_mqtt(git_update):
         client.loop()
 
     client.loop_stop()
-    client.disconnect()        
+    client.disconnect()
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
@@ -437,7 +437,7 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
     client = create_mqtt_client()
     if client is None:
         return
-      
+
     client.loop_start()
 
     if config.cpu_load:
@@ -508,7 +508,7 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
     if config.shutdown_button:
         if config.discovery_messages:
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_shutdown/config",
-                           config_json('shutdown_button'), qos=config.qos)            
+                           config_json('shutdown_button'), qos=config.qos)
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
@@ -527,14 +527,14 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
     client = create_mqtt_client()
     if client is None:
         return
-      
+
     client.loop_start()
     client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
-    
+
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
-    
+
     client.loop_stop()
     client.disconnect()
 
@@ -719,7 +719,7 @@ if __name__ == '__main__':
                 time.sleep(1)  # Check the exit flag every second
         except KeyboardInterrupt:
             print(" Ctrl+C pressed. Setting exit flag...")
-            client.loop_stop() 
+            client.loop_stop()
             exit_flag = True
             stop_event.set()  # Signal the threads to stop
             sys.exit(0)  # Exit the script
