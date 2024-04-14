@@ -39,6 +39,8 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-03-24: --hass to display configuration for Home Assistant wake on lan switch
+* 2024-02-20: Shutdown button added (only works when running as service)
 * 2024-02-05: System Restart button added (only works when running as service)
 * 2024-01-28: Remote updates via Home Assistant are now available
 * 2024-01-28: Improved error handling for the MQTT connection
@@ -61,6 +63,7 @@ options:
   --service, -s  run script as a service
   --version, -v  display version
   --update,  -u  update script and config
+  --hass, -H     display Home assistant wake on lan configuration
 ```
 
 
@@ -231,6 +234,8 @@ python3 src/update.py
 ## Home Assistant Integration
 
 If you are using discovery_messages, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
+
+Use '''python3 src/rpi-cpu2mqtt.py --hass''' to display the configuration for Home Assistant wake on lan switch.
 
 [moved to wiki](../../wiki/Home-Assistant-Integration-(outdated))
 

@@ -20,8 +20,6 @@ import re
 import html
 import uuid
 
-# get device host name - used in mqtt topic
-hostname = socket.gethostname()
 
 def check_wifi_signal(format):
     try:
@@ -81,7 +79,7 @@ def check_swap():
 
 
 def check_memory():
-    full_cmd = "free -t | awk 'NR == 2 {print $3/$2*100}'"
+    full_cmd = "free | grep -i mem | awk 'NR == 1 {print $3/$2*100}'"
     memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
     memory = round(float(memory.decode("utf-8").replace(",", ".")))
 
@@ -546,7 +544,8 @@ def parse_arguments():
     parser.add_argument('--display', '-d', action='store_true', help='display values on screen', default=False)
     parser.add_argument('--service', '-s', action='store_true', help='run script as a service, sleep interval is configurable in config.py', default=False)
     parser.add_argument('--version', '-v', action='store_true', help='display installed version and exit', default=False)
-    parser.add_argument('--update', '-u', action='store_true', help='update script and config then exit', default=False)
+    parser.add_argument('--update',  '-u', action='store_true', help='update script and config then exit', default=False)
+    parser.add_argument('--hass',    '-H', action='store_true', help='display Home assistant wake on lan configuration', default=False)
     args = parser.parse_args()
 
     if args.update:
@@ -571,6 +570,22 @@ def parse_arguments():
             print("Update available")
         else:
             print("No update available")
+        exit()
+
+    if args.hass:
+        hass_config = """Add this to your Home Assistant switches.yaml file: 
+
+  - platform: wake_on_lan
+    mac: "{}"
+    host: "{}"
+    name: "{}-switch"
+    turn_off:
+      service: mqtt.publish
+      data:
+        topic: "homeassistant/update/{}/command"
+        payload: "shutdown"
+    """.format(get_mac_address(), get_network_ip(), hostname, hostname )
+        print(hass_config)
         exit()
 
     return args
@@ -640,8 +655,6 @@ def update_status():
             break
 
 
-
-
 def on_message(client, userdata, msg):
     global exit_flag, thread1, thread2
     print("Received message: ", msg.payload.decode())
@@ -673,6 +686,8 @@ def on_message(client, userdata, msg):
 exit_flag = False
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
+# get device host name - used in mqtt topic
+hostname = socket.gethostname()
 
 if __name__ == '__main__':
     args = parse_arguments();
