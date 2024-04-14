@@ -136,13 +136,16 @@ def get_os():
 
 
 def get_manufacturer():
-    if 'Raspberry' not in check_model_name():
-        full_cmd = "cat /proc/cpuinfo  | grep 'vendor'| uniq"
-        pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-        pretty_name = pretty_name.split(':')[1].replace('\n', '')
-    else:
-        pretty_name = 'Raspberry Pi'
-
+    try:
+        if 'Raspberry' not in check_model_name():
+            full_cmd = "cat /proc/cpuinfo  | grep 'vendor'| uniq"
+            pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+            pretty_name = pretty_name.split(':')[1].replace('\n', '')
+        else:
+            pretty_name = 'Raspberry Pi'
+    except Exception:
+        pretty_name = 'Unknown'
+        
     return(pretty_name)
 
 
