@@ -91,6 +91,16 @@ install_requirements(){
 }
 
 update_config(){
+  if [ -f src/config.py ]; then
+    read -p "src/config.py already exists Do you want to remove it? (y/n) " yn
+    case $yn in
+        [Yy]* ) echo "replacing config file";;
+        [Nn]* ) return;;
+        * ) echo "Please answer y for yes or n for no.";;
+    esac
+  fi
+
+
   print_green "+ Copy config.py.example to config.py"
   cp src/config.py.example src/config.py
   printm "MQTT settings"
@@ -155,6 +165,15 @@ set_cron(){
 
 set_service(){
   printm "Setting systemd service"
+
+  if [ -f /etc/systemd/system/rpi-mqtt-monitor.service ]; then
+    read -p "Service file already exists. Do you want to remove it? (y/n) " yn
+    case $yn in
+        [Yy]* ) sudo rm /etc/systemd/system/rpi-mqtt-monitor.service;;
+        [Nn]* ) return;;
+        * ) echo "Please answer y for yes or n for no.";;
+    esac
+  fi
   printf "How often do you want the script to run in seconds? (default is 120): "
   read MIN
   if [ -z "$MIN" ]; then
@@ -164,14 +183,6 @@ set_service(){
   cwd=$(pwd)
   user=$(whoami)
   exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
-  if [ -f /etc/systemd/system/rpi-mqtt-monitor.service ]; then
-    read -p "Service file already exists. Do you want to remove it? (y/n) " yn
-    case $yn in
-        [Yy]* ) sudo rm /etc/systemd/system/rpi-mqtt-monitor.service;;
-        [Nn]* ) return;;
-        * ) echo "Please answer y for yes or n for no.";;
-    esac
-  fi
   print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
@@ -188,6 +199,14 @@ set_service(){
   git config --global --add safe.directory ${cwd}
 }
 
+create_shortcut(){
+  printm "Creating shortcut rpi-mqtt-monitor"
+  cwd=$(pwd)
+  echo "${python} ${cwd}/src/rpi-cpu2mqtt.py \$@" > rpi-mqtt-monitor
+  sudo mv rpi-mqtt-monitor /usr/local/bin/
+  sudo chmod +x /usr/local/bin/rpi-mqtt-monitor
+}
+
 main(){
   printm "Raspberry Pi MQTT Monitor installer"
   welcome
@@ -196,7 +215,8 @@ main(){
   create_venv
   install_requirements 
   update_config
-  
+  create_shortcut
+
   while true; do
     read -p "Do you want to set up a (c)ron job or a (s)ervice? " cs
     case $cs in
