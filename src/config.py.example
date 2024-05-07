@@ -24,6 +24,12 @@ restart_button = True
 # Enable remote shutdown button in Home Assistant
 shutdown_button = True
 
+# Enable control of attached display(s) via Home Assistant
+display_control = True
+
+# user for which display_control is enabled
+os_user = 'os_user_to_be_replaced'
+
 # Binary sensor that displays when there are  updates
 git_update = True
 
