@@ -223,7 +223,7 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    Wifi Signal: {} %
    Wifi Signal dBm: {}
    RPI5 Fan Speed: {} RPM
-   Update Available: {}
+   Update: {}
     """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, check_git_update(script_dir))
 
     print(output)
@@ -377,6 +377,18 @@ def config_json(what_config):
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_press"] = "shutdown"
         data["device_class"] = "restart"
+    elif what_config == "display_on":
+        data["icon"] = "mdi:monitor"
+        data["name"] = "Monitor ON"
+        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["payload_press"] = "display_on"
+        data["device_class"] = "restart"
+    elif what_config == "display_off":
+        data["icon"] = "mdi:monitor"
+        data["name"] = "Monitor OFF"
+        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["payload_press"] = "display_off"
+        data["device_class"] = "restart"
     else:
         return ""
     # Return our built discovery config
@@ -512,6 +524,12 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         if config.discovery_messages:
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_shutdown/config",
                            config_json('shutdown_button'), qos=config.qos)
+    if config.display_control:
+        if config.discovery_messages:
+            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_on/config",
+                           config_json('display_on'), qos=config.qos)
+            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
+                           config_json('display_off'), qos=config.qos)
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
@@ -684,7 +702,12 @@ def on_message(client, userdata, msg):
     elif msg.payload.decode() == "shutdown":
         print("Shutting down the system...")
         os.system("sudo shutdown now")
-
+    elif msg.payload.decode() == "display_off":
+        print("Turn off display")
+        os.system('su -l {} -c "xset -display :0 dpms force off"'.format(config.os_user))
+    elif msg.payload.decode() == "display_on":
+        print("Turn on display")
+        os.system('su -l {} -c "xset -display :0 dpms force on"'.format(config.os_user))
 
 exit_flag = False
 stop_event = threading.Event()

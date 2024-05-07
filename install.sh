@@ -47,7 +47,6 @@ print_yellow(){
 }
 
 check_and_install_pip(){
-
   pip_ver=$(${python} -m pip --version 2>&1);
   if [[ "$pip_ver" == *"No"* ]]; then
     echo "- Pip is not installed, installing it."
@@ -100,6 +99,8 @@ update_config(){
     esac
   fi
 
+  user=$(whoami)
+  sed -i "s/os_user_to_be_replaced/${user}/" src/config.py
 
   print_green "+ Copy config.py.example to config.py"
   cp src/config.py.example src/config.py
