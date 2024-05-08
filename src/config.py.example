@@ -25,12 +25,12 @@ restart_button = True
 shutdown_button = True
 
 # Enable control of attached display(s) via Home Assistant
-display_control = True
+display_control = False
 
 # user for which display_control is enabled
 os_user = 'os_user_to_be_replaced'
 
-# Binary sensor that displays when there are  updates
+# Binary sensor that displays when there are updates
 git_update = True
 
 # Enable remote update of the script via Home Assistant

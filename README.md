@@ -78,7 +78,7 @@ Run this command to use the automated installation:
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
 
-Raspberry Pi MQTT monitor will be intalled in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
+Raspberry Pi MQTT monitor will be installed in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
 
 The auto-installer needs the software below and will install it if its not found:
 
@@ -87,13 +87,13 @@ The auto-installer needs the software below and will install it if its not found
 * git
 * paho-mqtt
 
-Only python is not automatically installed, the rest of the dependancies should be handeled by the auto installation.
-It will also help you configure the host and credentials for the mqtt server in config.py and create the cronjob configuration for you.
-
+Only python is not automatically installed, the rest of the dependencies should be handled by the auto installation.
+It will also help you configure the host and credentials for the mqtt server in config.py and create the service or cronjob configuration for you.
+It is recommended to run the script as a service, this way you can use the restart, shutdown and display control buttons in Home Assistant.
 
 ### Manual
 
-If you don't like the automated installation here are manuall installation instructions (missing the creation of virtual environment).
+If you don't like the automated installation here are manual installation instructions (missing the creation of virtual environment).
 
 1. Install pip if you don't have it:
 
@@ -104,7 +104,7 @@ sudo apt install python-pip
 2. Then install this python module needed for the script:
 
 ```bash
-pip3 install paho-mqtt
+pip3 install paho-mqtt==1.6.1
 ```
 
 3. Install git if you don't have it:
@@ -150,6 +150,9 @@ uptime_seconds = False
 wifi_signal = False
 wifi_signal_dbm = False
 rpi5_fan_speed = False
+display_control = False
+shutdown_button = True
+restart_button = True
 ```
 
 If ```discovery_messages``` is set to true, the script will send MQTT Discovery config messages which allows Home Assistant to automatically add the sensors without having to define them in configuration.  Note, this setting is only available when ```group_messages``` is not used.
@@ -163,40 +166,45 @@ The group message looks like this:
 
 ## Test Raspberry Pi MQTT Monitor
 
-Run Raspberry Pi MQTT Monitor (you might need to update the path in the command below, depending on where you installled it)
+Run Raspberry Pi MQTT Monitor (this will work only if you used the automated installer or created the shortcut manually)
 
 ```bash
-/usr/bin/python3 /home/pi/rpi-mqtt-monitor/rpi-cpu2mqtt.py -d
+rpi-mqtt-monitor -d
 ```
 
 Once you run Raspberry Pi MQTT monitor you should see something like this:
 
 ```
+:: rpi-mqtt-monitor
+   Version: 0.9.1
+
 :: Device Information
-   Model Name: Intel(R) Pentium(R) Silver J5040 CPU @ 2.00GHz
-   Manufacturer: GenuineIntel
+   Model Name:  Intel(R) Pentium(R) Silver J5040 CPU @ 2.00GHz
+   Manufacturer:  GenuineIntel
    OS: Ubuntu 23.10
    Hostname: ubuntu-pc
    IP Address: 192.168.0.200
+   MAC Address: A8-A1-59-82-57-E7
+   Update Check Interval: 3600 seconds
 
 :: Measured values
-   CPU Load: 71.0
-   CPU Temp: 68
-   Used Space: 11
-   Voltage: False
-   CPU Clock Speed: False
-   Swap: False
-   Memory: 67
-   Uptime: 0
-   Wifi Signal: False
+   CPU Load: 48.5 %
+   CPU Temp: 71 °C
+   Used Space: 12 %
+   Voltage: False V
+   CPU Clock Speed: False MHz
+   Swap: False %
+   Memory: 53 %
+   Uptime: 0 days
+   Wifi Signal: False %
    Wifi Signal dBm: False
-   RPI5 Fan Speed: False
-   Git Update: off
+   RPI5 Fan Speed: False RPM
+   Update: {"installed_ver": "0.9.1", "new_ver": "0.9.1"}
 ```
 ## Schedule Raspberry Pi MQTT Monitor execution as a service
 
 If you want to run Raspberry Pi MQTT Monitor as a service you can use the provided service file.
-You need to edit the service file and update the path to the script and the user that will run it.
+You need to edit the service file and update the path to the script and the user (if you want to use shutdown or restart buttons user needs to be root) that will run it. 
 Then copy the service file to ```/etc/systemd/system/``` and enable it:
 
 ```bash
