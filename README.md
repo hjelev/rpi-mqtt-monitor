@@ -104,7 +104,7 @@ sudo apt install python-pip
 2. Then install this python module needed for the script:
 
 ```bash
-pip3 install paho-mqtt==1.6.1
+pip install paho-mqtt==1.6.1
 ```
 
 3. Install git if you don't have it:
