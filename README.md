@@ -200,15 +200,15 @@ You need to edit the service file and update the path to the script and the user
 Then copy the service file to ```/etc/systemd/system/``` and enable it:
 
 ```bash
-sudo cp rpi-cpu2mqtt.service /etc/systemd/system/
-sudo systemctl enable rpi-cpu2mqtt.service
+sudo cp rpi-mqtt-monitor.service /etc/systemd/system/
+sudo systemctl enable rpi-mqtt-monitor.service
 ```
 
 To test that the service is working you can run:
 
 ```bash
-sudo service rpi-cpu2mqtt start
-sudo service rpi-cpu2mqtt status
+sudo service rpi-mqtt-monitor start
+sudo service rpi-mqtt-monitor status
 ```
 
 ## Schedule Raspberry Pi MQTT Monitor execution with a cron
