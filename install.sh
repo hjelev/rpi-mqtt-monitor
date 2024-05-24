@@ -221,6 +221,8 @@ main(){
   done
   
   printm "Installation is complete."
+  echo "rpi-mqtt-monitor is now running and sending information to your MQTT broker."
+  echo "To see all available options run: rpi-mqtt-monitor -h in the terminal."
 }
 
 main
