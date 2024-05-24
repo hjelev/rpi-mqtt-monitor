@@ -132,6 +132,12 @@ update_config(){
   fi
   sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
 
+  printf "Do you need to control your monitors? (default is No): "
+  read CONTROL
+  if [[ "$CONTROL" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    sed -i "s/display_control = False/display_control = True/g" src/config.py
+  fi
+
   print_green  "+ config.py is updated with provided settings"
 
   # Get the local version
