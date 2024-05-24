@@ -1,14 +1,3 @@
-welcome(){
-  echo "  This script will install if not installed: python-pip and python module paho-mqtt,"
-  echo "  configure Raspberry Pi MQTT monitor and create a cronjob to run it."
-  read -r -p "  Do you want to proceed? [y/N] " response
-  if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-    printf ""
-  else
-    exit
-  fi	
-}
-
 find_python(){
   if [[ $(python3 --version)  ]]; then 
     python=$(which python3)
@@ -215,8 +204,6 @@ create_shortcut(){
 }
 
 main(){
-  printm "Raspberry Pi MQTT Monitor installer"
-  welcome
   find_python
   check_and_install_pip
   create_venv
