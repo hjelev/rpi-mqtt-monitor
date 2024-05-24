@@ -52,9 +52,12 @@ def check_used_space(path):
 def check_cpu_load():
     p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
     cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]
-    cpu_load = str(p).split("average:")[1].split(", ")[0].replace(' ', '').replace(',', '.')
-    cpu_load = float(cpu_load) / int(cores) * 100
-    cpu_load = round(float(cpu_load), 1)
+    try:
+        cpu_load = str(p).split("average:")[1].split(", ")[0].replace(' ', '').replace(',', '.')
+        cpu_load = float(cpu_load) / int(cores) * 100
+        cpu_load = round(float(cpu_load), 1)
+    except Exception:
+        cpu_load = 0
 
     return cpu_load
 
@@ -118,7 +121,10 @@ def check_model_name():
    if model_name == '':
         full_cmd = "cat /proc/cpuinfo  | grep 'name'| uniq"
         model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-        model_name = model_name.split(':')[1].replace('\n', '')
+        try:
+            model_name = model_name.split(':')[1].replace('\n', '')
+        except Exception:
+            model_name = 'Unknown'
 
    return model_name
 
@@ -133,8 +139,11 @@ def check_rpi5_fan_speed():
 def get_os():
     full_cmd = 'cat /etc/os-release | grep -i pretty_name'
     pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-    pretty_name = pretty_name.split('=')[1].replace('"', '').replace('\n', '')
-
+    try:
+        pretty_name = pretty_name.split('=')[1].replace('"', '').replace('\n', '')
+    except Exception:
+        pretty_name = 'Unknown'
+        
     return(pretty_name)
 
 
