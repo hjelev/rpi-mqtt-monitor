@@ -205,6 +205,7 @@ def get_mac_address():
 
 def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                           uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
+    remote_version = update.check_git_version_remote(script_dir)
     output = """
 :: rpi-mqtt-monitor
    Version: {}
@@ -236,8 +237,11 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    Wifi Signal dBm: {}
    RPI5 Fan Speed: {} RPM
    Update: {}
-    """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, check_git_update(script_dir))
+   """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, check_git_update(script_dir))
+    output += """Installation directory: {}
 
+:: Release notes {}: 
+{}""".format(script_dir, remote_version, get_release_notes(remote_version).strip())
     print(output)
 
 
