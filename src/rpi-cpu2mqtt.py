@@ -286,7 +286,7 @@ def config_json(what_config):
         "icon": "",
         "name": "",
         "unique_id": "",
-        "unit_of_measurement": "",
+
         "device": {
             "identifiers": [hostname],
             "manufacturer": 'github.com/hjelev',
@@ -361,6 +361,10 @@ def config_json(what_config):
         data["name"] = "Fan Speed"
         data["unit_of_measurement"] = "RPM"
         data["state_class"] = "measurement"
+    elif what_config == "status":
+        data["icon"] = "mdi:lan-connect"
+        data["name"] = "Status"
+        data["value_template"] = "{{ 'online' if value == '1' else 'offline' }}"
     elif what_config == "git_update":
         data["icon"] = "mdi:git"
         data["name"] = "RPi MQTT Monitor"
@@ -546,6 +550,11 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
                            config_json('display_on'), qos=config.qos)
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
                            config_json('display_off'), qos=config.qos)
+
+    status_sensor_topic = "homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
+    client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
+    client.publish(config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
+    
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
@@ -738,7 +747,8 @@ if __name__ == '__main__':
         client = paho.Client()
         client.username_pw_set(config.mqtt_user, config.mqtt_password)
         client.on_message = on_message
-
+        # set will_set to send a message when the client disconnects
+        client.will_set(config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
         try:
             client.connect(config.mqtt_host, int(config.mqtt_port))
         except Exception as e:
