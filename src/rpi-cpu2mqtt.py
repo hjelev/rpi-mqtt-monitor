@@ -116,9 +116,9 @@ def check_uptime(format):
 
 
 def check_model_name():
-   full_cmd = "cat /sys/firmware/devicetree/base/model"
-   model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-   if model_name == '':
+    full_cmd = "cat /sys/firmware/devicetree/base/model"
+    model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+    if model_name == '':
         full_cmd = "cat /proc/cpuinfo  | grep 'name'| uniq"
         model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
         try:
@@ -126,14 +126,14 @@ def check_model_name():
         except Exception:
             model_name = 'Unknown'
 
-   return model_name
+    return model_name
 
 
 def check_rpi5_fan_speed():
-   full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
-   rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").strip()
+    full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
+    rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").strip()
 
-   return rpi5_fan_speed
+    return rpi5_fan_speed
 
 
 def get_os():
