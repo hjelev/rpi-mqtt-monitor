@@ -84,10 +84,13 @@ def check_swap():
 def check_memory():
     full_cmd = "free | grep -i mem | awk 'NR == 1 {print $3/$2*100}'"
     memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-    if memory == '':
+    if not memory:
         full_cmd = "free | grep -i speicher | awk 'NR == 1 {print $3/$2*100}'"
         memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-    memory = round(float(memory.decode("utf-8").replace(",", ".")))
+    if memory:
+        memory = round(float(memory.decode("utf-8").replace(",", ".")))
+    else:
+        memory = 0
 
     return memory
 
