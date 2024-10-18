@@ -42,13 +42,14 @@ retain = True
 # QOS setting for published topics: 0,1,2 are acceptable values
 qos = 0
 
-# Random delay in seconds before measuring the values
+# Random delay in seconds before taking probes
 # - this is used for de-synchronizing message if you run this script on many hosts.
 # - if you want a fixed delay you can remove the randrange function and just set the needed value.
 # random_delay = randrange(10)
 
-# this is the time between executiuons if the script is used as service (--service option)
+# Interval in seconds between probes when running the script as a service (--service option)
 service_sleep_time = 120
+
 update_check_interval = 3600 # 1 hour
 cpu_load = True
 cpu_temp = True
@@ -61,9 +62,12 @@ memory = True
 uptime = True
 uptime_seconds = False
 
+# Check storage devices temperatures - experimental feature, disabled by default
+drive_temps = False
+
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
 wifi_signal = False
 wifi_signal_dbm = False
 
-# this works only on raspbery pi version 5 with stock fan
+# This works only on raspbery pi version 5 with stock fan
 rpi5_fan_speed = False
