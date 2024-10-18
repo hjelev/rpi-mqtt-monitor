@@ -353,6 +353,7 @@ def config_json(what_config, device=0):
         data["icon"] = "hass:thermometer"
         data["name"] = "CPU Temperature"
         data["unit_of_measurement"] = "°C"
+        data["device_class"] = "temperature"
         data["state_class"] = "measurement"
     elif what_config == "diskusage":
         data["icon"] = "mdi:harddisk"
