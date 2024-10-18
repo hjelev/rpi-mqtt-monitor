@@ -19,7 +19,7 @@ import config
 import re
 import html
 import uuid
-
+import glob
 
 def check_wifi_signal(format):
     try:
@@ -206,8 +206,41 @@ def get_mac_address():
     return mac
 
 
+def get_hwmon_device_name(hwmon_path):
+    try:
+        with open(os.path.join(hwmon_path, 'name'), 'r') as f:
+            return f.read().strip()
+    except Exception as e:
+        print(f"Error reading name for {hwmon_path}: {e}")
+        return None
+
+
+def get_hwmon_temp(hwmon_path):
+    try:
+        temp_files = glob.glob(os.path.join(hwmon_path, 'temp*_input'))
+        for temp_file in temp_files:
+            with open(temp_file, 'r') as tf:
+                temp = int(tf.read().strip()) / 1000.0
+                return temp
+    except Exception as e:
+        print(f"Error reading temperature for {hwmon_path}: {e}")
+        return None
+
+
+def check_all_drive_temps():
+    drive_temps = {}
+    hwmon_devices = glob.glob('/sys/class/hwmon/hwmon*')
+    for hwmon in hwmon_devices:
+        device_name = get_hwmon_device_name(hwmon)
+        if device_name and any(keyword in device_name.lower() for keyword in ['nvme', 'sd']):
+            temp = get_hwmon_temp(hwmon)
+            if temp is not None:
+                drive_temps[device_name] = temp
+    return drive_temps
+
+
 def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
+                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0):
     remote_version = update.check_git_version_remote(script_dir)
     output = """
 :: rpi-mqtt-monitor
@@ -241,11 +274,19 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    RPI5 Fan Speed: {} RPM
    Update: {}
    """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, check_git_update(script_dir))
-    output += """Installation directory: {}
+    
+    drive_temps = check_all_drive_temps()
+    if len(drive_temps) > 0:
+        for device, temp in drive_temps.items():
+            output += f"{device.capitalize()} Temp: {temp:.2f}°C\n"
+
+    output += """\nInstallation directory: {}
 
 :: Release notes {}: 
 {}""".format(script_dir, remote_version, get_release_notes(remote_version).strip())
     print(output)
+    
+
 
 
 def extract_text(html_string):
@@ -280,7 +321,7 @@ def get_release_notes(version):
     return release_notes
 
 
-def config_json(what_config):
+def config_json(what_config, device=0):
     model_name = check_model_name()
     manufacturer = get_manufacturer()
     os = get_os()
@@ -412,6 +453,12 @@ def config_json(what_config):
         data["command_topic"] = "homeassistant/update/" + hostname + "/command"
         data["payload_press"] = "display_off"
         data["device_class"] = "restart"
+    elif what_config == device + "_temp":
+        data["icon"] = "hass:thermometer"
+        data["name"] = device + " Temperature"
+        data["unit_of_measurement"] = "°C"
+        data["state_class"] = "measurement"
+        
     else:
         return ""
     # Return our built discovery config
@@ -471,7 +518,7 @@ def publish_update_status_to_mqtt(git_update):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0):
+                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0):
     client = create_mqtt_client()
     if client is None:
         return
@@ -553,6 +600,13 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
                            config_json('display_on'), qos=config.qos)
             client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
                            config_json('display_off'), qos=config.qos)
+    if config.drive_temps:
+        for device, temp in drive_temps.items():
+            if config.discovery_messages:
+                client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + device + "_temp/config",
+                           config_json(device + "_temp", device), qos=config.qos)
+            client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
+
 
     status_sensor_topic = "homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
@@ -641,7 +695,7 @@ def parse_arguments():
 
 
 def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = drive_temps = False
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -667,24 +721,26 @@ def collect_monitored_values():
         wifi_signal_dbm = check_wifi_signal('dbm')
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
+    if config.drive_temps:
+        drive_temps = check_all_drive_temps()
 
-    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed
+    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps
 
 
 def gather_and_send_info():
     while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed = collect_monitored_values()
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
             time.sleep(config.random_delay)
 
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
+            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps)
 
         if hasattr(config, 'group_messages') and config.group_messages:
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
         else:
-            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed)
+            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps)
 
         if not args.service:
             break
