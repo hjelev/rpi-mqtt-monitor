@@ -39,6 +39,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-10-19: Added support for drive temperatures
 * 2024-03-24: --hass to display configuration for Home Assistant wake on lan switch
 * 2024-02-20: Shutdown button added (only works when running as service)
 * 2024-02-05: System Restart button added (only works when running as service)
