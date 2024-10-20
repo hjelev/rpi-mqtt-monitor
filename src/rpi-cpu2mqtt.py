@@ -382,7 +382,7 @@ def config_json(what_config, device=0):
     elif what_config == "uptime_days":
         data["icon"] = "mdi:calendar"
         data["name"] = "Uptime"
-        data["unit_of_measurement"] = "days"
+        data["unit_of_measurement"] = "d"
         data["device_class"] = "duration"
         data["state_class"] = "total_increasing"
     elif what_config == "uptime_seconds":
