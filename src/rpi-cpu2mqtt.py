@@ -82,11 +82,9 @@ def check_swap():
 
 
 def check_memory():
-    full_cmd = "free | grep -i mem | awk 'NR == 1 {print $3/$2*100}'"
+    full_cmd = 'free -b | awk \'NR==2 {printf "%.2f\\n", $3/$2 * 100}\''
     memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-    if not memory:
-        full_cmd = "free | grep -i speicher | awk 'NR == 1 {print $3/$2*100}'"
-        memory = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+
     if memory:
         memory = round(float(memory.decode("utf-8").replace(",", ".")))
     else:
@@ -280,14 +278,12 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
         for device, temp in drive_temps.items():
             output += f"{device.capitalize()} Temp: {temp:.2f}°C\n"
 
-    output += """\nInstallation directory: {}
+    output += """\n    Installation directory: {}
 
 :: Release notes {}: 
 {}""".format(script_dir, remote_version, get_release_notes(remote_version).strip())
     print(output)
     
-
-
 
 def extract_text(html_string):
     html_string = html.unescape(html_string)
