@@ -360,6 +360,7 @@ def config_json(what_config, device=0):
         data["icon"] = "mdi:flash"
         data["name"] = "CPU Voltage"
         data["unit_of_measurement"] = "V"
+        data["device_class"] = "voltage"
         data["state_class"] = "measurement"
     elif what_config == "swap":
         data["icon"] = "mdi:harddisk"
@@ -375,11 +376,13 @@ def config_json(what_config, device=0):
         data["icon"] = "mdi:speedometer"
         data["name"] = "CPU Clock Speed"
         data["unit_of_measurement"] = "MHz"
+        data["device_class"] = "frequency"
         data["state_class"] = "measurement"
     elif what_config == "uptime_days":
         data["icon"] = "mdi:calendar"
         data["name"] = "Uptime"
-        data["unit_of_measurement"] = "days"
+        data["unit_of_measurement"] = "d"
+        data["device_class"] = "duration"
         data["state_class"] = "total_increasing"
     elif what_config == "uptime_seconds":
         data["icon"] = "mdi:timer-outline"
@@ -396,6 +399,7 @@ def config_json(what_config, device=0):
         data["icon"] = "mdi:wifi"
         data["name"] = "Wifi Signal"
         data["unit_of_measurement"] = "dBm"
+        data["device_class"] = "signal_strength"
         data["state_class"] = "measurement"
     elif what_config == "rpi5_fan_speed":
         data["icon"] = "mdi:fan"
