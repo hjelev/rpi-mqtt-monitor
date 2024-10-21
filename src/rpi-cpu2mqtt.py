@@ -278,7 +278,7 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
         for device, temp in drive_temps.items():
             output += f"{device.capitalize()} Temp: {temp:.2f}°C\n"
 
-    output += """\n    Installation directory: {}
+    output += """\n:: Installation directory: \n   {}
 
 :: Release notes {}: 
 {}""".format(script_dir, remote_version, get_release_notes(remote_version).strip())
