@@ -94,7 +94,7 @@ def check_memory():
 
 
 def check_cpu_temp():
-    full_cmd = "cat /sys/class/thermal/thermal_zone*/temp 2> /dev/null | sed 's/\\(.\\)..$//' | tail -n 1"
+    full_cmd = "awk '{printf (\"%.2f\\n\", $1/1000); }' $(for zone in /sys/class/thermal/thermal_zone*/; do grep -iq \"cpu\" \"${zone}type\" && echo \"${zone}temp\"; done)"
     try:
         p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         cpu_temp = p.decode("utf-8").strip()
