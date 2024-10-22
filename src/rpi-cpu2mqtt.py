@@ -425,7 +425,7 @@ def config_json(what_config, device=0):
         data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
         data["device_class"] = "firmware"
-        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
         data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
@@ -433,25 +433,25 @@ def config_json(what_config, device=0):
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
         data["name"] = "System Restart"
-        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "restart"
         data["device_class"] = "restart"
     elif what_config == "shutdown_button":
         data["icon"] = "mdi:power"
         data["name"] = "System Shutdown"
-        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "shutdown"
         data["device_class"] = "restart"
     elif what_config == "display_on":
         data["icon"] = "mdi:monitor"
         data["name"] = "Monitor ON"
-        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_on"
         data["device_class"] = "restart"
     elif what_config == "display_off":
         data["icon"] = "mdi:monitor"
         data["name"] = "Monitor OFF"
-        data["command_topic"] = "homeassistant/update/" + hostname + "/command"
+        data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_off"
         data["device_class"] = "restart"
     elif what_config == device + "_temp":
@@ -501,13 +501,13 @@ def publish_update_status_to_mqtt(git_update):
     client.loop_start()
     if config.git_update:
         if config.discovery_messages:
-            client.publish("homeassistant/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
+            client.publish(config.mqtt_discovery_prefix + "/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
                            config_json('git_update'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=1, retain=config.retain)
 
     if config.update:
         if config.discovery_messages:
-            client.publish("homeassistant/update/" + hostname + "/config",
+            client.publish(config.mqtt_discovery_prefix + "/update/" + hostname + "/config",
                            config_json('update'), qos=1)
 
     # Wait for all messages to be delivered
@@ -529,88 +529,88 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
 
     if config.cpu_load:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpuload/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpuload/config",
                            config_json('cpuload'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpuload", cpu_load, qos=config.qos, retain=config.retain)
     if config.cpu_temp:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cputemp/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cputemp/config",
                            config_json('cputemp'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cputemp", cpu_temp, qos=config.qos, retain=config.retain)
     if config.used_space:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_diskusage/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_diskusage/config",
                            config_json('diskusage'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/diskusage", used_space, qos=config.qos, retain=config.retain)
     if config.voltage:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_voltage/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_voltage/config",
                            config_json('voltage'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/voltage", voltage, qos=config.qos, retain=config.retain)
     if config.swap:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_swap/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_swap/config",
                            config_json('swap'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/swap", swap, qos=config.qos, retain=config.retain)
     if config.memory:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_memory/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_memory/config",
                            config_json('memory'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/memory", memory, qos=config.qos, retain=config.retain)
     if config.sys_clock_speed:
         if config.discovery_messages:
             client.publish(
-                "homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_sys_clock_speed/config",
+                config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_sys_clock_speed/config",
                 config_json('sys_clock_speed'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/sys_clock_speed", sys_clock_speed, qos=config.qos, retain=config.retain)
     if config.uptime:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_days/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_days/config",
                            config_json('uptime_days'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_days", uptime_days, qos=config.qos, retain=config.retain)
     if config.uptime_seconds:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_seconds/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_seconds/config",
                            config_json('uptime_seconds'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_seconds", uptime_seconds, qos=config.qos, retain=config.retain)
     if config.wifi_signal:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_wifi_signal/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_wifi_signal/config",
                            config_json('wifi_signal'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/wifi_signal", wifi_signal, qos=config.qos, retain=config.retain)
     if config.wifi_signal_dbm:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_wifi_signal_dbm/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_wifi_signal_dbm/config",
                            config_json('wifi_signal_dbm'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/wifi_signal_dbm", wifi_signal_dbm, qos=config.qos, retain=config.retain)
     if config.rpi5_fan_speed:
         if config.discovery_messages:
-            client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi5_fan_speed/config",
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi5_fan_speed/config",
                            config_json('rpi5_fan_speed'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
     if config.restart_button:
         if config.discovery_messages:
-            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
+            client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
                            config_json('restart_button'), qos=config.qos)
     if config.shutdown_button:
         if config.discovery_messages:
-            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_shutdown/config",
+            client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_shutdown/config",
                            config_json('shutdown_button'), qos=config.qos)
     if config.display_control:
         if config.discovery_messages:
-            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_on/config",
+            client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_on/config",
                            config_json('display_on'), qos=config.qos)
-            client.publish("homeassistant/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
+            client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
                            config_json('display_off'), qos=config.qos)
     if config.drive_temps:
         for device, temp in drive_temps.items():
             if config.discovery_messages:
-                client.publish("homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + device + "_temp/config",
+                client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + device + "_temp/config",
                            config_json(device + "_temp", device), qos=config.qos)
             client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
 
 
-    status_sensor_topic = "homeassistant/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
+    status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
     client.publish(config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
     
@@ -687,7 +687,7 @@ def parse_arguments():
     turn_off:
       service: mqtt.publish
       data:
-        topic: "homeassistant/update/{}/command"
+        topic: config.mqtt_discovery_prefix + "/update/{}/command"
         payload: "shutdown"
     """.format(get_mac_address(), get_network_ip(), hostname, hostname )
         print(hass_config)
@@ -816,8 +816,8 @@ if __name__ == '__main__':
             print("Error connecting to MQTT broker:", e)
             sys.exit(1)
 
-        client.subscribe("homeassistant/update/" + hostname + "/command")
-        print("Listening to topic : " + "homeassistant/update/" + hostname + "/command")
+        client.subscribe(config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
+        print("Listening to topic : " + config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
         client.loop_start()
         thread1 = threading.Thread(target=gather_and_send_info)
         thread1.daemon = True  # Set thread1 as a daemon thread

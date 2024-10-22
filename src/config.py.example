@@ -7,6 +7,7 @@ mqtt_host = "ip address or host"
 mqtt_user = "username"
 mqtt_password = "password"
 mqtt_port = "1883"
+mqtt_discovery_prefix = "homeassistant"
 mqtt_topic_prefix = "rpi-MQTT-monitor"
 
 # Messages configuration
