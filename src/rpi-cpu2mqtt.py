@@ -94,19 +94,17 @@ def check_memory():
 
 
 def check_rpi_power_status():
-    full_cmd = "vcgencmd get_throttled | awk -F= '{print $2}'"
-    power_status = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-
-    if power_status:
-        print(power_status)
-        if power_status == "0x0":
-            power_status = "OK"
+    try:
+        full_cmd = "vcgencmd get_throttled | cut -d= -f2"
+        throttled = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        throttled = throttled.decode('utf-8').strip()
+        
+        if throttled == "0x0":
+            return "OK"
         else:
-            power_status = "KO"
-    else:
-        power_status = "NA"
-
-    return power_status
+            return "KO"
+    except Exception as e:
+        return "Error: " + str(e)
 
 
 def check_cpu_temp():
