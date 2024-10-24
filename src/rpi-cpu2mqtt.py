@@ -218,6 +218,20 @@ def get_mac_address():
     return mac
 
 
+def get_apt_updates():
+    try:
+        subprocess.run(['sudo', 'apt', 'update'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        full_cmd = "apt-get -q -y --ignore-hold --allow-change-held-packages --allow-unauthenticated -s dist-upgrade | /bin/grep ^Inst | wc -l"
+        result = subprocess.run(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        updates_count = int(result.stdout.strip())
+    except Exception as e:
+        print(f"Error checking for updates: {e}")
+        updates_count = 0
+
+    return updates_count
+
+
 def get_hwmon_device_name(hwmon_path):
     try:
         with open(os.path.join(hwmon_path, 'name'), 'r') as f:
@@ -254,8 +268,7 @@ def check_all_drive_temps():
 def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                           uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0):
     remote_version = update.check_git_version_remote(script_dir)
-    output = """
-:: rpi-mqtt-monitor
+    output = """:: rpi-mqtt-monitor
    Version: {}
 
 :: Device Information
@@ -478,7 +491,11 @@ def config_json(what_config, device="0"):
         data["state_class"] = "measurement"
     elif what_config == "rpi_power_status":
         data["icon"] = "mdi:flash"
-        data["name"] = "RPi Power Status"        
+        data["name"] = "RPi Power Status"  
+    elif what_config == "apt_updates":
+        data["icon"] = "mdi:update"
+        data["name"] = "APT Updates"
+    
     else:
         return ""
     # Return our built discovery config
@@ -509,7 +526,7 @@ def create_mqtt_client():
     return client
 
 
-def publish_update_status_to_mqtt(git_update):
+def publish_update_status_to_mqtt(git_update, apt_updates):
 
     client = create_mqtt_client()
     if client is None:
@@ -527,6 +544,13 @@ def publish_update_status_to_mqtt(git_update):
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/update/" + hostname + "/config",
                            config_json('update'), qos=1)
+
+    if config.apt_updates:
+        if config.discovery_messages:
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_apt_updates/config",
+                           config_json('apt_updates'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/apt_updates", apt_updates, qos=config.qos, retain=config.retain)
+
 
     # Wait for all messages to be delivered
     while len(client._out_messages) > 0:
@@ -781,7 +805,8 @@ def gather_and_send_info():
 def update_status():
     while not stop_event.is_set():
         git_update = check_git_update(script_dir)
-        publish_update_status_to_mqtt(git_update)
+        apt_updates = get_apt_updates()
+        publish_update_status_to_mqtt(git_update, apt_updates)
         stop_event.wait(config.update_check_interval)
         if stop_event.is_set():
             break
