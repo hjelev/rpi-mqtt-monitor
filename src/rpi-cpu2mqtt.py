@@ -348,8 +348,9 @@ def config_json(what_config, device="0"):
             "model": 'RPi MQTT Monitor ' + config.version,
             "name": hostname,
             "sw_version": os,
-            "hw_version": model_name + " by " + manufacturer,
-            "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor"
+            "hw_version": model_name + " by " + manufacturer + " IP:" + get_network_ip(),
+            "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor",
+            "connections": [["mac", get_mac_address()]]
         }
     }
 
