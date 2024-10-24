@@ -98,6 +98,7 @@ def check_rpi_power_status():
     power_status = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
     if power_status:
+        print(power_status)
         if power_status == "0x0":
             power_status = "OK"
         else:
