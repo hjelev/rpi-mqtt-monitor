@@ -97,7 +97,7 @@ def check_cpu_temp():
     full_cmd = "awk '{printf (\"%.2f\\n\", $1/1000); }' $(for zone in /sys/class/thermal/thermal_zone*/; do grep -iq \"cpu\" \"${zone}type\" && echo \"${zone}temp\"; done)"
     try:
         p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-        cpu_temp = p.decode("utf-8").strip()
+        cpu_temp = p.decode("utf-8").strip().replace(",", ".")
     except Exception:
         cpu_temp = 0
 
