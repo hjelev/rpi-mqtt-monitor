@@ -72,3 +72,6 @@ wifi_signal_dbm = False
 
 # This works only on raspbery pi version 5 with stock fan
 rpi5_fan_speed = False
+
+# this works only on raspbery pi
+rpi_power_status = False
