@@ -75,3 +75,6 @@ rpi5_fan_speed = False
 
 # this works only on raspbery pi
 rpi_power_status = False
+
+# Check for apt updates - experimental feature, disabled by default, updateed with update_check_interval
+apt_updates = False
