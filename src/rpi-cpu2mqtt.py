@@ -108,7 +108,7 @@ def check_rpi_power_status():
 
 
 def check_cpu_temp():
-    full_cmd = "awk '{printf (\"%.2f\\n\", $1/1000); }' $(for zone in /sys/class/thermal/thermal_zone*/; do grep -iq \"cpu\" \"${zone}type\" && echo \"${zone}temp\"; done)"
+    full_cmd = f"awk '{{printf (\"%.2f\\n\", $1/1000); }}' $(for zone in /sys/class/thermal/thermal_zone*/; do grep -iq \"{config.cpu_thermal_zone}\" \"${{zone}}type\" && echo \"${{zone}}temp\"; done)"    
     try:
         p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         cpu_temp = p.decode("utf-8").strip().replace(",", ".")
