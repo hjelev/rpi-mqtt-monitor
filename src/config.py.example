@@ -78,3 +78,6 @@ rpi_power_status = False
 
 # Check for apt updates - experimental feature, disabled by default, updateed with update_check_interval
 apt_updates = False
+
+# Change the thermal zone if you have issues with cpu temps
+cpu_thermal_zone = 'cpu'
