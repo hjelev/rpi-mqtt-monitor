@@ -251,7 +251,8 @@ Use '''python3 src/rpi-cpu2mqtt.py --hass''' to display the configuration for Ho
 
 ## To Do
 
-- maybe add network traffic monitoring via some third party software (for now I can't find a way to do it without additional software)
+- fix uptime sensor to use timestamp
+- integrate hass api
 
 ## Feature request
 
