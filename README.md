@@ -18,7 +18,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
 * Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell.
 * Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message)
-* Easy update: You can update the script by calling it with command line argument --update
+* Easy update: You can update the script by calling it with command line argument --update or via Home Assistant
 
 
 ## Table of Contents
