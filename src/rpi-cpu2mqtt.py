@@ -109,16 +109,23 @@ def check_rpi_power_status():
         return "Error: " + str(e)
 
 def read_ext_sensors():
-    
-    ext_sensors = []
+    """
+    here we read the external sensors
+    we create a list with the external sensors where we append the values
 
+    """
+    # we copy the variable from the config file and replace the values by the real sensor values
+    ext_sensors = config.ext_sensors
+    # item[0] = name
+    # item[1] = sensor_type
+    # item[2] = ID
+    # item[3] = value
+    # now we iterate over the external sensors
     for item in config.ext_sensors:
-        ext_sensor_type = item[0]
-        ext_sensor_id = item[1]
-        
-        if ext_sensor_type == "ds18b20":
-            temp = ds18b20.sensor_DS18B20(sensor_id=ext_sensor_id)
-            ext_sensors.append([ext_sensor_type, ext_sensor_id, temp])
+        # if it is a DS18B20 sensor 
+        if item[1] == "ds18b20":
+            temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
+            item[3] = temp
             
     return ext_sensors
 
@@ -515,7 +522,7 @@ def config_json(what_config, device="0"):
         data["name"] = "APT Updates"
     elif what_config == "ds18b20_status":
         data["icon"] = "hass:thermometer"
-        data["name"] = "DS18B20" " Temperature"
+        data["name"] = device + " Temperature"
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
@@ -683,17 +690,17 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
     if config.ext_sensors:
         # we loop through all sensors
         for item in ext_sensors:
-            # item[0] = sensor_type
-            # item[1] = ID
-            # item[2] = value, like temperature or humidity
-            if item[0] == "ds18b20":
-            #FIXME, for more than 1 DS18B20 we need to add a number to the topic, like ds18b20_1 ds18b20_2 etc.
+            # item[0] = name
+            # item[1] = sensor_type
+            # item[2] = ID
+            # item[3] = value, like temperature or humidity
+            if item[1] == "ds18b20":
                 if config.discovery_messages:
                     print ("we want to publish via discovery")
                     client.publish(
-                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_ds18b20_status/config",
-                        config_json('ds18b20_status'), qos=config.qos)
-                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/ds18b20_status", item[2], qos=config.qos, retain=config.retain)
+                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_status/config",
+                        config_json('ds18b20_status', device=item[0]), qos=config.qos)
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + item[0] + "_status", item[3], qos=config.qos, retain=config.retain)
         
 
     status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
@@ -712,7 +719,7 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0, rpi_power_status="0", ext_sensors=[]):
     # compose the CSV message containing the measured values
 
-    values = (cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status) + tuple(sensor[2] for sensor in ext_sensors)
+    values = (cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status) + tuple(sensor[3] for sensor in ext_sensors)
     values = str(values)[1:-1]
 
     client = create_mqtt_client()

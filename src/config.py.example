@@ -83,6 +83,6 @@ apt_updates = False
 cpu_thermal_zone = 'cpu'
 
 # read external sensors for temperature, humidity, pressure etc.
-# a list of sensors with properties [sensor_type, ID, default_value]
+# a list of sensors with properties [name, sensor_type, ID, default_value]
 # the default_value is returned if it fails to read the external sensor
-ext_sensors = [["ds18b20", "0014531448ff", -300], ["sht21", 0x24, -300]] 
+ext_sensors = [["ext1", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0x24, -300]] 
