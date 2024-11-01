@@ -85,4 +85,8 @@ cpu_thermal_zone = 'cpu'
 # read external sensors for temperature, humidity, pressure etc.
 # a list of sensors with properties [name, sensor_type, ID, default_value]
 # the default_value is returned if it fails to read the external sensor
-ext_sensors = [["ext1", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0x24, -300]] 
+# the default value is either a scalar or a list, e.g. temperature and humidity
+# only 1 sensor; keep in mind to keep a list of list
+#ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300]] 
+# more than 1 sensor
+ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0x40, [-300, 0]]] 

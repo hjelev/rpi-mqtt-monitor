@@ -20,8 +20,11 @@ import re
 import html
 import uuid
 import glob
+# append folder ext_sensor_lib
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ext_sensor_lib')))
 #import external sensor lib
-from ext_sensor_lib import ds18b20
+import ds18b20
+from sht21 import SHT21
 
 def check_wifi_signal(format):
     try:
@@ -126,6 +129,13 @@ def read_ext_sensors():
         if item[1] == "ds18b20":
             temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
             item[3] = temp
+        if item[1] == "sht21":
+            with SHT21(1) as sht21:
+                temp = sht21.read_temperature()
+                temp = '%6.1f' % temp
+                hum = sht21.read_humidity()
+                hum = '%2.1f' % hum
+            item[3] = [temp, hum]
             
     return ext_sensors
 
@@ -526,6 +536,27 @@ def config_json(what_config, device="0"):
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
+        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["unique_id"] = hostname + "_" + what_config + "_" + device
+    elif what_config == "sht21_temp_status":
+        data["icon"] = "hass:thermometer"
+        data["name"] = device + " Temperature"
+        data["unit_of_measurement"] = "°C"
+        data["device_class"] = "temperature"
+        data["state_class"] = "measurement"
+        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["unique_id"] = hostname + "_" + what_config + "_" + device
+    elif what_config == "sht21_hum_status":
+        data["icon"] = "mdi:water-percent"
+        data["name"] = device + " Humidity"
+        data["unit_of_measurement"] = "%"
+        data["device_class"] = "temperature"
+        data["state_class"] = "measurement"
+        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["unique_id"] = hostname + "_" + what_config + "_" + device
     
     else:
         return ""
@@ -696,12 +727,26 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             # item[3] = value, like temperature or humidity
             if item[1] == "ds18b20":
                 if config.discovery_messages:
-                    print ("we want to publish via discovery")
                     client.publish(
                         config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_status/config",
                         config_json('ds18b20_status', device=item[0]), qos=config.qos)
-                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + item[0] + "_status", item[3], qos=config.qos, retain=config.retain)
-        
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "ds18b20_status_" + item[0], item[3], qos=config.qos, retain=config.retain)
+            if item[1] == "sht21":
+                if config.discovery_messages:
+                    print ("we want to publish via discovery")
+                    # temperature
+                    client.publish(
+                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_temp_status/config",
+                        config_json('sht21_temp_status', device=item[0]), qos=config.qos)
+                    # humidity
+                    client.publish(
+                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_hum_status/config",
+                        config_json('sht21_hum_status', device=item[0]), qos=config.qos)
+                # temperature
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_temp_status_" + item[0], item[3][0], qos=config.qos, retain=config.retain)
+                # humidity
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_hum_status_" + item[0], item[3][1], qos=config.qos, retain=config.retain)
+                
 
     status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
