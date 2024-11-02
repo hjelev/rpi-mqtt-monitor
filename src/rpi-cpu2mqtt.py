@@ -148,6 +148,7 @@ def read_ext_sensors():
             # in case we have any problems to read the sensor, we continue and keep default values
             except Exception:
                 print ("Error while reading sensor %s" % item[1])
+    print (ext_sensors)
     return ext_sensors
 
 
