@@ -130,7 +130,7 @@ def read_ext_sensors():
         if item[1] == "ds18b20":
             # if sensor ID in unknown, then we try to get it
             # this only works for a single DS18B20 sensor
-            if int(item[2])==0:
+            if item[2]==0:
                 item[2] = ds18b20.get_available_sensors()[0]
             temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
             item[3] = temp
