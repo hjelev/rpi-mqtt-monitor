@@ -130,7 +130,7 @@ def read_ext_sensors():
         if item[1] == "ds18b20":
             # if sensor ID in unknown, then we try to get it
             # this only works for a single DS18B20 sensor
-            if item[2]==0:
+            if int(item[2])==0:
                 item[2] = ds18b20.get_available_sensors()[0]
             temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
             item[3] = temp
@@ -882,29 +882,6 @@ def collect_monitored_values():
     return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors
 
 
-
-
-def write_rpi_cam_web_interface_annotation(annotation):
-    """
-    writes an annotation to Rpi-Cam-Web-Interface
-    """
-    file = open("/dev/shm/mjpeg/user_annotate.txt","w")
-    #file.write("T: %.1f 'C; H: %d %%; T-Rpi: %.1f 'C" % (temp_1, int(hum), temp_2))
-    
-    temp_1 =0 # ext_sensors[0][3]
-    temp_2 = 0
-    hum = 0
-
-    output = f"T: {temp_1:.1f} 'C; H: {int(hum)} %%; T-Rpi: {temp_2:.1f} 'C"
-    #file.write(output)
-    file.write(annotation)
-
-    file.close()
-
-
-
-
-
 def gather_and_send_info():
     while not stop_event.is_set():
         cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors= collect_monitored_values()
@@ -919,10 +896,6 @@ def gather_and_send_info():
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
         else:
             publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
-
-        if config.rpi_cam_web_interface:
-            write_rpi_cam_web_interface_annotation(config.rpi_cam_web_interface)
-
 
         if not args.service:
             break
