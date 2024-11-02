@@ -20,11 +20,12 @@ import re
 import html
 import uuid
 import glob
-# append folder ext_sensor_lib
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ext_sensor_lib')))
-#import external sensor lib
-import ds18b20
-from sht21 import SHT21
+#import external sensor lib only if one uses external sensors
+if config.ext_sensors:
+    # append folder ext_sensor_lib
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ext_sensor_lib')))
+    import ds18b20
+    from sht21 import SHT21
 
 def check_wifi_signal(format):
     try:
@@ -127,16 +128,27 @@ def read_ext_sensors():
     for item in config.ext_sensors:
         # if it is a DS18B20 sensor 
         if item[1] == "ds18b20":
+            # if sensor ID in unknown, then we try to get it
+            # this only works for a single DS18B20 sensor
+            if int(item[2])==0:
+                item[2] = ds18b20.get_available_sensors()[0]
             temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
             item[3] = temp
+            # in case that some error occurs during reading, we get -300
+            if temp==-300:
+                print ("Error while reading sensor %s, %s" % (item[1], item[2]))
         if item[1] == "sht21":
-            with SHT21(1) as sht21:
-                temp = sht21.read_temperature()
-                temp = '%6.1f' % temp
-                hum = sht21.read_humidity()
-                hum = '%2.1f' % hum
-            item[3] = [temp, hum]
-            
+            try:
+                with SHT21(1) as sht21:
+                    temp = sht21.read_temperature()
+                    temp = '%2.1f' % temp
+                    hum = sht21.read_humidity()
+                    hum = '%2.1f' % hum
+                    item[3] = [temp, hum]
+            # in case we have any problems to read the sensor, we continue and keep default values
+            except Exception:
+                print ("Error while reading sensor %s" % item[1])
+    print (ext_sensors)
     return ext_sensors
 
 
@@ -733,7 +745,6 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
                 client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "ds18b20_status_" + item[0], item[3], qos=config.qos, retain=config.retain)
             if item[1] == "sht21":
                 if config.discovery_messages:
-                    print ("we want to publish via discovery")
                     # temperature
                     client.publish(
                         config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_temp_status/config",
@@ -867,8 +878,6 @@ def collect_monitored_values():
         rpi_power_status = check_rpi_power_status()
     if config.ext_sensors:
         ext_sensors = read_ext_sensors()
-        #FIXME
-        print ("ext_sensors", ext_sensors)
 
     return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors
 
