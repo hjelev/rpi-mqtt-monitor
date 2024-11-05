@@ -40,6 +40,8 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-11-06: External sensors by @pallago
+* 2024-10-25: Apt updates sensor
 * 2024-10-24: Added rpi_power_status sensor
 * 2024-10-19: Added support for drive temperatures
 * 2024-03-24: --hass to display configuration for Home Assistant wake on lan switch
