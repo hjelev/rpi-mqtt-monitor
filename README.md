@@ -29,6 +29,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
   - [Automated](#automated)
   - [Manual](#manual)
 - [Configuration](#configuration)
+  - [External Sensors](#external-sensors)
 - [Test Raspberry Pi MQTT Monitor](#test-raspberry-pi-mqtt-monitor)
 - [Schedule Raspberry Pi MQTT Monitor execution as a service](#schedule-raspberry-pi-mqtt-monitor-execution-as-a-service)
 - [Schedule Raspberry Pi MQTT Monitor execution](#schedule-raspberry-pi-mqtt-monitor-execution)
@@ -165,6 +166,18 @@ The group message looks like this:
 ```
 1.3, 47.1, 12, 1.2, 600, nan, 14.1, 12, 50, -60
 ```
+
+### External Sensors
+External sensors (currently DS18B20 for temperature and SHT21 for temperature and humdity) can be read out.
+Therefore the ```ext_sensor```key in the config file must be configured.
+A list of sensors with properties ```[name, sensor_type, ID, default_value]``` must be given.
+The default_value is returned if the Raspberry fails to read the external sensor. The default value is either a scalar or a list, e.g. temperature and humidity. Examples:
+* 1x ds18b20 sensor located in the RPi housing: ```ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300]]```
+* If the ID in unkown and if there is only 1 ds18b20 sensor, then use: ```ext_sensors = [["Housing", "ds18b20", 0, -300]]```
+* If there are two sensors, one DS18B20 and one SHT21 (via I2C), then use: ```ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300], ["Outside", "sht21", 0, [-300, 0]]]```, where the -300 is the default value for temperature and 0 is the default value for humidity.
+
+default option is ```False```
+
 
 ## Test Raspberry Pi MQTT Monitor
 

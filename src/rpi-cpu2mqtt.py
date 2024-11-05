@@ -20,6 +20,12 @@ import re
 import html
 import uuid
 import glob
+#import external sensor lib only if one uses external sensors
+if config.ext_sensors:
+    # append folder ext_sensor_lib
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ext_sensor_lib')))
+    import ds18b20
+    from sht21 import SHT21
 
 def check_wifi_signal(format):
     try:
@@ -105,6 +111,46 @@ def check_rpi_power_status():
             return "KO"
     except Exception as e:
         return "Error: " + str(e)
+
+def read_ext_sensors():
+    """
+    here we read the external sensors
+    we create a list with the external sensors where we append the values
+
+    """
+    # we copy the variable from the config file and replace the values by the real sensor values
+    ext_sensors = config.ext_sensors
+    # item[0] = name
+    # item[1] = sensor_type
+    # item[2] = ID
+    # item[3] = value
+    # now we iterate over the external sensors
+    for item in config.ext_sensors:
+        # if it is a DS18B20 sensor 
+        if item[1] == "ds18b20":
+            # if sensor ID in unknown, then we try to get it
+            # this only works for a single DS18B20 sensor
+            if item[2]==0:
+                item[2] = ds18b20.get_available_sensors()[0]
+            temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
+            item[3] = temp
+            # in case that some error occurs during reading, we get -300
+            if temp==-300:
+                print ("Error while reading sensor %s, %s" % (item[1], item[2]))
+        if item[1] == "sht21":
+            try:
+                with SHT21(1) as sht21:
+                    temp = sht21.read_temperature()
+                    temp = '%2.1f' % temp
+                    hum = sht21.read_humidity()
+                    hum = '%2.1f' % hum
+                    item[3] = [temp, hum]
+            # in case we have any problems to read the sensor, we continue and keep default values
+            except Exception:
+                print ("Error while reading sensor %s" % item[1])
+    print (ext_sensors)
+    return ext_sensors
+
 
 
 def check_cpu_temp():
@@ -266,7 +312,7 @@ def check_all_drive_temps():
 
 
 def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0):
+                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
     remote_version = update.check_git_version_remote(script_dir)
     output = """:: rpi-mqtt-monitor
    Version: {}
@@ -299,7 +345,8 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    RPI5 Fan Speed: {} RPM
    RPI Power Status: {}
    Update: {}
-   """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, rpi_power_status, check_git_update(script_dir))
+   External Sensors: {}
+   """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, rpi_power_status, check_git_update(script_dir), ext_sensors)
     
     drive_temps = check_all_drive_temps()
     if len(drive_temps) > 0:
@@ -495,6 +542,33 @@ def config_json(what_config, device="0"):
     elif what_config == "apt_updates":
         data["icon"] = "mdi:update"
         data["name"] = "APT Updates"
+    elif what_config == "ds18b20_status":
+        data["icon"] = "hass:thermometer"
+        data["name"] = device + " Temperature"
+        data["unit_of_measurement"] = "°C"
+        data["device_class"] = "temperature"
+        data["state_class"] = "measurement"
+        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["unique_id"] = hostname + "_" + what_config + "_" + device
+    elif what_config == "sht21_temp_status":
+        data["icon"] = "hass:thermometer"
+        data["name"] = device + " Temperature"
+        data["unit_of_measurement"] = "°C"
+        data["device_class"] = "temperature"
+        data["state_class"] = "measurement"
+        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["unique_id"] = hostname + "_" + what_config + "_" + device
+    elif what_config == "sht21_hum_status":
+        data["icon"] = "mdi:water-percent"
+        data["name"] = device + " Humidity"
+        data["unit_of_measurement"] = "%"
+        data["device_class"] = "temperature"
+        data["state_class"] = "measurement"
+        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["unique_id"] = hostname + "_" + what_config + "_" + device
     
     else:
         return ""
@@ -562,7 +636,7 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0):
+                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
     client = create_mqtt_client()
     if client is None:
         return
@@ -656,6 +730,34 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
                 config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi_power_status/config",
                 config_json('rpi_power_status'), qos=config.qos)
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi_power_status", rpi_power_status, qos=config.qos, retain=config.retain)
+    if config.ext_sensors:
+        # we loop through all sensors
+        for item in ext_sensors:
+            # item[0] = name
+            # item[1] = sensor_type
+            # item[2] = ID
+            # item[3] = value, like temperature or humidity
+            if item[1] == "ds18b20":
+                if config.discovery_messages:
+                    client.publish(
+                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_status/config",
+                        config_json('ds18b20_status', device=item[0]), qos=config.qos)
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "ds18b20_status_" + item[0], item[3], qos=config.qos, retain=config.retain)
+            if item[1] == "sht21":
+                if config.discovery_messages:
+                    # temperature
+                    client.publish(
+                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_temp_status/config",
+                        config_json('sht21_temp_status', device=item[0]), qos=config.qos)
+                    # humidity
+                    client.publish(
+                        config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_hum_status/config",
+                        config_json('sht21_hum_status', device=item[0]), qos=config.qos)
+                # temperature
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_temp_status_" + item[0], item[3][0], qos=config.qos, retain=config.retain)
+                # humidity
+                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_hum_status_" + item[0], item[3][1], qos=config.qos, retain=config.retain)
+                
 
     status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
@@ -670,10 +772,10 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
 
 
 def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                         uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0, rpi_power_status="0"):
+                         uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0, rpi_power_status="0", ext_sensors=[]):
     # compose the CSV message containing the measured values
 
-    values = cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status
+    values = (cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status) + tuple(sensor[3] for sensor in ext_sensors)
     values = str(values)[1:-1]
 
     client = create_mqtt_client()
@@ -744,7 +846,7 @@ def parse_arguments():
 
 
 def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = drive_temps = rpi_power_status = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = drive_temps = rpi_power_status = ext_sensors = False
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -774,24 +876,26 @@ def collect_monitored_values():
         drive_temps = check_all_drive_temps()
     if config.rpi_power_status:
         rpi_power_status = check_rpi_power_status()
+    if config.ext_sensors:
+        ext_sensors = read_ext_sensors()
 
-    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status
+    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors
 
 
 def gather_and_send_info():
     while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status = collect_monitored_values()
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors= collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
             time.sleep(config.random_delay)
 
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status)
+            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
 
         if hasattr(config, 'group_messages') and config.group_messages:
-            bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status)
+            bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
         else:
-            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status)
+            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
 
         if not args.service:
             break

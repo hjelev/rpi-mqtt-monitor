@@ -81,3 +81,7 @@ apt_updates = False
 
 # Change the thermal zone if you have issues with cpu temps
 cpu_thermal_zone = 'cpu'
+
+# read external sensors for temperature, humidity, pressure etc.
+ext_sensors = False
+#ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0, [-300, 0]]] 
