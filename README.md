@@ -14,11 +14,12 @@
 The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant.
 
 * Start monitoring your system in just a few minutes.
-* Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage and system clock speed.
+* Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, voltage, rpi power health, rpi5 fan speed, apt updates available on host, external sensors, hdd/ssd temperature and system clock speed.
+* Remotely restart / shutdown your system and control your monitors.
 * Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
 * Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell.
-* Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message)
-* Easy update: You can update the script by calling it with command line argument --update or via Home Assistant
+* Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message).
+* Easy update: You can update the script by calling it with command line "rpi-mqtt-monitor --update" or via Home Assistant UI.
 
 
 ## Table of Contents
