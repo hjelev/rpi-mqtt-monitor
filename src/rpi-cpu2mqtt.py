@@ -892,6 +892,24 @@ def gather_and_send_info():
         if args.display:
             print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
 
+        # write some output to a file
+        if config.output_filename:
+            # the only options are "a" for append or "w" for (over)write
+            # check if one of this options is defined
+            if config.output_mode not in ["a", "w"]:
+                print("Error, output_type not known. Default w is set.")
+                config.output_type = "w"
+            try:
+                # open the text file
+                output_file = open(config.output_filename, config.output_mode)
+                # read what should be written into the textfile
+                # we need to define this is a function, otherwise the values are not updated and default values are taken
+                output_content = config.get_content_outputfile()
+                output_file.write(output_content)
+                output_file.close()
+            except Exception as e:
+                print("Error writing to output file:", e)
+
         if hasattr(config, 'group_messages') and config.group_messages:
             bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
         else:

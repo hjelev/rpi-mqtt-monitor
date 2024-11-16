@@ -85,3 +85,15 @@ cpu_thermal_zone = 'cpu'
 # read external sensors for temperature, humidity, pressure etc.
 ext_sensors = False
 #ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0, [-300, 0]]] 
+
+# output file
+output_filename = False
+#output_filename = "/dev/shm/mjpeg/user_annotate.txt"
+# a for append or w for write (overwrites content)
+output_mode = "w"
+# define what should be in the output
+def get_content_outputfile():
+    # Access values from ext_sensors and format the content
+    sht21_temp = round(float(ext_sensors[1][3][0]), 1)  # External temperature (rounded to 1 decimal)
+    sht21_hum = ext_sensors[1][3][1]  # Humidity
+    ds18b20_temp = round(float(ext_sensors[0][3]), 1)  # Raspberry Pi temperature (rounded to 1 decimal)
