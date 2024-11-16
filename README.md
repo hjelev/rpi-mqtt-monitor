@@ -60,7 +60,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 ## CLI arguments
 
 ```
-usage: rpi-cpu2mqtt.py [-h] [--display] [--service] [--version] [--update]
+usage: rpi-mqtt-monitor [-h] [--display] [--service] [--version] [--update]
 
 options:
   -h, --help     show this help message and exit
