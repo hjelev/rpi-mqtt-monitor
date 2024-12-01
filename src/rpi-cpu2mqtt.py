@@ -7,6 +7,7 @@
 from __future__ import division
 import subprocess
 import time
+from datetime import datetime
 import socket
 import paho.mqtt.client as paho
 import json
@@ -173,7 +174,14 @@ def check_sys_clock_speed():
 
 
 def check_uptime(format):
-    full_cmd = "awk '{print int($1"+format+")}' /proc/uptime"
+    if format == 'timestamp':
+        full_cmd = "uptime -s"
+        timestamp_str = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
+        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+        iso_timestamp = timestamp.isoformat() + 'Z'  # Append 'Z' to indicate UTC time
+        return iso_timestamp
+    else:
+        full_cmd = "awk '{print int($1"+format+")}' /proc/uptime"
 
     return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
 
@@ -314,7 +322,7 @@ def check_all_drive_temps():
 
 
 def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                          uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
+                          uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
     remote_version = update.check_git_version_remote(script_dir)
     output = """:: rpi-mqtt-monitor
    Version: {}
@@ -341,14 +349,14 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    CPU Clock Speed: {} MHz
    Swap: {} %
    Memory: {} %
-   Uptime: {} days
+   Online since: {}
    Wifi Signal: {} %
    Wifi Signal dBm: {}
    RPI5 Fan Speed: {} RPM
    RPI Power Status: {}
    Update: {}
    External Sensors: {}
-   """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, rpi_power_status, check_git_update(script_dir), ext_sensors)
+   """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, rpi_power_status, check_git_update(script_dir), ext_sensors)
     
     drive_temps = check_all_drive_temps()
     if len(drive_temps) > 0:
@@ -456,12 +464,12 @@ def config_json(what_config, device="0", hass_api=False):
         data["unit_of_measurement"] = "MHz"
         data["device_class"] = "frequency"
         data["state_class"] = "measurement"
-    elif what_config == "uptime_days":
+    elif what_config == "uptime":
         data["icon"] = "mdi:calendar"
         data["name"] = "Uptime"
-        data["unit_of_measurement"] = "d"
-        data["device_class"] = "duration"
-        data["state_class"] = "total_increasing"
+        data["value_template"] = "{{ as_datetime(value) }}"
+        data["state_class"] = "measurement"
+        data["device_class"] = "timestamp"
     elif what_config == "uptime_seconds":
         data["icon"] = "mdi:timer-outline"
         data["name"] = "Uptime"
@@ -506,7 +514,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
-        data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
+        data['entity_picture'] = "https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/refs/heads/master/images/rpi-mqtt-monitor.jpg"
         data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
@@ -581,12 +589,16 @@ def config_json(what_config, device="0", hass_api=False):
             "name": data["name"],
             "icon": data["icon"],
             "state_class": data["state_class"],
-            "unit_of_measurement": data["unit_of_measurement"]
         }
+        if "unit_of_measurement" in data:
+            result["unit_of_measurement"] = data["unit_of_measurement"]      
         if "device_class" in data:
             result["device_class"] = data["device_class"]
         if "unique_id" in data:
             result["unique_id"] = data["unique_id"] 
+        if "value_template" in data:
+            result["value_template"] = data["value_template"] 
+            
         return result
 
     return json.dumps(data)
@@ -652,10 +664,12 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
 
 
 def publish_to_hass_api(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
+                    uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
 
     for param, value in locals().items():
         if value:
+            print(param, value)
+            print(config_json(param, "0", True))
             if param == 'drive_temps' and isinstance(value, dict):
                 for device, temp in value.items():
                     entity_id = f"sensor.{hostname.replace('-','_')}_{device}_temp"
@@ -690,7 +704,7 @@ def send_sensor_data_to_home_assistant(entity_id, state, attributes):
 
 
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
+                    uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
     client = create_mqtt_client()
     if client is None:
         return
@@ -735,9 +749,9 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
         client.publish(config.mqtt_topic_prefix + "/" + hostname + "/sys_clock_speed", sys_clock_speed, qos=config.qos, retain=config.retain)
     if config.uptime:
         if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_days/config",
-                           config_json('uptime_days'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_days", uptime_days, qos=config.qos, retain=config.retain)
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime/config",
+                           config_json('uptime'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime", uptime, qos=config.qos, retain=config.retain)
     if config.uptime_seconds:
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_seconds/config",
@@ -826,10 +840,10 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
 
 
 def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                         uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0, rpi_power_status="0", ext_sensors=[]):
+                         uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0, rpi_power_status="0", ext_sensors=[]):
     # compose the CSV message containing the measured values
 
-    values = (cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status) + tuple(sensor[3] for sensor in ext_sensors)
+    values = (cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status) + tuple(sensor[3] for sensor in ext_sensors)
     values = str(values)[1:-1]
 
     client = create_mqtt_client()
@@ -906,7 +920,7 @@ def parse_arguments():
 
 
 def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime_days = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = drive_temps = rpi_power_status = ext_sensors = False
+    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = drive_temps = rpi_power_status = ext_sensors = False
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
@@ -923,7 +937,7 @@ def collect_monitored_values():
     if config.memory:
         memory = check_memory()
     if config.uptime:
-        uptime_days = check_uptime('/3600/24')
+        uptime = check_uptime('timestamp')
     if config.uptime_seconds:
         uptime_seconds = check_uptime('')
     if config.wifi_signal:
@@ -939,25 +953,25 @@ def collect_monitored_values():
     if config.ext_sensors:
         ext_sensors = read_ext_sensors()
 
-    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors
+    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors
 
 
 def gather_and_send_info():
     while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors= collect_monitored_values()
+        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
             time.sleep(config.random_delay)
 
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
         if args.hass_api:
-            publish_to_hass_api(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+            publish_to_hass_api(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
         else:
             if hasattr(config, 'group_messages') and config.group_messages:
-                bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+                bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
             else:
-                publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+                publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
 
         if not args.service:
             break
