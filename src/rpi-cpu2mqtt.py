@@ -20,6 +20,7 @@ import re
 import html
 import uuid
 import glob
+import requests
 #import external sensor lib only if one uses external sensors
 if config.ext_sensors:
     # append folder ext_sensor_lib
@@ -166,8 +167,9 @@ def check_cpu_temp():
 
 def check_sys_clock_speed():
     full_cmd = "awk '{printf (\"%0.0f\",$1/1000); }' </sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
-
-    return subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+    byte_data = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+    sys_clock_speed = int(byte_data.decode("utf-8").strip())
+    return sys_clock_speed
 
 
 def check_uptime(format):
@@ -392,7 +394,7 @@ def get_release_notes(version):
     return release_notes
 
 
-def config_json(what_config, device="0"):
+def config_json(what_config, device="0", hass_api=False): 
     model_name = check_model_name()
     manufacturer = get_manufacturer()
     os = get_os()
@@ -416,18 +418,18 @@ def config_json(what_config, device="0"):
 
     data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
     data["unique_id"] = hostname + "_" + what_config
-    if what_config == "cpuload":
+    if what_config == "cpu_load":
         data["icon"] = "mdi:speedometer"
         data["name"] = "CPU Usage"
         data["state_class"] = "measurement"
         data["unit_of_measurement"] = "%"
-    elif what_config == "cputemp":
+    elif what_config == "cpu_temp":
         data["icon"] = "hass:thermometer"
         data["name"] = "CPU Temperature"
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
-    elif what_config == "diskusage":
+    elif what_config == "used_space":
         data["icon"] = "mdi:harddisk"
         data["name"] = "Disk Usage"
         data["unit_of_measurement"] = "%"
@@ -573,6 +575,20 @@ def config_json(what_config, device="0"):
     else:
         return ""
     # Return our built discovery config
+
+    if hass_api:
+        result = {
+            "name": data["name"],
+            "icon": data["icon"],
+            "state_class": data["state_class"],
+            "unit_of_measurement": data["unit_of_measurement"]
+        }
+        if "device_class" in data:
+            result["device_class"] = data["device_class"]
+        if "unique_id" in data:
+            result["unique_id"] = data["unique_id"] 
+        return result
+
     return json.dumps(data)
 
 
@@ -635,6 +651,44 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
     client.disconnect()
 
 
+def publish_to_hass_api(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
+                    uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
+
+    for param, value in locals().items():
+        if value:
+            if param == 'drive_temps' and isinstance(value, dict):
+                for device, temp in value.items():
+                    entity_id = f"sensor.{hostname.replace("-","_")}_{device}_temp"
+                    state = temp
+                    attributes = config_json(device + "_temp", device, True)
+                    send_sensor_data_to_home_assistant(entity_id, state, attributes)
+            else:
+                entity_id = f"sensor.{hostname.replace("-","_")}_{param}"
+                state = value
+                attributes = config_json(param, "0", True)
+                send_sensor_data_to_home_assistant(entity_id, state, attributes)
+
+
+def send_sensor_data_to_home_assistant(entity_id, state, attributes):
+
+    home_assistant_url = config.hass_host
+    api_token = config.hass_token
+    url = f"{home_assistant_url}/api/states/{entity_id}"
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "state": state,
+        "attributes": attributes
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code in [200, 201]:
+        pass
+    else:
+        print(f"Failed to update {entity_id}: {response.status_code} - {response.text}")
+
+
 def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
                     uptime_days=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
     client = create_mqtt_client()
@@ -645,19 +699,19 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
 
     if config.cpu_load:
         if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpuload/config",
-                           config_json('cpuload'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpuload", cpu_load, qos=config.qos, retain=config.retain)
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpu_load/config",
+                           config_json('cpu_load'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpu_load", cpu_load, qos=config.qos, retain=config.retain)
     if config.cpu_temp:
         if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cputemp/config",
-                           config_json('cputemp'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cputemp", cpu_temp, qos=config.qos, retain=config.retain)
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpu_temp/config",
+                           config_json('cpu_temp'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpu_temp", cpu_temp, qos=config.qos, retain=config.retain)
     if config.used_space:
         if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_diskusage/config",
-                           config_json('diskusage'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/diskusage", used_space, qos=config.qos, retain=config.retain)
+            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_used_space/config",
+                           config_json('used_space'), qos=config.qos)
+        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/used_space", used_space, qos=config.qos, retain=config.retain)
     if config.voltage:
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_voltage/config",
@@ -794,12 +848,18 @@ def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_cl
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--display', '-d', action='store_true', help='display values on screen', default=False)
-    parser.add_argument('--service', '-s', action='store_true', help='run script as a service, sleep interval is configurable in config.py', default=False)
-    parser.add_argument('--version', '-v', action='store_true', help='display installed version and exit', default=False)
-    parser.add_argument('--update',  '-u', action='store_true', help='update script and config then exit', default=False)
-    parser.add_argument('--hass',    '-H', action='store_true', help='display Home assistant wake on lan configuration', default=False)
+    parser = argparse.ArgumentParser(
+        prog='rpi-mqtt-monitor',
+        description='Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.'
+    )
+    parser.add_argument('-H', '--hass_api', action='store_true', help='send readings via Home Assistant API (not via MQTT)', default=False)
+    parser.add_argument('-d', '--display',  action='store_true', help='display values on screen', default=False)
+    parser.add_argument('-s', '--service',  action='store_true', help='run script as a service, sleep interval is configurable in config.py', default=False)
+    parser.add_argument('-v', '--version', action='store_true',  help='display installed version and exit', default=False)
+    parser.add_argument('-u', '--update',  action='store_true', help='update script and config then exit', default=False)
+    parser.add_argument('-w', '--hass_wake', action='store_true', help='display Home assistant wake on lan configuration', default=False)
+
+
     args = parser.parse_args()
 
     if args.update:
@@ -826,7 +886,7 @@ def parse_arguments():
             print("No update available")
         exit()
 
-    if args.hass:
+    if args.hass_wake:
         hass_config = """Add this to your Home Assistant switches.yaml file: 
 
   - platform: wake_on_lan
@@ -891,11 +951,13 @@ def gather_and_send_info():
 
         if args.display:
             print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
-
-        if hasattr(config, 'group_messages') and config.group_messages:
-            bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+        if args.hass_api:
+            publish_to_hass_api(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
         else:
-            publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+            if hasattr(config, 'group_messages') and config.group_messages:
+                bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+            else:
+                publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime_days, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
 
         if not args.service:
             break
@@ -959,28 +1021,32 @@ hostname = re.sub(r'[^a-zA-Z0-9_-]', '_', socket.gethostname())
 if __name__ == '__main__':
     args = parse_arguments();
     if args.service:
-        client = paho.Client()
-        client.username_pw_set(config.mqtt_user, config.mqtt_password)
-        client.on_message = on_message
-        # set will_set to send a message when the client disconnects
-        client.will_set(config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
-        try:
-            client.connect(config.mqtt_host, int(config.mqtt_port))
-        except Exception as e:
-            print("Error connecting to MQTT broker:", e)
-            sys.exit(1)
+        if not args.hass_api:
+            client = paho.Client()
+            client.username_pw_set(config.mqtt_user, config.mqtt_password)
+            client.on_message = on_message
+            # set will_set to send a message when the client disconnects
+            client.will_set(config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
+            try:
+                client.connect(config.mqtt_host, int(config.mqtt_port))
+            except Exception as e:
+                print("Error connecting to MQTT broker:", e)
+                sys.exit(1)
 
-        client.subscribe(config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
-        print("Listening to topic : " + config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
-        client.loop_start()
+            client.subscribe(config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
+            print("Listening to topic : " + config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
+            client.loop_start()
+
+
         thread1 = threading.Thread(target=gather_and_send_info)
         thread1.daemon = True  # Set thread1 as a daemon thread
         thread1.start()
 
-        if config.update:
-            thread2 = threading.Thread(target=update_status)
-            thread2.daemon = True  # Set thread2 as a daemon thread
-            thread2.start()
+        if not args.hass_api:
+            if config.update:
+                thread2 = threading.Thread(target=update_status)
+                thread2.daemon = True  # Set thread2 as a daemon thread
+                thread2.start()
 
         try:
             while True:

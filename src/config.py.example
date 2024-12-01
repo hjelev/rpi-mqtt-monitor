@@ -10,6 +10,10 @@ mqtt_port = "1883"
 mqtt_discovery_prefix = "homeassistant"
 mqtt_topic_prefix = "rpi-MQTT-monitor"
 
+# Below hass_ configuration is only needed if you use Home Assistant API instead of 
+hass_token = "your_hass_token"
+hass_host = "your_hass_host"
+
 # Messages configuration
 
 # Uncomment the line bellow to send just one CSV message containing all values (this method don't support HA discovery_messages)
