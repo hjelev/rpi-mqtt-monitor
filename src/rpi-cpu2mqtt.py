@@ -514,7 +514,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
-        data['entity_picture'] = "https://masoko.net/rpi-mqtt-monitor.png"
+        data['entity_picture'] = "https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/refs/heads/master/images/update_icon.png
         data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
