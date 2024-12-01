@@ -658,12 +658,12 @@ def publish_to_hass_api(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clo
         if value:
             if param == 'drive_temps' and isinstance(value, dict):
                 for device, temp in value.items():
-                    entity_id = f"sensor.{hostname.replace("-","_")}_{device}_temp"
+                    entity_id = f'sensor.{hostname.replace("-", "_")}_{device}_temp'
                     state = temp
                     attributes = config_json(device + "_temp", device, True)
                     send_sensor_data_to_home_assistant(entity_id, state, attributes)
             else:
-                entity_id = f"sensor.{hostname.replace("-","_")}_{param}"
+                entity_id = f'sensor.{hostname.replace("-", "_")}_{device}_temp'
                 state = value
                 attributes = config_json(param, "0", True)
                 send_sensor_data_to_home_assistant(entity_id, state, attributes)
