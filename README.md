@@ -78,7 +78,6 @@ options:
 ```
 
 
-
 ## Installation
 
 ### Automated

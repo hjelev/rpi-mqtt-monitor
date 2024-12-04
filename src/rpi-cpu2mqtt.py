@@ -321,8 +321,7 @@ def check_all_drive_temps():
 
 def print_measured_values(monitored_values):
     remote_version = update.check_git_version_remote(script_dir)
-    output = """:: rpi-mqtt-monitor
-   Version: {}
+    output = """:: rpi-mqtt-monitor :: v {}
 
 :: Device Information
    Model Name: {}
@@ -333,8 +332,7 @@ def print_measured_values(monitored_values):
    MAC Address: {}
 """.format(config.version, check_model_name(), get_manufacturer(), get_os(), hostname, get_network_ip(), get_mac_address())
 
-    if args.service:
-        output += "   Service Sleep Time: {} seconds\n".format(config.service_sleep_time)
+    output += "   Service Sleep Time: {} seconds\n".format(config.service_sleep_time)
     if config.update:
         output += "   Update Check Interval: {} seconds\n".format(config.update_check_interval)
       # Add dynamic measured values with units
@@ -365,10 +363,10 @@ def print_measured_values(monitored_values):
         for device, temp in drive_temps.items():
             output += f"   {device.capitalize()} Temp: {temp:.2f}°C\n"
 
-    output += """\n:: Installation directory: \n   {}
+    output += """\n:: Installation directory :: {}
 
 :: Release notes {}: 
-{}""".format(script_dir, remote_version, get_release_notes(remote_version).strip())
+{}""".format(os.path.dirname(script_dir), remote_version, get_release_notes(remote_version))
     print(output)
     
 
@@ -389,17 +387,12 @@ def get_release_notes(version):
         release_notes = "No release notes available"
 
     lines = extract_text(release_notes).split('\n')
-
-    for i in range(len(lines)):
-        if lines[i].strip() != "":
-            lines[i] = "* " + lines[i]
+    lines = ["   * "+ line for line in lines if line.strip() != ""]
 
     release_notes = '\n'.join(lines)
 
     if len(release_notes) > 255:
         release_notes = release_notes[:250] + " ..."
-
-    release_notes = "### What's Changed" + release_notes
 
     return release_notes
 
