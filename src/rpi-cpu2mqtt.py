@@ -337,31 +337,33 @@ def print_measured_values(monitored_values):
         output += "   Service Sleep Time: {} seconds\n".format(config.service_sleep_time)
     if config.update:
         output += "   Update Check Interval: {} seconds\n".format(config.update_check_interval)
-    output += """
-:: Measured values
-   CPU Load: {} %
-   CPU Temp: {} °C
-   Used Space: {} %
-   Voltage: {} V
-   CPU Clock Speed: {} MHz
-   Swap: {} %
-   Memory: {} %
-   Online since: {}
-   Wifi Signal: {} %
-   Wifi Signal dBm: {}
-   RPI5 Fan Speed: {} RPM
-   RPI Power Status: {}
-   Update: {}
-   External Sensors: {}
-   """.format(monitored_values.get('cpu_load', ''), monitored_values.get('cpu_temp', ''), monitored_values.get('used_space', ''), monitored_values.get('voltage', ''), 
-              monitored_values.get('sys_clock_speed', ''), monitored_values.get('swap', ''), monitored_values.get('memory', ''), monitored_values.get('uptime', ''), 
-              monitored_values.get('wifi_signal', ''), monitored_values.get('wifi_signal_dbm', ''), monitored_values.get('rpi5_fan_speed', ''), 
-              monitored_values.get('rpi_power_status', ''), monitored_values.get('check_git_update(script_dir)', ''), monitored_values.get('ext_sensors', ''))
-    
+      # Add dynamic measured values with units
+    measured_values = {
+        "CPU Load": ("cpu_load", "%"),
+        "CPU Temp": ("cpu_temp", "°C"),
+        "Used Space": ("used_space", "%"),
+        "Voltage": ("voltage", "V"),
+        "CPU Clock Speed": ("sys_clock_speed", "MHz"),
+        "Swap": ("swap", "%"),
+        "Memory": ("memory", "%"),
+        "Online since": ("uptime", ""),
+        "Wifi Signal": ("wifi_signal", "%"),
+        "Wifi Signal dBm": ("wifi_signal_dbm", "dBm"),
+        "RPI5 Fan Speed": ("rpi5_fan_speed", "RPM"),
+        "RPI Power Status": ("rpi_power_status", ""),
+        "Update": ("update", ""),
+        "External Sensors": ("ext_sensors", "")
+    }
+
+    output += "\n:: Measured values\n"
+    for label, (key, unit) in measured_values.items():
+        if key in monitored_values:
+            output += f"   {label}: {monitored_values[key]} {unit}\n"
+
     drive_temps = check_all_drive_temps()
     if len(drive_temps) > 0:
         for device, temp in drive_temps.items():
-            output += f"{device.capitalize()} Temp: {temp:.2f}°C\n"
+            output += f"   {device.capitalize()} Temp: {temp:.2f}°C\n"
 
     output += """\n:: Installation directory: \n   {}
 
@@ -808,13 +810,12 @@ def parse_arguments():
         prog='rpi-mqtt-monitor',
         description='Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.'
     )
-    parser.add_argument('-H', '--hass_api', action='store_true', help='send readings via Home Assistant API (not via MQTT)', default=False)
-    parser.add_argument('-d', '--display',  action='store_true', help='display values on screen', default=False)
-    parser.add_argument('-s', '--service',  action='store_true', help='run script as a service, sleep interval is configurable in config.py', default=False)
-    parser.add_argument('-v', '--version', action='store_true',  help='display installed version and exit', default=False)
-    parser.add_argument('-u', '--update',  action='store_true', help='update script and config then exit', default=False)
+    parser.add_argument('-H', '--hass_api', action='store_true',  help='send readings via Home Assistant API (not via MQTT)', default=False)
+    parser.add_argument('-d', '--display',  action='store_true',  help='display values on screen', default=False)
+    parser.add_argument('-s', '--service',  action='store_true',  help='run script as a service, sleep interval is configurable in config.py', default=False)
+    parser.add_argument('-v', '--version',  action='store_true',  help='display installed version and exit', default=False)
+    parser.add_argument('-u', '--update',   action='store_true',  help='update script and config then exit', default=False)
     parser.add_argument('-w', '--hass_wake', action='store_true', help='display Home assistant wake on lan configuration', default=False)
-
 
     args = parser.parse_args()
 
