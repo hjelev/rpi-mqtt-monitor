@@ -41,6 +41,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## What is new
 
+* 2024-12-01: Support for Home Assistant API (no MQTT needed)
 * 2024-11-06: External sensors by @pallago
 * 2024-10-25: Apt updates sensor
 * 2024-10-24: Added rpi_power_status sensor
@@ -61,15 +62,19 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 ## CLI arguments
 
 ```
-usage: rpi-mqtt-monitor [-h] [--display] [--service] [--version] [--update]
+usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w]
+
+Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.
 
 options:
-  -h, --help     show this help message and exit
-  --display, -d  display values on screen
-  --service, -s  run script as a service
-  --version, -v  display version
-  --update,  -u  update script and config
-  --hass, -H     display Home assistant wake on lan configuration
+  -h, --help       show this help message and exit
+  -H, --hass_api   send readings via Home Assistant API (not via MQTT)
+  -d, --display    display values on screen
+  -s, --service    run script as a service, sleep interval is configurable in config.py
+  -v, --version    display installed version and exit
+  -u, --update     update script and config then exit
+  -w, --hass_wake  display Home assistant wake on lan configuration
+
 ```
 
 
@@ -88,10 +93,11 @@ Raspberry Pi MQTT monitor will be installed in the location where the installer 
 
 The auto-installer needs the software below and will install it if its not found:
 
+* git
 * python (2 or 3)
 * python-pip
-* git
-* paho-mqtt
+* paho-mqtt (python module)
+* requests (python module)
 
 Only python is not automatically installed, the rest of the dependencies should be handled by the auto installation.
 It will also help you configure the host and credentials for the mqtt server in config.py and create the service or cronjob configuration for you.
@@ -104,14 +110,14 @@ It is recommended to run the script as a service, this way you can use the resta
 
 If you are using discovery_messages, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
 
-Use '''python3 src/rpi-cpu2mqtt.py --hass''' to display the configuration for Home Assistant wake on lan switch.
+Use '''rpi-mqtt-monitor --hass_wake''' to display the configuration for Home Assistant wake on lan switch.
 
 [moved to wiki](../../wiki/Home-Assistant-Integration-(outdated))
 
 ## To Do
 
 - fix uptime sensor to use timestamp
-- integrate hass api
+- improve hass api integration
 
 ## Feature request
 

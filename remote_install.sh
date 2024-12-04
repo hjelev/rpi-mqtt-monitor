@@ -1,4 +1,6 @@
 #!/bin/bash
+# Description: Remote Installation script for rpi-mqtt-monitor
+
 printm(){
   length=$(expr length "$1")
   length=$(($length + 4))

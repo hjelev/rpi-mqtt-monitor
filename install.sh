@@ -1,3 +1,4 @@
+#!/bin/bash
 find_python(){
   if [[ $(python3 --version)  ]]; then 
     python=$(which python3)
@@ -78,21 +79,7 @@ install_requirements(){
   deactivate
 }
 
-update_config(){
-  if [ -f src/config.py ]; then
-    read -p "src/config.py already exists Do you want to remove it? (y/n) " yn
-    case $yn in
-        [Yy]* ) echo "replacing config file";;
-        [Nn]* ) return;;
-        * ) echo "Please answer y for yes or n for no.";;
-    esac
-  fi
-
-  user=$(whoami)
-  sed -i "s/os_user_to_be_replaced/${user}/" src/config.py
-
-  print_green "+ Copy config.py.example to config.py"
-  cp src/config.py.example src/config.py
+mqtt_configuration(){
   printm "MQTT settings"
   
   printf "Enter mqtt_host: "
@@ -120,12 +107,65 @@ update_config(){
     TOPIC=rpi-MQTT-monitor
   fi
   sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
-
+  
   printf "Do you need to control your monitors? (default is No): "
   read CONTROL
   if [[ "$CONTROL" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     sed -i "s/display_control = False/display_control = True/g" src/config.py
   fi
+  finish_message="MQTT broker"
+}
+
+hass_api_configuration(){
+    printf "Enter Home Assistant API URL (defalut is http://localhost:8123): "
+    read HA_URL
+    if [ -z "$HA_URL" ]; then
+      HA_URL="http://localhost:8123"
+    fi
+    sed -i "s|your_hass_host|${HA_URL}|" src/config.py
+
+    printf "Enter Home Assistant API Token: "
+    read HA_TOKEN
+    sed -i "s|your_hass_token|${HA_TOKEN}|" src/config.py
+    hass_api=" --hass_api"
+    finish_message="Home Assistant API"
+}
+
+update_config(){
+  if [ -f src/config.py ]; then
+    read -p "src/config.py already exists Do you want to remove it? (y/n) " yn
+    case $yn in
+        [Yy]* ) echo "replacing config file";;
+        [Nn]* ) return;;
+        * ) echo "Please answer y for yes or n for no.";;
+    esac
+  fi
+
+  print_green "+ Copy config.py.example to config.py"
+  cp src/config.py.example src/config.py
+
+  user=$(whoami)
+  sed -i "s/os_user_to_be_replaced/${user}/" src/config.py
+
+  echo "Do you want to use Home Assistant API or MQTT?"
+  echo "1) Home Assistant API"
+  echo "2) MQTT (default)"
+  read -p "Enter your choice [1 or 2]: " choice
+
+  # Run the appropriate configuration function based on the user's choice
+  case $choice in
+      1)
+          hass_api_configuration
+          ;;
+      2 | "")
+          mqtt_configuration
+          ;;
+      *)
+          echo "Invalid choice. Defaulting to MQTT configuration."
+          mqtt_configuration
+          ;;
+  esac
+
 
   print_green  "+ config.py is updated with provided settings"
 
@@ -152,8 +192,8 @@ set_cron(){
       MIN=2
     fi
     echo "Adding the line below to your crontab"
-    echo "*/${MIN} * * * * cd ${cwd}; ${python} ${cwd}/src/rpi-cpu2mqtt.py"
-    echo "*/${MIN} * * * * cd ${cwd}; ${python} ${cwd}/src/rpi-cpu2mqtt.py" >> tempcron
+    echo "*/${MIN} * * * * cd ${cwd}; ${python} ${cwd}/src/rpi-cpu2mqtt.py${hass_api}"
+    echo "*/${MIN} * * * * cd ${cwd}; ${python} ${cwd}/src/rpi-cpu2mqtt.py${hass_api}" >> tempcron
     crontab tempcron
   fi
   rm tempcron
@@ -178,7 +218,7 @@ set_service(){
   sed -i "s/120/${MIN}/" src/config.py
   cwd=$(pwd)
   user=$(whoami)
-  exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service"
+  exec_start="${python} ${cwd}/src/rpi-cpu2mqtt.py --service${hass_api}"
   print_green "+ Copy rpi-mqtt-monitor.service to /etc/systemd/system/"
   sudo cp ${cwd}/rpi-mqtt-monitor.service /etc/systemd/system/
   sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=${cwd}|" /etc/systemd/system/rpi-mqtt-monitor.service
@@ -221,7 +261,7 @@ main(){
   done
   
   printm "Installation is complete."
-  echo "rpi-mqtt-monitor is now running and sending information to your MQTT broker."
+  echo "rpi-mqtt-monitor is now running and sending information to your ${finish_message}."
   echo "To see all available options run: rpi-mqtt-monitor -h in the terminal."
 }
 
