@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-# Python script (runs on 2 and 3) to monitor cpu load, temperature, frequency, free space etc.
-# on a Raspberry Pi or Ubuntu computer and publish the data to a MQTT server.
-# RUN sudo apt-get install python-pip
-# RUN pip install paho-mqtt
+# rpi-mqtt-monitor is a python script to monitor cpu load, temperature, frequency, free space etc.
+# on a Raspberry Pi or Ubuntu computer and publish the data to a MQTT server or Home Assistant API.
 
 from __future__ import division
 import subprocess
@@ -114,6 +112,7 @@ def check_rpi_power_status():
     except Exception as e:
         return "Error: " + str(e)
 
+
 def read_ext_sensors():
     """
     here we read the external sensors
@@ -152,7 +151,6 @@ def read_ext_sensors():
                 print ("Error while reading sensor %s" % item[1])
     print (ext_sensors)
     return ext_sensors
-
 
 
 def check_cpu_temp():
@@ -321,8 +319,7 @@ def check_all_drive_temps():
     return drive_temps
 
 
-def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                          uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
+def print_measured_values(monitored_values):
     remote_version = update.check_git_version_remote(script_dir)
     output = """:: rpi-mqtt-monitor
    Version: {}
@@ -356,7 +353,10 @@ def print_measured_values(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_c
    RPI Power Status: {}
    Update: {}
    External Sensors: {}
-   """.format(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, rpi_power_status, check_git_update(script_dir), ext_sensors)
+   """.format(monitored_values.get('cpu_load', ''), monitored_values.get('cpu_temp', ''), monitored_values.get('used_space', ''), monitored_values.get('voltage', ''), 
+              monitored_values.get('sys_clock_speed', ''), monitored_values.get('swap', ''), monitored_values.get('memory', ''), monitored_values.get('uptime', ''), 
+              monitored_values.get('wifi_signal', ''), monitored_values.get('wifi_signal_dbm', ''), monitored_values.get('rpi5_fan_speed', ''), 
+              monitored_values.get('rpi_power_status', ''), monitored_values.get('check_git_update(script_dir)', ''), monitored_values.get('ext_sensors', ''))
     
     drive_temps = check_all_drive_temps()
     if len(drive_temps) > 0:
@@ -663,10 +663,8 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
     client.disconnect()
 
 
-def publish_to_hass_api(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
-
-    for param, value in locals().items():
+def publish_to_hass_api(monitored_values):
+    for param, value in monitored_values.items():
         if value:
             print(param, value)
             print(config_json(param, "0", True))
@@ -703,75 +701,22 @@ def send_sensor_data_to_home_assistant(entity_id, state, attributes):
         print(f"Failed to update {entity_id}: {response.status_code} - {response.text}")
 
 
-def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                    uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, drive_temps=0, rpi_power_status=0, ext_sensors=[]):
+def publish_to_mqtt(monitored_values):
     client = create_mqtt_client()
     if client is None:
         return
 
     client.loop_start()
+    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ext_sensors']
+  # Publish standard monitored values
+    for key, value in monitored_values.items():
+        if key not in non_standard_values and key in config.__dict__ and config.__dict__[key]:
+            if config.discovery_messages:
+                client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_{key}/config",
+                            config_json(key), qos=config.qos)
+            client.publish(f"{config.mqtt_topic_prefix}/{hostname}/{key}", value, qos=config.qos, retain=config.retain)
 
-    if config.cpu_load:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpu_load/config",
-                           config_json('cpu_load'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpu_load", cpu_load, qos=config.qos, retain=config.retain)
-    if config.cpu_temp:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_cpu_temp/config",
-                           config_json('cpu_temp'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/cpu_temp", cpu_temp, qos=config.qos, retain=config.retain)
-    if config.used_space:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_used_space/config",
-                           config_json('used_space'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/used_space", used_space, qos=config.qos, retain=config.retain)
-    if config.voltage:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_voltage/config",
-                           config_json('voltage'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/voltage", voltage, qos=config.qos, retain=config.retain)
-    if config.swap:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_swap/config",
-                           config_json('swap'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/swap", swap, qos=config.qos, retain=config.retain)
-    if config.memory:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_memory/config",
-                           config_json('memory'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/memory", memory, qos=config.qos, retain=config.retain)
-    if config.sys_clock_speed:
-        if config.discovery_messages:
-            client.publish(
-                config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_sys_clock_speed/config",
-                config_json('sys_clock_speed'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/sys_clock_speed", sys_clock_speed, qos=config.qos, retain=config.retain)
-    if config.uptime:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime/config",
-                           config_json('uptime'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime", uptime, qos=config.qos, retain=config.retain)
-    if config.uptime_seconds:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_uptime_seconds/config",
-                           config_json('uptime_seconds'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/uptime_seconds", uptime_seconds, qos=config.qos, retain=config.retain)
-    if config.wifi_signal:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_wifi_signal/config",
-                           config_json('wifi_signal'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/wifi_signal", wifi_signal, qos=config.qos, retain=config.retain)
-    if config.wifi_signal_dbm:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_wifi_signal_dbm/config",
-                           config_json('wifi_signal_dbm'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/wifi_signal_dbm", wifi_signal_dbm, qos=config.qos, retain=config.retain)
-    if config.rpi5_fan_speed:
-        if config.discovery_messages:
-            client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi5_fan_speed/config",
-                           config_json('rpi5_fan_speed'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi5_fan_speed", rpi5_fan_speed, qos=config.qos, retain=config.retain)
+  # Publish non standard values    
     if config.restart_button:
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_restart/config",
@@ -787,20 +732,15 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
             client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
                            config_json('display_off'), qos=config.qos)
     if config.drive_temps:
-        for device, temp in drive_temps.items():
+        for device, temp in monitored_values['drive_temps'].items():
             if config.discovery_messages:
                 client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + device + "_temp/config",
                            config_json(device + "_temp", device), qos=config.qos)
             client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
-    if config.rpi_power_status:
-        if config.discovery_messages:
-            client.publish(
-                config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_rpi_power_status/config",
-                config_json('rpi_power_status'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/rpi_power_status", rpi_power_status, qos=config.qos, retain=config.retain)
+
     if config.ext_sensors:
         # we loop through all sensors
-        for item in ext_sensors:
+        for item in monitored_values['ext_sensors']:
             # item[0] = name
             # item[1] = sensor_type
             # item[2] = ID
@@ -826,7 +766,6 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
                 # humidity
                 client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_hum_status_" + item[0], item[3][1], qos=config.qos, retain=config.retain)
                 
-
     status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
     client.publish(config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
@@ -839,19 +778,22 @@ def publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_s
     client.disconnect()
 
 
-def bulk_publish_to_mqtt(cpu_load=0, cpu_temp=0, used_space=0, voltage=0, sys_clock_speed=0, swap=0, memory=0,
-                         uptime=0, uptime_seconds=0, wifi_signal=0, wifi_signal_dbm=0, rpi5_fan_speed=0, git_update=0, rpi_power_status="0", ext_sensors=[]):
-    # compose the CSV message containing the measured values
+def bulk_publish_to_mqtt(monitored_values):
+    values = [monitored_values.get(key, 0) for key in [
+        'cpu_load', 'cpu_temp', 'used_space', 'voltage', 'sys_clock_speed', 'swap', 'memory', 'uptime', 'uptime_seconds',
+        'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status'
+    ]]
 
-    values = (cpu_load, cpu_temp, used_space, voltage, int(sys_clock_speed), swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, git_update, rpi_power_status) + tuple(sensor[3] for sensor in ext_sensors)
-    values = str(values)[1:-1]
+    ext_sensors = monitored_values.get('ext_sensors', [])
+    values.extend(sensor[3] for sensor in ext_sensors)
+    values_str = ', '.join(map(str, values))
 
     client = create_mqtt_client()
     if client is None:
         return
 
     client.loop_start()
-    client.publish(config.mqtt_topic_prefix + "/" + hostname, values, qos=config.qos, retain=config.retain)
+    client.publish(config.mqtt_topic_prefix + "/" + hostname, values_str, qos=config.qos, retain=config.retain)
 
     while len(client._out_messages) > 0:
         time.sleep(0.1)
@@ -919,59 +861,75 @@ def parse_arguments():
     return args
 
 
-def collect_monitored_values():
-    cpu_load = cpu_temp = used_space = voltage = sys_clock_speed = swap = memory = uptime_seconds = uptime = wifi_signal = wifi_signal_dbm = rpi5_fan_speed = drive_temps = rpi_power_status = ext_sensors = False
+def collect_monitored_values():    
+    monitored_values = {}
 
     if config.cpu_load:
         cpu_load = check_cpu_load()
+        monitored_values["cpu_load"] = cpu_load
     if config.cpu_temp:
         cpu_temp = check_cpu_temp()
+        monitored_values["cpu_temp"] = cpu_temp
     if config.used_space:
         used_space = check_used_space(config.used_space_path)
+        monitored_values["used_space"] = used_space
     if config.voltage:
         voltage = check_voltage()
+        monitored_values["voltage"] = voltage
     if config.sys_clock_speed:
         sys_clock_speed = check_sys_clock_speed()
+        monitored_values["sys_clock_speed"] = sys_clock_speed
     if config.swap:
         swap = check_swap()
+        monitored_values["swap"] = swap
     if config.memory:
         memory = check_memory()
+        monitored_values["memory"] = memory
     if config.uptime:
         uptime = check_uptime('timestamp')
+        monitored_values["uptime"] = uptime
     if config.uptime_seconds:
         uptime_seconds = check_uptime('')
+        monitored_values["uptime_seconds"] = uptime_seconds
     if config.wifi_signal:
         wifi_signal = check_wifi_signal('')
+        monitored_values["uptwifi_signalime"] = wifi_signal
     if config.wifi_signal_dbm:
         wifi_signal_dbm = check_wifi_signal('dbm')
+        monitored_values["wifi_signal_dbm"] = wifi_signal_dbm
     if config.rpi5_fan_speed:
         rpi5_fan_speed = check_rpi5_fan_speed()
+        monitored_values["rpi5_fan_speed"] = rpi5_fan_speed
     if config.drive_temps:
         drive_temps = check_all_drive_temps()
+        monitored_values["drive_temps"] = drive_temps
     if config.rpi_power_status:
         rpi_power_status = check_rpi_power_status()
+        monitored_values["rpi_power_status"] = rpi_power_status
     if config.ext_sensors:
         ext_sensors = read_ext_sensors()
+        monitored_values["ext_sensors"] = ext_sensors
 
-    return cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors
+    return monitored_values
 
 
 def gather_and_send_info():
-    while not stop_event.is_set():
-        cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors = collect_monitored_values()
+    while not stop_event.is_set():       
+        monitored_values = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
             time.sleep(config.random_delay)
 
         if args.display:
-            print_measured_values(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+            print_measured_values(monitored_values)
+
         if args.hass_api:
-            publish_to_hass_api(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+            publish_to_hass_api(monitored_values)
         else:
             if hasattr(config, 'group_messages') and config.group_messages:
-                bulk_publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+                bulk_publish_to_mqtt(monitored_values)
             else:
-                publish_to_mqtt(cpu_load, cpu_temp, used_space, voltage, sys_clock_speed, swap, memory, uptime, uptime_seconds, wifi_signal, wifi_signal_dbm, rpi5_fan_speed, drive_temps, rpi_power_status, ext_sensors)
+                publish_to_mqtt(monitored_values)
 
         if not args.service:
             break
