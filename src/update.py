@@ -2,13 +2,16 @@ import ast
 import os
 import subprocess
 import config
+import sys
+
 
 def safe_literal_eval(node):
     try:
         return ast.literal_eval(node)
     except ValueError:
         return None
-    
+
+
 def get_assignments(filename):
     with open(filename) as f:
         tree = ast.parse(f.read(), filename)
@@ -54,6 +57,7 @@ def display_config_differences(current_config, example_config, display=True):
     else:
         return False
 
+
 def check_git_version_remote(script_dir):
     full_cmd = "/usr/bin/git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
     try:
@@ -79,13 +83,28 @@ def update_config_version(version, script_dir):
                 f.write(line)
 
 
+def install_requirements(script_dir):
+    main_dir_path = os.path.dirname(script_dir)
+    requirements_path = os.path.join(main_dir_path, 'requirements.txt')
+    activate_script = os.path.join(main_dir_path, 'rpi_mon_env' ,'bin', 'activate')
+    command = f"source {activate_script} && pip install -q -r {requirements_path}"
+
+    try:
+        subprocess.run(command, shell=True, check=True, executable='/bin/bash')
+        print("Requirements installed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while installing requirements: {e}")
+        sys.exit(1)
+
+
 def do_update(script_dir, version=config.version, git_update=True, config_update=True):
     print("Current version: {}".format(config.version))
     if git_update:
         print(":: Updating git repository", script_dir)
         result = subprocess.run(['/usr/bin/git', '-C', script_dir, 'pull'], check=True, universal_newlines=True, stdout=subprocess.PIPE)
         print(result.stdout)
-
+        install_requirements(script_dir)
+        
     if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
         print(":: Updating config.py")
         update_config(script_dir + '/config.py',script_dir + '/config.py.example')
@@ -97,3 +116,4 @@ def do_update(script_dir, version=config.version, git_update=True, config_update
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
     do_update(script_dir,check_git_version_remote(script_dir))
+    
