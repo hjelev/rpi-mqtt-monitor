@@ -816,12 +816,12 @@ def parse_arguments():
         version = update.check_git_version_remote(script_dir).strip()
         git_update = check_git_update(script_dir)
 
-        if git_update == 'on':
-            git_update = True
-        else:
-            git_update = False
+        # if git_update == 'on':
+        #     git_update = True
+        # else:
+        #     git_update = False
 
-        update.do_update(script_dir, version, git_update)
+        update.do_update(script_dir, version, True)
 
         exit()
 
