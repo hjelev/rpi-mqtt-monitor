@@ -624,7 +624,6 @@ def create_mqtt_client():
 
 
 def publish_update_status_to_mqtt(git_update, apt_updates):
-
     client = create_mqtt_client()
     if client is None:
         print("Error: Unable to connect to MQTT broker")
@@ -661,8 +660,6 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
 def publish_to_hass_api(monitored_values):
     for param, value in monitored_values.items():
         if value:
-            print(param, value)
-            print(config_json(param, "0", True))
             if param == 'drive_temps' and isinstance(value, dict):
                 for device, temp in value.items():
                     entity_id = f"sensor.{hostname.replace('-','_')}_{device}_temp"
@@ -677,7 +674,6 @@ def publish_to_hass_api(monitored_values):
 
 
 def send_sensor_data_to_home_assistant(entity_id, state, attributes):
-
     home_assistant_url = config.hass_host
     api_token = config.hass_token
     url = f"{home_assistant_url}/api/states/{entity_id}"
@@ -814,13 +810,6 @@ def parse_arguments():
 
     if args.update:
         version = update.check_git_version_remote(script_dir).strip()
-        git_update = check_git_update(script_dir)
-
-        # if git_update == 'on':
-        #     git_update = True
-        # else:
-        #     git_update = False
-
         update.do_update(script_dir, version, True)
 
         exit()
