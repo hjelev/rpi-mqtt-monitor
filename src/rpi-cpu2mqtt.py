@@ -917,6 +917,24 @@ def gather_and_send_info():
         if args.display:
             print_measured_values(monitored_values)
 
+        # write some output to a file
+        if config.output_filename:
+            # the only options are "a" for append or "w" for (over)write
+            # check if one of this options is defined
+            if config.output_mode not in ["a", "w"]:
+                print("Error, output_type not known. Default w is set.")
+                config.output_type = "w"
+            try:
+                # open the text file
+                output_file = open(config.output_filename, config.output_mode)
+                # read what should be written into the textfile
+                # we need to define this is a function, otherwise the values are not updated and default values are taken
+                output_content = config.get_content_outputfile()
+                output_file.write(output_content)
+                output_file.close()
+            except Exception as e:
+                print("Error writing to output file:", e)
+
         if args.hass_api:
             publish_to_hass_api(monitored_values)
         else:
