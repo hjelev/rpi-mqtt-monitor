@@ -982,7 +982,10 @@ stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # get device host name - used in mqtt topic
 # and adhere to the allowed character set
-hostname = re.sub(r'[^a-zA-Z0-9_-]', '_', socket.gethostname())
+if hasattr(config, 'ha_device_name') and config.ha_device_name:
+    hostname = re.sub(r'[^a-zA-Z0-9_-]', '_', config.ha_device_name)
+else:
+    hostname = re.sub(r'[^a-zA-Z0-9_-]', '_', socket.gethostname())
 
 if __name__ == '__main__':
     args = parse_arguments();
