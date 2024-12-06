@@ -35,6 +35,10 @@ display_control = False
 # user for which display_control is enabled
 os_user = 'os_user_to_be_replaced'
 
+# By default, the 'hostname' will be used as device name in home assistant.
+# To set a custom device name, uncomment the following line and set the custom name.
+# ha_device_name = 'device_name_to_use'
+
 # Binary sensor that displays when there are updates
 git_update = True
 
