@@ -29,18 +29,19 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 - [Installation](#installation)
   - [Automated](#automated)
   - [Manual](#manual)
-- [Configuration](#configuration)
-  - [External Sensors](#external-sensors)
-- [Test Raspberry Pi MQTT Monitor](#test-raspberry-pi-mqtt-monitor)
-- [Schedule Raspberry Pi MQTT Monitor execution as a service](#schedule-raspberry-pi-mqtt-monitor-execution-as-a-service)
-- [Schedule Raspberry Pi MQTT Monitor execution](#schedule-raspberry-pi-mqtt-monitor-execution)
-- [How to update](#how-to-update)
+  - [How to update](https://github.com/hjelev/rpi-mqtt-monitor/wiki/How-to-update)
+- [Configuration](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
+  - [External Sensors](https://github.com/hjelev/rpi-mqtt-monitor/wiki/External-Sensors)
+- [Schedule Raspberry Pi MQTT Monitor execution as a service](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation#schedule-raspberry-pi-mqtt-monitor-execution-as-a-service)
+- [Schedule Raspberry Pi MQTT Monitor execution with a cron](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation#schedule-raspberry-pi-mqtt-monitor-execution-with-a-cron)
 - [Home Assistant Integration](#home-assistant-integration)
 - [To Do](#to-do)
 - [Feature request](#feature-request)
 
 ## What is new
 
+* 2024-12-06: Output File by @pallago 
+* 2024-12-06: Allow overwriting of hostname from config by @sudhaus 
 * 2024-12-01: Support for Home Assistant API (no MQTT needed)
 * 2024-11-06: External sensors by @pallago
 * 2024-10-25: Apt updates sensor
@@ -115,7 +116,6 @@ Use '''rpi-mqtt-monitor --hass_wake''' to display the configuration for Home Ass
 
 ## To Do
 
-- fix uptime sensor to use timestamp
 - improve hass api integration
 
 ## Feature request
