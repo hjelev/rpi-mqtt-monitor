@@ -2,6 +2,7 @@ from random import randrange
 
 # Script version
 version = "0.6.2"
+
 # MQTT server configuration
 mqtt_host = "ip address or host"
 mqtt_user = "username"
@@ -10,11 +11,28 @@ mqtt_port = "1883"
 mqtt_discovery_prefix = "homeassistant"
 mqtt_topic_prefix = "rpi-MQTT-monitor"
 
-# Below hass_ configuration is only needed if you use Home Assistant API instead of 
+# Retain flag for published topics
+retain = True
+
+# QOS setting for published topics: 0,1,2 are acceptable values
+qos = 0
+
+# Home Assistant API configuration
 hass_token = "your_hass_token"
 hass_host = "your_hass_host"
 
 # Messages configuration
+
+# Interval in seconds between probes when running the script as a service (--service option)
+service_sleep_time = 120
+
+# Interval for checking git_update and apt_updates
+update_check_interval = 3600 # 1 hour
+
+# Random delay in seconds before taking probes
+# - this is used for de-synchronizing message if you run this script on many hosts.
+# - if you want a fixed delay you can remove the randrange function and just set the needed value.
+# random_delay = randrange(10)
 
 # Uncomment the line bellow to send just one CSV message containing all values (this method don't support HA discovery_messages)
 # group_messages = True
@@ -23,11 +41,16 @@ hass_host = "your_hass_host"
 # Only works when group_messages is not used
 discovery_messages = True
 
+# System control configuration
+
 # Enable remote restart button in Home Assistant
 restart_button = True
 
 # Enable remote shutdown button in Home Assistant
 shutdown_button = True
+
+# Enable remote update of the script via Home Assistant
+update = True
 
 # Enable control of attached display(s) via Home Assistant
 display_control = False
@@ -39,27 +62,11 @@ os_user = 'os_user_to_be_replaced'
 # To set a custom device name, uncomment the following line and set the custom name.
 # ha_device_name = 'device_name_to_use'
 
-# Binary sensor that displays when there are updates
+# Sensors configuration
+
+# Binary sensor that displays when there is an update for the script
 git_update = True
 
-# Enable remote update of the script via Home Assistant
-update = True
-
-# Retain flag for published topics
-retain = True
-
-# QOS setting for published topics: 0,1,2 are acceptable values
-qos = 0
-
-# Random delay in seconds before taking probes
-# - this is used for de-synchronizing message if you run this script on many hosts.
-# - if you want a fixed delay you can remove the randrange function and just set the needed value.
-# random_delay = randrange(10)
-
-# Interval in seconds between probes when running the script as a service (--service option)
-service_sleep_time = 120
-
-update_check_interval = 3600 # 1 hour
 cpu_load = True
 cpu_temp = True
 used_space = True
