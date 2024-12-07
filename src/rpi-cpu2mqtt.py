@@ -476,6 +476,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["name"] = "Wifi Signal"
         data["unit_of_measurement"] = "%"
         data["state_class"] = "measurement"
+        data["device_class"] = "signal_strength"
     elif what_config == "wifi_signal_dbm":
         data["icon"] = "mdi:wifi"
         data["name"] = "Wifi Signal"
