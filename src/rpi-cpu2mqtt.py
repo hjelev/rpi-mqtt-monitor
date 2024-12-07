@@ -877,7 +877,7 @@ def collect_monitored_values():
         monitored_values["uptime_seconds"] = uptime_seconds
     if config.wifi_signal:
         wifi_signal = check_wifi_signal('')
-        monitored_values["uptwifi_signalime"] = wifi_signal
+        monitored_values["wifi_signal"] = wifi_signal
     if config.wifi_signal_dbm:
         wifi_signal_dbm = check_wifi_signal('dbm')
         monitored_values["wifi_signal_dbm"] = wifi_signal_dbm
