@@ -463,7 +463,6 @@ def config_json(what_config, device="0", hass_api=False):
         data["icon"] = "mdi:calendar"
         data["name"] = "Uptime"
         data["value_template"] = "{{ as_datetime(value) }}"
-        data["state_class"] = "measurement"
         data["device_class"] = "timestamp"
     elif what_config == "uptime_seconds":
         data["icon"] = "mdi:timer-outline"
