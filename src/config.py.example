@@ -1,7 +1,7 @@
 from random import randrange
 
 # Script version
-version = "0.6.2"
+version = "0.6.3"
 
 # MQTT server configuration
 mqtt_host = "ip address or host"
@@ -22,6 +22,7 @@ hass_token = "your_hass_token"
 hass_host = "your_hass_host"
 
 # Messages configuration
+language = "en"
 
 # Interval in seconds between probes when running the script as a service (--service option)
 service_sleep_time = 120
