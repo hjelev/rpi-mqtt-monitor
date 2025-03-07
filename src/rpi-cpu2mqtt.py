@@ -20,12 +20,22 @@ import html
 import uuid
 import glob
 import requests
+import configparser
 #import external sensor lib only if one uses external sensors
 if config.ext_sensors:
     # append folder ext_sensor_lib
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ext_sensor_lib')))
     import ds18b20
     from sht21 import SHT21
+
+
+configlanguage = configparser.ConfigParser()
+configlanguage.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'translations.ini'))
+
+def get_translation(key):
+    """ get the correct translation"""
+    return configlanguage.get(config.language, key, fallback=key)
+
 
 def check_wifi_signal(format):
     try:
@@ -149,7 +159,7 @@ def read_ext_sensors():
             # in case we have any problems to read the sensor, we continue and keep default values
             except Exception:
                 print ("Error while reading sensor %s" % item[1])
-    print (ext_sensors)
+    #print (ext_sensors)
     return ext_sensors
 
 
@@ -337,20 +347,20 @@ def print_measured_values(monitored_values):
         output += "   Update Check Interval: {} seconds\n".format(config.update_check_interval)
       # Add dynamic measured values with units
     measured_values = {
-        "CPU Load": ("cpu_load", "%"),
-        "CPU Temp": ("cpu_temp", "°C"),
-        "Used Space": ("used_space", "%"),
-        "Voltage": ("voltage", "V"),
-        "CPU Clock Speed": ("sys_clock_speed", "MHz"),
-        "Swap": ("swap", "%"),
-        "Memory": ("memory", "%"),
-        "Online since": ("uptime", ""),
-        "Wifi Signal": ("wifi_signal", "%"),
-        "Wifi Signal dBm": ("wifi_signal_dbm", "dBm"),
-        "RPI5 Fan Speed": ("rpi5_fan_speed", "RPM"),
-        "RPI Power Status": ("rpi_power_status", ""),
-        "Update": ("update", ""),
-        "External Sensors": ("ext_sensors", "")
+        get_translation("cpu_load"): ("cpu_load", "%"),
+        get_translation("cpu_temperature"): ("cpu_temp", "°C"),
+        get_translation("used_space"): ("used_space", "%"),
+        get_translation("voltage"): ("voltage", "V"),
+        get_translation("cpu_clock_speed"): ("sys_clock_speed", "MHz"),
+        get_translation("disk_swap"): ("swap", "%"),
+        get_translation("memory_usage"): ("memory", "%"),
+        get_translation("uptime"): ("uptime", ""),
+        get_translation("wifi_signal"): ("wifi_signal", "%"),
+        get_translation("wifi_signal_strength")+" [dBm]": ("wifi_signal_dbm", "dBm"),
+        get_translation("fan_speed"): ("rpi5_fan_speed", "RPM"),
+        get_translation("rpi_power_status"): ("rpi_power_status", ""),
+        get_translation("update"): ("update", ""),
+        get_translation("external_sensors"): ("ext_sensors", "")
     }
 
     output += "\n:: Measured values\n"
@@ -423,77 +433,77 @@ def config_json(what_config, device="0", hass_api=False):
     data["unique_id"] = hostname + "_" + what_config
     if what_config == "cpu_load":
         data["icon"] = "mdi:speedometer"
-        data["name"] = "CPU Usage"
+        data["name"] = get_translation("cpu_load")
         data["state_class"] = "measurement"
         data["unit_of_measurement"] = "%"
     elif what_config == "cpu_temp":
         data["icon"] = "hass:thermometer"
-        data["name"] = "CPU Temperature"
+        data["name"] = get_translation("cpu_temperature")
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
     elif what_config == "used_space":
         data["icon"] = "mdi:harddisk"
-        data["name"] = "Disk Usage"
+        data["name"] = get_translation("disk_usage")
         data["unit_of_measurement"] = "%"
         data["state_class"] = "measurement"
     elif what_config == "voltage":
         data["icon"] = "mdi:flash"
-        data["name"] = "CPU Voltage"
+        data["name"] = get_translation("cpu_voltage")
         data["unit_of_measurement"] = "V"
         data["device_class"] = "voltage"
         data["state_class"] = "measurement"
     elif what_config == "swap":
         data["icon"] = "mdi:harddisk"
-        data["name"] = "Disk Swap"
+        data["name"] = get_translation("disk_swap")
         data["unit_of_measurement"] = "%"
         data["state_class"] = "measurement"
     elif what_config == "memory":
         data["icon"] = "mdi:memory"
-        data["name"] = "Memory Usage"
+        data["name"] = get_translation("memory_usage")
         data["unit_of_measurement"] = "%"
         data["state_class"] = "measurement"
     elif what_config == "sys_clock_speed":
         data["icon"] = "mdi:speedometer"
-        data["name"] = "CPU Clock Speed"
+        data["name"] = get_translation("cpu_clock_speed")
         data["unit_of_measurement"] = "MHz"
         data["device_class"] = "frequency"
         data["state_class"] = "measurement"
     elif what_config == "uptime":
         data["icon"] = "mdi:calendar"
-        data["name"] = "Uptime"
+        data["name"] = get_translation("uptime")
         data["value_template"] = "{{ as_datetime(value) }}"
         data["device_class"] = "timestamp"
     elif what_config == "uptime_seconds":
         data["icon"] = "mdi:timer-outline"
-        data["name"] = "Uptime"
+        data["name"] = get_translation("uptime")
         data["unit_of_measurement"] = "s"
         data["device_class"] = "duration"
         data["state_class"] = "total_increasing"
     elif what_config == "wifi_signal":
         data["icon"] = "mdi:wifi"
-        data["name"] = "Wifi Signal"
+        data["name"] = get_translation("wifi_signal")
         data["unit_of_measurement"] = "%"
         data["state_class"] = "measurement"
         data["device_class"] = "signal_strength"
     elif what_config == "wifi_signal_dbm":
         data["icon"] = "mdi:wifi"
-        data["name"] = "Wifi Signal"
+        data["name"] = get_translation("wifi_signal_strength")
         data["unit_of_measurement"] = "dBm"
         data["device_class"] = "signal_strength"
         data["state_class"] = "measurement"
     elif what_config == "rpi5_fan_speed":
         data["icon"] = "mdi:fan"
-        data["name"] = "Fan Speed"
+        data["name"] = get_translation("fan_speed")
         data["unit_of_measurement"] = "RPM"
         data["state_class"] = "measurement"
     elif what_config == "status":
         data["icon"] = "mdi:lan-connect"
-        data["name"] = "Status"
+        data["name"] = get_translation("status")
         data["value_template"] = "{{ 'online' if value == '1' else 'offline' }}"
     elif what_config == "git_update":
         data["icon"] = "mdi:git"
-        data["name"] = "RPi MQTT Monitor"
+        data["name"] = get_translation("rpi_mqtt_monitor")
         data["title"] = "Device Update"
         data["device_class"] = "update"
         data["state_class"] = "measurement"
@@ -501,7 +511,7 @@ def config_json(what_config, device="0", hass_api=False):
     elif what_config == "update":
         version = update.check_git_version_remote(script_dir)
         data["icon"] = "mdi:update"
-        data["name"] = "RPi MQTT Monitor"
+        data["name"] = get_translation("rpi_mqtt_monitor")
         data["title"] = "New Version"
         data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
@@ -513,43 +523,43 @@ def config_json(what_config, device="0", hass_api=False):
         data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
         data["icon"] = "mdi:restart"
-        data["name"] = "System Restart"
+        data["name"] = get_translation("system_restart")
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "restart"
         data["device_class"] = "restart"
     elif what_config == "shutdown_button":
         data["icon"] = "mdi:power"
-        data["name"] = "System Shutdown"
+        data["name"] = get_translation("system_shutdown")
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "shutdown"
         data["device_class"] = "restart"
     elif what_config == "display_on":
         data["icon"] = "mdi:monitor"
-        data["name"] = "Monitor ON"
+        data["name"] = get_translation("monitor_on")
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_on"
         data["device_class"] = "restart"
     elif what_config == "display_off":
         data["icon"] = "mdi:monitor"
-        data["name"] = "Monitor OFF"
+        data["name"] = get_translation("monitor_off")
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_off"
         data["device_class"] = "restart"
     elif what_config == device + "_temp":
         data["icon"] = "hass:thermometer"
-        data["name"] = device + " Temperature"
+        data["name"] = device + " " + get_translation("temperature")
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
     elif what_config == "rpi_power_status":
         data["icon"] = "mdi:flash"
-        data["name"] = "RPi Power Status"  
+        data["name"] = get_translation("rpi_power_status")
     elif what_config == "apt_updates":
         data["icon"] = "mdi:update"
-        data["name"] = "APT Updates"
+        data["name"] = get_translation("apt_updates")
     elif what_config == "ds18b20_status":
         data["icon"] = "hass:thermometer"
-        data["name"] = device + " Temperature"
+        data["name"] = device + " " + get_translation("temperature")
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
@@ -558,7 +568,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_temp_status":
         data["icon"] = "hass:thermometer"
-        data["name"] = device + " Temperature"
+        data["name"] = device + " " + get_translation("temperature")
         data["unit_of_measurement"] = "°C"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
@@ -567,7 +577,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_hum_status":
         data["icon"] = "mdi:water-percent"
-        data["name"] = device + " Humidity"
+        data["name"] = device + " " + get_translation("humidity")
         data["unit_of_measurement"] = "%"
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
