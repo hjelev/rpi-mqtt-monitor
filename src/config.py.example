@@ -106,6 +106,9 @@ cpu_thermal_zone = 'cpu'
 ext_sensors = False
 #ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0, [-300, 0]]] 
 
+# use availability, i.e. switch sensors to "unavailable" if there are issues reading them
+use_availability = True
+
 # output file
 output_filename = False
 #output_filename = "/dev/shm/mjpeg/user_annotate.txt"
