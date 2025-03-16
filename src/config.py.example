@@ -28,6 +28,9 @@ language = "en"
 # Interval in seconds between probes when running the script as a service (--service option)
 service_sleep_time = 120
 
+# Let homeassistant mark sensors as unavailable after a given time without updates
+expire_after_time = 3*service_sleep_time
+
 # Interval for checking git_update and apt_updates
 update_check_interval = 3600 # 1 hour
 

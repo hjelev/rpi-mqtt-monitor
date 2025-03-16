@@ -589,6 +589,10 @@ def config_json(what_config, device="0", hass_api=False):
         return ""
     # Return our built discovery config
 
+    # If this is a "measurement" add expiry information from config file
+    if "state_class" in data and data["state_class"] == "measurement" and config.expire_after_time:
+        data["expire_after"] = config.expire_after_time
+
     if hass_api:
         result = {
             "name": data["name"],
