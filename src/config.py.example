@@ -10,6 +10,7 @@ mqtt_password = "password"
 mqtt_port = "1883"
 mqtt_discovery_prefix = "homeassistant"
 mqtt_topic_prefix = "rpi-MQTT-monitor"
+mqtt_uns_structure = ""
 
 # Retain flag for published topics
 retain = True
