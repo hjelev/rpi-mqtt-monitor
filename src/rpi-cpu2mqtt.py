@@ -594,7 +594,8 @@ def config_json(what_config, device="0", hass_api=False):
     # Return our built discovery config
 
     # If this is a "measurement" add expiry information and availability from config file
-    if "state_class" in data and data["state_class"] == "measurement":
+    # exclude "git_update", since that is running with a different update rate :(
+    if "state_class" in data and data["state_class"] == "measurement" and what_config != "git_update":
         if config.expire_after_time:
             data["expire_after"] = config.expire_after_time
         if config.use_availability:
