@@ -107,6 +107,13 @@ mqtt_configuration(){
     TOPIC=rpi-MQTT-monitor
   fi
   sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
+
+  printf "Enter mqtt_uns_structure (default is empty): "
+  read UNS
+  if [[ -n "$UNS" && ! "$UNS" =~ /$ ]]; then
+    UNS="${UNS}/"
+  fi
+  sed -i "s/mqtt_uns_structure = .*/mqtt_uns_structure = '${UNS}'/" src/config.py
   
   printf "Do you need to control your monitors? (default is No): "
   read CONTROL

@@ -429,7 +429,7 @@ def config_json(what_config, device="0", hass_api=False):
         }
     }
 
-    data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
+    data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
     data["unique_id"] = hostname + "_" + what_config
     if what_config == "cpu_load":
         data["icon"] = "mdi:speedometer"
@@ -513,7 +513,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["icon"] = "mdi:update"
         data["name"] = get_translation("rpi_mqtt_monitor")
         data["title"] = "New Version"
-        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
+        data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
         data["device_class"] = "firmware"
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
@@ -564,7 +564,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
         # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
-        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_temp_status":
         data["icon"] = "hass:thermometer"
@@ -573,7 +573,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
         # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
-        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_hum_status":
         data["icon"] = "mdi:water-percent"
@@ -582,7 +582,7 @@ def config_json(what_config, device="0", hass_api=False):
         data["device_class"] = "temperature"
         data["state_class"] = "measurement"
         # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
-        data["state_topic"] = config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
+        data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     
     else:
@@ -644,7 +644,7 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
                            config_json('git_update'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=1, retain=config.retain)
+        client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/git_update", git_update, qos=1, retain=config.retain)
 
     if config.update:
         if config.discovery_messages:
@@ -655,7 +655,7 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_apt_updates/config",
                            config_json('apt_updates'), qos=config.qos)
-        client.publish(config.mqtt_topic_prefix + "/" + hostname + "/apt_updates", apt_updates, qos=config.qos, retain=config.retain)
+        client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/apt_updates", apt_updates, qos=config.qos, retain=config.retain)
 
 
     # Wait for all messages to be delivered
@@ -715,7 +715,7 @@ def publish_to_mqtt(monitored_values):
             if config.discovery_messages:
                 client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_{key}/config",
                             config_json(key), qos=config.qos)
-            client.publish(f"{config.mqtt_topic_prefix}/{hostname}/{key}", value, qos=config.qos, retain=config.retain)
+            client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}", value, qos=config.qos, retain=config.retain)
 
   # Publish non standard values    
     if config.restart_button:
@@ -737,7 +737,7 @@ def publish_to_mqtt(monitored_values):
             if config.discovery_messages:
                 client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + device + "_temp/config",
                            config_json(device + "_temp", device), qos=config.qos)
-            client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
+            client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
 
     if config.ext_sensors:
         # we loop through all sensors
@@ -751,7 +751,7 @@ def publish_to_mqtt(monitored_values):
                     client.publish(
                         config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_status/config",
                         config_json('ds18b20_status', device=item[0]), qos=config.qos)
-                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "ds18b20_status_" + item[0], item[3], qos=config.qos, retain=config.retain)
+                client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "ds18b20_status_" + item[0], item[3], qos=config.qos, retain=config.retain)
             if item[1] == "sht21":
                 if config.discovery_messages:
                     # temperature
@@ -763,13 +763,13 @@ def publish_to_mqtt(monitored_values):
                         config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_hum_status/config",
                         config_json('sht21_hum_status', device=item[0]), qos=config.qos)
                 # temperature
-                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_temp_status_" + item[0], item[3][0], qos=config.qos, retain=config.retain)
+                client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_temp_status_" + item[0], item[3][0], qos=config.qos, retain=config.retain)
                 # humidity
-                client.publish(config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_hum_status_" + item[0], item[3][1], qos=config.qos, retain=config.retain)
+                client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_hum_status_" + item[0], item[3][1], qos=config.qos, retain=config.retain)
                 
     status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
-    client.publish(config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
+    client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
     
     while len(client._out_messages) > 0:
         time.sleep(0.1)
@@ -794,7 +794,7 @@ def bulk_publish_to_mqtt(monitored_values):
         return
 
     client.loop_start()
-    client.publish(config.mqtt_topic_prefix + "/" + hostname, values_str, qos=config.qos, retain=config.retain)
+    client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname, values_str, qos=config.qos, retain=config.retain)
 
     while len(client._out_messages) > 0:
         time.sleep(0.1)
@@ -1012,7 +1012,7 @@ if __name__ == '__main__':
             client.username_pw_set(config.mqtt_user, config.mqtt_password)
             client.on_message = on_message
             # set will_set to send a message when the client disconnects
-            client.will_set(config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
+            client.will_set(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
             try:
                 client.connect(config.mqtt_host, int(config.mqtt_port))
             except Exception as e:
