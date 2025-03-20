@@ -51,7 +51,7 @@ def check_wifi_signal(format):
             wifi_signal = round((int(wifi_signal) / 70)* 100)
 
     except Exception:
-        wifi_signal = 0
+        wifi_signal = None if config.use_availability else 0
 
     return wifi_signal
 
@@ -73,7 +73,7 @@ def check_cpu_load():
         cpu_load = float(cpu_load) / int(cores) * 100
         cpu_load = round(float(cpu_load), 1)
     except Exception:
-        cpu_load = 0
+        cpu_load = None if config.use_availability else 0
 
     return cpu_load
 
@@ -84,7 +84,7 @@ def check_voltage():
         voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         voltage = voltage.strip()[:-1]
     except Exception:
-        voltage = 0
+        voltage = None if config.use_availability else 0
 
     return voltage.decode('utf8')
 
@@ -148,6 +148,8 @@ def read_ext_sensors():
             # in case that some error occurs during reading, we get -300
             if temp==-300:
                 print ("Error while reading sensor %s, %s" % (item[1], item[2]))
+                if config.use_availability:
+                    item[3] = None
         if item[1] == "sht21":
             try:
                 with SHT21(1) as sht21:
@@ -159,6 +161,8 @@ def read_ext_sensors():
             # in case we have any problems to read the sensor, we continue and keep default values
             except Exception:
                 print ("Error while reading sensor %s" % item[1])
+                if config.use_availability:
+                    item[3] = [None, None]
     #print (ext_sensors)
     return ext_sensors
 
@@ -169,7 +173,7 @@ def check_cpu_temp():
         p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         cpu_temp = p.decode("utf-8").strip().replace(",", ".")
     except Exception:
-        cpu_temp = 0
+        cpu_temp = None if config.use_availability else 0
 
     return cpu_temp
 
@@ -203,7 +207,7 @@ def check_model_name():
         try:
             model_name = model_name.split(':')[1].replace('\n', '')
         except Exception:
-            model_name = 'Unknown'
+            model_name = None if config.use_availability else 'Unknown'
 
    return model_name
 
@@ -221,7 +225,7 @@ def get_os():
     try:
         pretty_name = pretty_name.split('=')[1].replace('"', '').replace('\n', '')
     except Exception:
-        pretty_name = 'Unknown'
+        pretty_name = None if config.use_availability else 'Unknown'
         
     return(pretty_name)
 
@@ -235,7 +239,7 @@ def get_manufacturer():
         else:
             pretty_name = 'Raspberry Pi'
     except Exception:
-        pretty_name = 'Unknown'
+        pretty_name = None if config.use_availability else 'Unknown'
         
     return(pretty_name)
 
@@ -270,7 +274,7 @@ def get_network_ip():
         s.connect(('10.255.255.255', 1))
         IP = s.getsockname()[0]
     except Exception:
-        IP = '127.0.0.1'
+        IP = None if config.use_availability else '127.0.0.1'
     finally:
         s.close()
     return IP
@@ -291,7 +295,7 @@ def get_apt_updates():
         updates_count = int(result.stdout.strip())
     except Exception as e:
         print(f"Error checking for updates: {e}")
-        updates_count = 0
+        updates_count = None if config.use_availability else 0
 
     return updates_count
 
@@ -394,7 +398,7 @@ def get_release_notes(version):
         response = subprocess.run(['curl', '-s', url], capture_output=True)
         release_notes = response.stdout.decode('utf-8').split("What's Changed")[1].split("</div>")[0].replace("</h2>","").split("<p>")[0]
     except Exception:
-        release_notes = "No release notes available"
+        release_notes = None if config.use_availability else "No release notes available"
 
     lines = extract_text(release_notes).split('\n')
     lines = ["   * "+ line for line in lines if line.strip() != ""]
@@ -589,6 +593,14 @@ def config_json(what_config, device="0", hass_api=False):
         return ""
     # Return our built discovery config
 
+    # If this is a "measurement" add expiry information and availability from config file
+    # exclude "git_update", since that is running with a different update rate :(
+    if "state_class" in data and data["state_class"] == "measurement" and what_config != "git_update":
+        if config.expire_after_time:
+            data["expire_after"] = config.expire_after_time
+        if config.use_availability:
+            data["availability_topic"] = data["state_topic"] + "_availability"
+
     if hass_api:
         result = {
             "name": data["name"],
@@ -715,6 +727,8 @@ def publish_to_mqtt(monitored_values):
             if config.discovery_messages:
                 client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_{key}/config",
                             config_json(key), qos=config.qos)
+            if config.use_availability:
+                client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}_availability", 'offline' if value is None else 'online', qos=config.qos)
             client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}", value, qos=config.qos, retain=config.retain)
 
   # Publish non standard values    
@@ -737,6 +751,8 @@ def publish_to_mqtt(monitored_values):
             if config.discovery_messages:
                 client.publish(config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + device + "_temp/config",
                            config_json(device + "_temp", device), qos=config.qos)
+            if config.use_availability:
+                client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{device}_temp_availability", 'offline' if temp is None else 'online', qos=config.qos)
             client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
 
     if config.ext_sensors:
@@ -751,6 +767,8 @@ def publish_to_mqtt(monitored_values):
                     client.publish(
                         config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_status/config",
                         config_json('ds18b20_status', device=item[0]), qos=config.qos)
+                if config.use_availability:
+                    client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/ds18b20_status_{item[0]}_availability", 'offline' if item[3] is None else 'online', qos=config.qos)
                 client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "ds18b20_status_" + item[0], item[3], qos=config.qos, retain=config.retain)
             if item[1] == "sht21":
                 if config.discovery_messages:
@@ -762,6 +780,9 @@ def publish_to_mqtt(monitored_values):
                     client.publish(
                         config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_" + item[0] + "_hum_status/config",
                         config_json('sht21_hum_status', device=item[0]), qos=config.qos)
+                if config.use_availability:
+                    client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/sht21_temp_status_{item[0]}_availability", 'offline' if item[3][0] is None else 'online', qos=config.qos)
+                    client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/sht21_hum_status_{item[0]}_availability", 'offline' if item[3][1] is None else 'online', qos=config.qos)
                 # temperature
                 client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_temp_status_" + item[0], item[3][0], qos=config.qos, retain=config.retain)
                 # humidity
