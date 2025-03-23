@@ -28,6 +28,9 @@ language = "en"
 # Interval in seconds between probes when running the script as a service (--service option)
 service_sleep_time = 120
 
+# Let homeassistant mark sensors as unavailable after a given time without updates
+expire_after_time = 3*service_sleep_time
+
 # Interval for checking git_update and apt_updates
 update_check_interval = 3600 # 1 hour
 
@@ -102,6 +105,9 @@ cpu_thermal_zone = 'cpu'
 # read external sensors for temperature, humidity, pressure etc.
 ext_sensors = False
 #ext_sensors = [["Housing", "ds18b20", "0014531448ff", -300], ["ext2", "sht21", 0, [-300, 0]]] 
+
+# use availability, i.e. switch sensors to "unavailable" if there are issues reading them
+use_availability = True
 
 # output file
 output_filename = False
