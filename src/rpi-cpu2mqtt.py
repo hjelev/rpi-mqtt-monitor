@@ -21,6 +21,7 @@ import uuid
 import glob
 import requests
 import configparser
+import psutil
 #import external sensor lib only if one uses external sensors
 if config.ext_sensors:
     # append folder ext_sensor_lib
@@ -66,16 +67,7 @@ def check_used_space(path):
 
 
 def check_cpu_load():
-    p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
-    cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]
-    try:
-        cpu_load = str(p).split("average:")[1].split(", ")[0].replace(' ', '').replace(',', '.')
-        cpu_load = float(cpu_load) / int(cores) * 100
-        cpu_load = round(float(cpu_load), 1)
-    except Exception:
-        cpu_load = None if config.use_availability else 0
-
-    return cpu_load
+    return psutil.cpu_percent(interval=1)
 
 
 def check_voltage():
