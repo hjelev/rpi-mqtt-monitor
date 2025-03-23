@@ -67,8 +67,18 @@ def check_used_space(path):
 
 
 def check_cpu_load():
-    return psutil.cpu_percent(interval=1)
-
+    if config.use_psutil:
+      return psutil.cpu_percent(interval=1)
+    else:
+      p = subprocess.Popen("uptime", shell=True, stdout=subprocess.PIPE).communicate()[0]
+      cores = subprocess.Popen("nproc", shell=True, stdout=subprocess.PIPE).communicate()[0]
+      try:
+        cpu_load = str(p).split("average:")[1].split(", ")[0].replace(' ', '').replace(',', '.')
+        cpu_load = float(cpu_load) / int(cores) * 100
+        cpu_load = round(float(cpu_load), 1)
+      except Exception:
+        cpu_load = None if config.use_availability else 0
+      return cpu_load  
 
 def check_voltage():
     try:
@@ -160,16 +170,26 @@ def read_ext_sensors():
 
 
 def check_cpu_temp():
-    try:
+    if config.use_psutil:
+      try:
         temps = psutil.sensors_temperatures()
         if not temps or "coretemp" not in temps:
             raise ValueError("CPU temperature sensor not found.")
-        
         cpu_temp = temps["coretemp"][0].current
         return round(cpu_temp, 2)
-    except Exception as e:
+      except Exception as e:
         print(f"Error reading CPU temperature: {e}")
         return None if config.use_availability else 0
+    else:
+      #OldVersion without psutil
+      full_cmd = f"awk '{{printf (\"%.2f\\n\", $1/1000); }}' $(for zone in /sys/class/thermal/thermal_zone*/; do grep -iq \"{config.cpu_thermal_zone}\" \"${{zone}}type\" && echo \"${{zone}}temp\"; done)"    
+      try:
+        p = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        cpu_temp = p.decode("utf-8").strip().replace(",", ".")
+      except Exception:
+        cpu_temp = None if config.use_availability else 0
+
+    return cpu_temp
 
 
 def check_sys_clock_speed():
