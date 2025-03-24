@@ -161,12 +161,20 @@ def read_ext_sensors():
 
 def check_cpu_temp():
     try:
+        # Get temperature readings from psutil
         temps = psutil.sensors_temperatures()
-        if not temps or "coretemp" not in temps:
+        if not temps:
+            raise ValueError("No temperature sensors found.")
+
+        # Check for Raspberry Pi (cpu_thermal) or x86 (coretemp)
+        if "cpu_thermal" in temps:
+            cpu_temp = temps["cpu_thermal"][0].current
+        elif "coretemp" in temps:
+            cpu_temp = temps["coretemp"][0].current
+        else:
             raise ValueError("CPU temperature sensor not found.")
-        
-        cpu_temp = temps["coretemp"][0].current
-        return round(cpu_temp, 2)
+
+        return round(cpu_temp, 2)  # Return temperature rounded to 2 decimal places
     except Exception as e:
         print(f"Error reading CPU temperature: {e}")
         return None if config.use_availability else 0
