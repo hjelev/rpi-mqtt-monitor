@@ -370,7 +370,7 @@ def print_measured_values(monitored_values):
     output += "   Service Sleep Time: {} seconds\n".format(config.service_sleep_time)
     if config.update:
         output += "   Update Check Interval: {} seconds\n".format(config.update_check_interval)
-      # Add dynamic measured values with units
+    # Add dynamic measured values with units
     measured_values = {
         get_translation("cpu_load"): ("cpu_load", "%"),
         get_translation("cpu_temperature"): ("cpu_temp", "°C"),
@@ -393,17 +393,18 @@ def print_measured_values(monitored_values):
         if key in monitored_values:
             output += f"   {label}: {monitored_values[key]} {unit}\n"
 
-    drive_temps = check_all_drive_temps()
-    if len(drive_temps) > 0:
-        for device, temp in drive_temps.items():
-            output += f"   {device.capitalize()} Temp: {temp:.2f}°C\n"
+    if config.drive_temps:
+        drive_temps = check_all_drive_temps()
+        if len(drive_temps) > 0:
+            for device, temp in drive_temps.items():
+                output += f"   {device.capitalize()} Temp: {temp:.2f}°C\n"
     output += "\n:: Scheduling\n "
 
     if check_service_file_exists():
         output += "  Running as Service\n"
     elif check_crontab_entry():
         output += "  Running as Cron Job\n"
-        
+
     output += """\n:: Installation directory :: {}
 
 :: Release notes {}: 
