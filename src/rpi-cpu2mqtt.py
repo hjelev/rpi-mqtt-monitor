@@ -120,7 +120,7 @@ def check_service_file_exists():
     return os.path.exists(service_file_path)
 
 
-def check_crontab_entry(script_name="rpi-cpu1mqtt.py"):
+def check_crontab_entry(script_name="rpi-cpu2mqtt.py"):
     try:
         # Get the current user's crontab
         result = subprocess.run(['crontab', '-l'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -402,7 +402,7 @@ def print_measured_values(monitored_values):
 
     if check_service_file_exists():
         output += "  Running as Service\n"
-    elif check_crontab_entry():
+    if check_crontab_entry():
         output += "  Running as Cron Job\n"
         
     output += """\n:: Installation directory :: {}
