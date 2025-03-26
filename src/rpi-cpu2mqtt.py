@@ -115,6 +115,27 @@ def check_rpi_power_status():
         return "Error: " + str(e)
 
 
+def check_service_file_exists():
+    service_file_path = "/etc/systemd/system/rpi-mqtt-monitor.service"
+    return os.path.exists(service_file_path)
+
+
+def check_crontab_entry(script_name="rpi-cpu1mqtt.py"):
+    try:
+        # Get the current user's crontab
+        result = subprocess.run(['crontab', '-l'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        # If the crontab command fails, it means there is no crontab for the user
+        if result.returncode != 0:
+            return False
+        
+        # Check if the script name is in the crontab output
+        return script_name in result.stdout
+    except Exception as e:
+        print(f"Error checking crontab: {e}")
+        return False
+    
+
 def read_ext_sensors():
     """
     here we read the external sensors
@@ -376,7 +397,13 @@ def print_measured_values(monitored_values):
     if len(drive_temps) > 0:
         for device, temp in drive_temps.items():
             output += f"   {device.capitalize()} Temp: {temp:.2f}°C\n"
+    output += "\n:: Scheduling\n "
 
+    if check_service_file_exists():
+        output += "  Running as Service\n"
+    elif check_crontab_entry():
+        output += "  Running as Cron Job\n"
+        
     output += """\n:: Installation directory :: {}
 
 :: Release notes {}: 
