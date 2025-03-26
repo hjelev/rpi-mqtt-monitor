@@ -404,11 +404,6 @@ def print_measured_values(monitored_values):
         output += "  Running as Service\n"
     elif check_crontab_entry():
         output += "  Running as Cron Job\n"
-
-    if check_service_file_exists():
-        output += "  Running as Service\n"
-    elif check_crontab_entry():
-        output += "  Running as Cron Job\n"
         
     output += """\n:: Installation directory :: {}
 
