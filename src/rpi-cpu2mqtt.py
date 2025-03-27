@@ -210,7 +210,7 @@ def check_uptime(format):
     if format == 'timestamp':
         full_cmd = "uptime -s"
         tz_cmd = "date +%z"
-        tz_str = subprocess.Popen(tz_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()**
+        tz_str = subprocess.Popen(tz_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
         timestamp_str = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
         timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
         iso_timestamp = timestamp.isoformat() + tz_str  # Append correct offset to indicate `local` time
