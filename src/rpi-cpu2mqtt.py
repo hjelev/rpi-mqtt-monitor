@@ -186,7 +186,9 @@ def check_cpu_temp():
         if not temps:
             raise ValueError("No temperature sensors found.")
 
-        if "cpu_thermal" in temps:
+        if config.cpu_thermal_zone in temps:
+            cpu_temp = temps[config.cpu_thermal_zone][0].current
+        elif "cpu_thermal" in temps:
             cpu_temp = temps["cpu_thermal"][0].current
         elif "coretemp" in temps:
             cpu_temp = temps["coretemp"][0].current
