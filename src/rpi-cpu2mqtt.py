@@ -586,9 +586,12 @@ def config_json(what_config, device="0", hass_api=False):
     elif what_config == "rpi_power_status":
         data["icon"] = "mdi:flash"
         data["name"] = get_translation("rpi_power_status")
+        data["state_class"] = "none"
     elif what_config == "apt_updates":
         data["icon"] = "mdi:update"
         data["name"] = get_translation("apt_updates")
+        data["unit_of_measurement"] = "updates"
+        data["state_class"] = "measurement"       
     elif what_config == "ds18b20_status":
         data["icon"] = "hass:thermometer"
         data["name"] = device + " " + get_translation("temperature")
@@ -628,24 +631,25 @@ def config_json(what_config, device="0", hass_api=False):
             data["expire_after"] = config.expire_after_time
         if config.use_availability:
             data["availability_topic"] = data["state_topic"] + "_availability"
-
+    
     if hass_api:
         result = {
             "name": data["name"],
             "icon": data["icon"],
-            "state_class": data["state_class"],
         }
+        if "state_class" in data:
+            result["state_class"] = data["state_class"]
         if "unit_of_measurement" in data:
-            result["unit_of_measurement"] = data["unit_of_measurement"]      
+            result["unit_of_measurement"] = data["unit_of_measurement"]
         if "device_class" in data:
             result["device_class"] = data["device_class"]
         if "unique_id" in data:
-            result["unique_id"] = data["unique_id"] 
+            result["unique_id"] = data["unique_id"]
         if "value_template" in data:
-            result["value_template"] = data["value_template"] 
-            
+            result["value_template"] = data["value_template"]
+    
         return result
-
+    
     return json.dumps(data)
 
 
