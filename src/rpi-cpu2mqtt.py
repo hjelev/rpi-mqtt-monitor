@@ -869,7 +869,7 @@ def parse_arguments():
     parser.add_argument('-v', '--version',  action='store_true',  help='display installed version and exit', default=False)
     parser.add_argument('-u', '--update',   action='store_true',  help='update script and config then exit', default=False)
     parser.add_argument('-w', '--hass_wake', action='store_true', help='display Home assistant wake on lan configuration', default=False)
-
+    parser.add_argument('--uninstall', action='store_true', help='uninstall rpi-mqtt-monitor and remove all related files')
     args = parser.parse_args()
 
     if args.update:
@@ -1015,6 +1015,24 @@ def update_status():
             break
 
 
+def uninstall_script():
+    """Call the remote_install.sh script to uninstall the application."""
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../remote_install.sh")
+    
+    if not os.path.exists(script_path):
+        print("Error: remote_install.sh script not found.")
+        return
+
+    try:
+        # Run the uninstall command
+        subprocess.run(["bash", script_path, "uninstall"], check=True)
+        print("Uninstallation process completed.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during uninstallation: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+
 def on_message(client, userdata, msg):
     global exit_flag, thread1, thread2
     print("Received message: ", msg.payload.decode())
@@ -1060,6 +1078,11 @@ else:
 
 if __name__ == '__main__':
     args = parse_arguments();
+
+    if args.uninstall:
+        uninstall_script()
+        sys.exit(0)
+
     if args.service:
         if not args.hass_api:
             client = paho.Client()

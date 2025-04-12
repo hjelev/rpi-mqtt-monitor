@@ -18,6 +18,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 * Remotely restart / shutdown your system and control your monitors.
 * Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
 * Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell.
+* Easy uninstallation, just run rpi-mqtt-monitor --uninstall
 * Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message).
 * Easy update: You can update the script by calling it with command line "rpi-mqtt-monitor --update" or via Home Assistant UI.
 * Support multiple languages: English, German and Bulgarian
@@ -63,7 +64,7 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 ## CLI arguments
 
 ```
-usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w]
+usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
 
 Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.
 
@@ -75,6 +76,7 @@ options:
   -v, --version    display installed version and exit
   -u, --update     update script and config then exit
   -w, --hass_wake  display Home assistant wake on lan configuration
+  --uninstall      uninstall rpi-mqtt-monitor and remove all related files
 
 ```
 
@@ -105,6 +107,13 @@ It is recommended to run the script as a service, this way you can use the resta
 
 ### Manual
 [moved to wiki](../../wiki/Manual-Installation)
+
+## Uninstallation
+
+To uninstall Raspberry Pi MQTT Monitor, run the following command:
+
+'''rpi-mqtt-monitor --uninstall'''
+
 
 ## Home Assistant Integration
 

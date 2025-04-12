@@ -24,15 +24,29 @@ welcome(){
 
 uninstall(){
   printm "Uninstalling rpi-mqtt-monitor"
-  
-  # Remove the rpi-mqtt-monitor directory
-  if [ -d "rpi-mqtt-monitor" ]; then
-    rm -rf rpi-mqtt-monitor
+
+  # Ask for confirmation before proceeding
+  read -r -p "Are you sure you want to uninstall rpi-mqtt-monitor? [y/N] " response
+  if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    echo "Uninstallation canceled."
+    exit
+  fi
+    
+  # Get the absolute path of the script
+  script_dir=$(dirname "$(realpath "$0")")
+
+  # Remove the rpi-mqtt-monitor directory if it exists
+  if [ -d "$script_dir" ]; then
+    if [ "$(realpath rpi-mqtt-monitor)" == "$script_dir" ]; then
+      # If the script is running from the installation directory, navigate out of it
+      cd ..
+    fi
+    sudo rm -rf "$script_dir"
     echo "Removed rpi-mqtt-monitor directory."
   else
     echo "rpi-mqtt-monitor directory not found."
   fi
-
+  
   # Remove the cron job if it exists
   if crontab -l | grep -q rpi-cpu2mqtt.py; then
     crontab -l | grep -v rpi-cpu2mqtt.py | crontab -
