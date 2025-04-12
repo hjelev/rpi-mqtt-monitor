@@ -590,12 +590,9 @@ def config_json(what_config, device="0", hass_api=False):
     elif what_config == "rpi_power_status":
         data["icon"] = "mdi:flash"
         data["name"] = get_translation("rpi_power_status")
-        data["state_class"] = "none"
     elif what_config == "apt_updates":
         data["icon"] = "mdi:update"
-        data["name"] = get_translation("apt_updates")
-        data["unit_of_measurement"] = "updates"
-        data["state_class"] = "measurement"       
+        data["name"] = get_translation("apt_updates")    
     elif what_config == "ds18b20_status":
         data["icon"] = "hass:thermometer"
         data["name"] = device + " " + get_translation("temperature")
