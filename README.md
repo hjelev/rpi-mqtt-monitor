@@ -112,8 +112,9 @@ It is recommended to run the script as a service, this way you can use the resta
 
 To uninstall Raspberry Pi MQTT Monitor, run the following command:
 
-'''rpi-mqtt-monitor --uninstall'''
-
+```bash
+rpi-mqtt-monitor --uninstall
+```
 
 ## Home Assistant Integration
 
