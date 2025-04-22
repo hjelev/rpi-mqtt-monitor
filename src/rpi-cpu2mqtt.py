@@ -443,214 +443,135 @@ def get_release_notes(version):
     return release_notes
 
 
-def config_json(what_config, device="0", hass_api=False): 
-    model_name = check_model_name()
-    manufacturer = get_manufacturer()
-    os = get_os()
-    data = {
-        "state_topic": "",
-        "icon": "",
-        "name": "",
-        "unique_id": "",
-
-        "device": {
-            "identifiers": [hostname],
-            "manufacturer": 'github.com/hjelev',
-            "model": 'RPi MQTT Monitor ' + config.version,
-            "name": hostname,
-            "sw_version": os,
-            "hw_version": model_name + " by " + manufacturer + " IP:" + get_network_ip(),
-            "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor",
-            "connections": [["mac", get_mac_address()]]
-        }
+def build_device_info():
+    return {
+        "identifiers": [hostname],
+        "manufacturer": 'github.com/hjelev',
+        "model": f'RPi MQTT Monitor {config.version}',
+        "name": hostname,
+        "sw_version": get_os(),
+        "hw_version": f"{check_model_name()} by {get_manufacturer()} IP:{get_network_ip()}",
+        "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor",
+        "connections": [["mac", get_mac_address()]]
     }
 
-    data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
-    data["unique_id"] = hostname + "_" + what_config
+def build_data_template(what_config):
+    return {
+        "state_topic": f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{what_config}",
+        "unique_id": f"{hostname}_{what_config}",
+        "device": build_device_info()
+    }
+
+def add_common_attributes(data, icon, name, unit=None, device_class=None, state_class=None):
+    data.update({
+        "icon": icon,
+        "name": name,
+    })
+    if unit:
+        data["unit_of_measurement"] = unit
+    if device_class:
+        data["device_class"] = device_class
+    if state_class:
+        data["state_class"] = state_class
+
+def handle_specific_configurations(data, what_config, device):
     if what_config == "cpu_load":
-        data["icon"] = "mdi:speedometer"
-        data["name"] = get_translation("cpu_load")
-        data["state_class"] = "measurement"
-        data["unit_of_measurement"] = "%"
+        add_common_attributes(data, "mdi:speedometer", get_translation("cpu_load"), "%", None, "measurement")
     elif what_config == "cpu_temp":
-        data["icon"] = "hass:thermometer"
-        data["name"] = get_translation("cpu_temperature")
-        data["unit_of_measurement"] = "°C"
-        data["device_class"] = "temperature"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "hass:thermometer", get_translation("cpu_temperature"), "°C", "temperature", "measurement")
     elif what_config == "used_space":
-        data["icon"] = "mdi:harddisk"
-        data["name"] = get_translation("disk_usage")
-        data["unit_of_measurement"] = "%"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:harddisk", get_translation("disk_usage"), "%", None, "measurement")
     elif what_config == "voltage":
-        data["icon"] = "mdi:flash"
-        data["name"] = get_translation("cpu_voltage")
-        data["unit_of_measurement"] = "V"
-        data["device_class"] = "voltage"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:flash", get_translation("cpu_voltage"), "V", "voltage", "measurement")
     elif what_config == "swap":
-        data["icon"] = "mdi:harddisk"
-        data["name"] = get_translation("disk_swap")
-        data["unit_of_measurement"] = "%"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:harddisk", get_translation("disk_swap"), "%", None, "measurement")
     elif what_config == "memory":
-        data["icon"] = "mdi:memory"
-        data["name"] = get_translation("memory_usage")
-        data["unit_of_measurement"] = "%"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:memory", get_translation("memory_usage"), "%", None, "measurement")
     elif what_config == "sys_clock_speed":
-        data["icon"] = "mdi:speedometer"
-        data["name"] = get_translation("cpu_clock_speed")
-        data["unit_of_measurement"] = "MHz"
-        data["device_class"] = "frequency"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:speedometer", get_translation("cpu_clock_speed"), "MHz", "frequency", "measurement")
     elif what_config == "uptime":
-        data["icon"] = "mdi:calendar"
-        data["name"] = get_translation("uptime")
+        add_common_attributes(data, "mdi:calendar", get_translation("uptime"))
         data["value_template"] = "{{ as_datetime(value) }}"
         data["device_class"] = "timestamp"
     elif what_config == "uptime_seconds":
-        data["icon"] = "mdi:timer-outline"
-        data["name"] = get_translation("uptime")
-        data["unit_of_measurement"] = "s"
-        data["device_class"] = "duration"
-        data["state_class"] = "total_increasing"
+        add_common_attributes(data, "mdi:timer-outline", get_translation("uptime"), "s", "duration", "total_increasing")
     elif what_config == "wifi_signal":
-        data["icon"] = "mdi:wifi"
-        data["name"] = get_translation("wifi_signal")
-        data["unit_of_measurement"] = "%"
-        data["state_class"] = "measurement"
-        data["device_class"] = "signal_strength"
+        add_common_attributes(data, "mdi:wifi", get_translation("wifi_signal"), "%", "signal_strength", "measurement")
     elif what_config == "wifi_signal_dbm":
-        data["icon"] = "mdi:wifi"
-        data["name"] = get_translation("wifi_signal_strength")
-        data["unit_of_measurement"] = "dBm"
-        data["device_class"] = "signal_strength"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:wifi", get_translation("wifi_signal_strength"), "dBm", "signal_strength", "measurement")
     elif what_config == "rpi5_fan_speed":
-        data["icon"] = "mdi:fan"
-        data["name"] = get_translation("fan_speed")
-        data["unit_of_measurement"] = "RPM"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "mdi:fan", get_translation("fan_speed"), "RPM", None, "measurement")
     elif what_config == "status":
-        data["icon"] = "mdi:lan-connect"
-        data["name"] = get_translation("status")
+        add_common_attributes(data, "mdi:lan-connect", get_translation("status"))
         data["value_template"] = "{{ 'online' if value == '1' else 'offline' }}"
     elif what_config == "git_update":
-        data["icon"] = "mdi:git"
-        data["name"] = get_translation("rpi_mqtt_monitor")
+        add_common_attributes(data, "mdi:git", get_translation("rpi_mqtt_monitor"), None, "update", "measurement")
         data["title"] = "Device Update"
-        data["device_class"] = "update"
-        data["state_class"] = "measurement"
         data["value_template"] = "{{ 'ON' if value_json.installed_ver != value_json.new_ver else 'OFF' }}"
     elif what_config == "update":
         version = update.check_git_version_remote(script_dir)
-        data["icon"] = "mdi:update"
-        data["name"] = get_translation("rpi_mqtt_monitor")
+        add_common_attributes(data, "mdi:update", get_translation("rpi_mqtt_monitor"), None, "firmware")
         data["title"] = "New Version"
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
         data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
-        data["device_class"] = "firmware"
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
         data['entity_picture'] = "https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/refs/heads/master/images/update_icon.png"
         data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
-        data["icon"] = "mdi:restart"
-        data["name"] = get_translation("system_restart")
+        add_common_attributes(data, "mdi:restart", get_translation("system_restart"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "restart"
         data["device_class"] = "restart"
     elif what_config == "shutdown_button":
-        data["icon"] = "mdi:power"
-        data["name"] = get_translation("system_shutdown")
+        add_common_attributes(data, "mdi:power", get_translation("system_shutdown"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "shutdown"
         data["device_class"] = "restart"
     elif what_config == "display_on":
-        data["icon"] = "mdi:monitor"
-        data["name"] = get_translation("monitor_on")
+        add_common_attributes(data, "mdi:monitor", get_translation("monitor_on"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_on"
         data["device_class"] = "restart"
     elif what_config == "display_off":
-        data["icon"] = "mdi:monitor"
-        data["name"] = get_translation("monitor_off")
+        add_common_attributes(data, "mdi:monitor", get_translation("monitor_off"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_off"
         data["device_class"] = "restart"
     elif what_config == device + "_temp":
-        data["icon"] = "hass:thermometer"
-        data["name"] = device + " " + get_translation("temperature")
-        data["unit_of_measurement"] = "°C"
-        data["device_class"] = "temperature"
-        data["state_class"] = "measurement"
+        add_common_attributes(data, "hass:thermometer", device + " " + get_translation("temperature"), "°C", "temperature", "measurement")
     elif what_config == "rpi_power_status":
-        data["icon"] = "mdi:flash"
-        data["name"] = get_translation("rpi_power_status")
+        add_common_attributes(data, "mdi:flash", get_translation("rpi_power_status"))
     elif what_config == "apt_updates":
-        data["icon"] = "mdi:update"
-        data["name"] = get_translation("apt_updates")    
+        add_common_attributes(data, "mdi:update", get_translation("apt_updates"))
     elif what_config == "ds18b20_status":
-        data["icon"] = "hass:thermometer"
-        data["name"] = device + " " + get_translation("temperature")
-        data["unit_of_measurement"] = "°C"
-        data["device_class"] = "temperature"
-        data["state_class"] = "measurement"
-        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        add_common_attributes(data, "hass:thermometer", device + " " + get_translation("temperature"), "°C", "temperature", "measurement")
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_temp_status":
-        data["icon"] = "hass:thermometer"
-        data["name"] = device + " " + get_translation("temperature")
-        data["unit_of_measurement"] = "°C"
-        data["device_class"] = "temperature"
-        data["state_class"] = "measurement"
-        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        add_common_attributes(data, "hass:thermometer", device + " " + get_translation("temperature"), "°C", "temperature", "measurement")
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_hum_status":
-        data["icon"] = "mdi:water-percent"
-        data["name"] = device + " " + get_translation("humidity")
-        data["unit_of_measurement"] = "%"
-        data["device_class"] = "temperature"
-        data["state_class"] = "measurement"
-        # we define again the state topic in order to get a unique state topic if we have two sensors of the same type
+        add_common_attributes(data, "mdi:water-percent", device + " " + get_translation("humidity"), "%", "temperature", "measurement")
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
-    
-    else:
-        return ""
-    # Return our built discovery config
 
-    # If this is a "measurement" add expiry information and availability from config file
-    # exclude "git_update", since that is running with a different update rate :(
+def config_json(what_config, device="0", hass_api=False):
+    data = build_data_template(what_config)
+    handle_specific_configurations(data, what_config, device)
+
     if "state_class" in data and data["state_class"] == "measurement" and what_config != "git_update":
         if config.expire_after_time:
             data["expire_after"] = config.expire_after_time
         if config.use_availability:
-            data["availability_topic"] = data["state_topic"] + "_availability"
-    
+            data["availability_topic"] = f"{data['state_topic']}_availability"
+
     if hass_api:
-        result = {
-            "name": data["name"],
-            "icon": data["icon"],
-        }
-        if "state_class" in data:
-            result["state_class"] = data["state_class"]
-        if "unit_of_measurement" in data:
-            result["unit_of_measurement"] = data["unit_of_measurement"]
-        if "device_class" in data:
-            result["device_class"] = data["device_class"]
-        if "unique_id" in data:
-            result["unique_id"] = data["unique_id"]
-        if "value_template" in data:
-            result["value_template"] = data["value_template"]
-    
+        result = {key: data[key] for key in ["name", "icon", "state_class", "unit_of_measurement", "device_class", "unique_id", "value_template"] if key in data}
         return result
-    
+
     return json.dumps(data)
 
 
