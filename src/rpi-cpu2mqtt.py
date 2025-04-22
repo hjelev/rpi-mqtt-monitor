@@ -443,30 +443,28 @@ def get_release_notes(version):
     return release_notes
 
 
-def config_json(what_config, device="0", hass_api=False): 
-    model_name = check_model_name()
-    manufacturer = get_manufacturer()
-    os = get_os()
-    data = {
-        "state_topic": "",
-        "icon": "",
-        "name": "",
-        "unique_id": "",
-
-        "device": {
-            "identifiers": [hostname],
-            "manufacturer": 'github.com/hjelev',
-            "model": 'RPi MQTT Monitor ' + config.version,
-            "name": hostname,
-            "sw_version": os,
-            "hw_version": model_name + " by " + manufacturer + " IP:" + get_network_ip(),
-            "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor",
-            "connections": [["mac", get_mac_address()]]
-        }
+def build_device_info():
+    return {
+        "identifiers": [hostname],
+        "manufacturer": 'github.com/hjelev',
+        "model": f'RPi MQTT Monitor {config.version}',
+        "name": hostname,
+        "sw_version": get_os(),
+        "hw_version": f"{check_model_name()} by {get_manufacturer()} IP:{get_network_ip()}",
+        "configuration_url": "https://github.com/hjelev/rpi-mqtt-monitor",
+        "connections": [["mac", get_mac_address()]]
     }
 
-    data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config
-    data["unique_id"] = hostname + "_" + what_config
+def build_data_template(what_config):
+    return {
+        "state_topic": f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{what_config}",
+        "unique_id": f"{hostname}_{what_config}",
+        "device": build_device_info()
+    }
+
+def config_json(what_config, device="0", hass_api=False):
+    data = build_data_template(what_config)
+
     if what_config == "cpu_load":
         data["icon"] = "mdi:speedometer"
         data["name"] = get_translation("cpu_load")
@@ -631,24 +629,10 @@ def config_json(what_config, device="0", hass_api=False):
         if config.expire_after_time:
             data["expire_after"] = config.expire_after_time
         if config.use_availability:
-            data["availability_topic"] = data["state_topic"] + "_availability"
+            data["availability_topic"] = f"{data['state_topic']}_availability"
     
     if hass_api:
-        result = {
-            "name": data["name"],
-            "icon": data["icon"],
-        }
-        if "state_class" in data:
-            result["state_class"] = data["state_class"]
-        if "unit_of_measurement" in data:
-            result["unit_of_measurement"] = data["unit_of_measurement"]
-        if "device_class" in data:
-            result["device_class"] = data["device_class"]
-        if "unique_id" in data:
-            result["unique_id"] = data["unique_id"]
-        if "value_template" in data:
-            result["value_template"] = data["value_template"]
-    
+        result = {key: data[key] for key in ["name", "icon", "state_class", "unit_of_measurement", "device_class", "unique_id", "value_template"] if key in data}
         return result
     
     return json.dumps(data)
