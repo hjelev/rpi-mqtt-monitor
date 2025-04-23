@@ -389,7 +389,9 @@ def print_measured_values(monitored_values):
         get_translation("fan_speed"): ("rpi5_fan_speed", "RPM"),
         get_translation("rpi_power_status"): ("rpi_power_status", ""),
         get_translation("update"): ("update", ""),
-        get_translation("external_sensors"): ("ext_sensors", "")
+        get_translation("external_sensors"): ("ext_sensors", ""),
+        get_translation("data_sent"): ("data_sent", "MB"),
+        get_translation("data_received"): ("data_received", "MB")
     }
 
     output += "\n:: Measured values\n"
@@ -557,6 +559,10 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:water-percent", device + " " + get_translation("humidity"), "%", "temperature", "measurement")
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
+    elif what_config == "data_sent":
+        add_common_attributes(data, "mdi:upload", get_translation("data_sent"), "MB", None, "measurement")
+    elif what_config == "data_received":
+        add_common_attributes(data, "mdi:download", get_translation("data_received"), "MB", None, "measurement")
 
 def config_json(what_config, device="0", hass_api=False):
     data = build_data_template(what_config)
@@ -745,6 +751,20 @@ def publish_to_mqtt(monitored_values):
     status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
     client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
+
+    if "data_sent" in monitored_values:
+        if config.discovery_messages:
+            client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_data_sent/config",
+                           config_json("data_sent"), qos=config.qos)
+        client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/data_sent",
+                       monitored_values["data_sent"], qos=config.qos, retain=config.retain)
+
+    if "data_received" in monitored_values:
+        if config.discovery_messages:
+            client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_data_received/config",
+                           config_json("data_received"), qos=config.qos)
+        client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/data_received",
+                       monitored_values["data_received"], qos=config.qos, retain=config.retain)
     
     while len(client._out_messages) > 0:
         time.sleep(0.1)
@@ -757,7 +777,7 @@ def publish_to_mqtt(monitored_values):
 def bulk_publish_to_mqtt(monitored_values):
     values = [monitored_values.get(key, 0) for key in [
         'cpu_load', 'cpu_temp', 'used_space', 'voltage', 'sys_clock_speed', 'swap', 'memory', 'uptime', 'uptime_seconds',
-        'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status'
+        'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status', 'data_sent', 'data_received'
     ]]
 
     ext_sensors = monitored_values.get('ext_sensors', [])
@@ -829,56 +849,52 @@ def parse_arguments():
     return args
 
 
-def collect_monitored_values():    
+def collect_monitored_values():
     monitored_values = {}
 
     if config.cpu_load:
-        cpu_load = check_cpu_load()
-        monitored_values["cpu_load"] = cpu_load
+        monitored_values["cpu_load"] = check_cpu_load()
     if config.cpu_temp:
-        cpu_temp = check_cpu_temp()
-        monitored_values["cpu_temp"] = cpu_temp
+        monitored_values["cpu_temp"] = check_cpu_temp()
     if config.used_space:
-        used_space = check_used_space(config.used_space_path)
-        monitored_values["used_space"] = used_space
+        monitored_values["used_space"] = check_used_space(config.used_space_path)
     if config.voltage:
-        voltage = check_voltage()
-        monitored_values["voltage"] = voltage
+        monitored_values["voltage"] = check_voltage()
     if config.sys_clock_speed:
-        sys_clock_speed = check_sys_clock_speed()
-        monitored_values["sys_clock_speed"] = sys_clock_speed
+        monitored_values["sys_clock_speed"] = check_sys_clock_speed()
     if config.swap:
-        swap = check_swap()
-        monitored_values["swap"] = swap
+        monitored_values["swap"] = check_swap()
     if config.memory:
-        memory = check_memory()
-        monitored_values["memory"] = memory
+        monitored_values["memory"] = check_memory()
     if config.uptime:
-        uptime = check_uptime('timestamp')
-        monitored_values["uptime"] = uptime
+        monitored_values["uptime"] = check_uptime('timestamp')
     if config.uptime_seconds:
-        uptime_seconds = check_uptime('')
-        monitored_values["uptime_seconds"] = uptime_seconds
+        monitored_values["uptime_seconds"] = check_uptime('')
     if config.wifi_signal:
-        wifi_signal = check_wifi_signal('')
-        monitored_values["wifi_signal"] = wifi_signal
+        monitored_values["wifi_signal"] = check_wifi_signal('')
     if config.wifi_signal_dbm:
-        wifi_signal_dbm = check_wifi_signal('dbm')
-        monitored_values["wifi_signal_dbm"] = wifi_signal_dbm
+        monitored_values["wifi_signal_dbm"] = check_wifi_signal('dbm')
     if config.rpi5_fan_speed:
-        rpi5_fan_speed = check_rpi5_fan_speed()
-        monitored_values["rpi5_fan_speed"] = rpi5_fan_speed
+        monitored_values["rpi5_fan_speed"] = check_rpi5_fan_speed()
     if config.drive_temps:
-        drive_temps = check_all_drive_temps()
-        monitored_values["drive_temps"] = drive_temps
+        monitored_values["drive_temps"] = check_all_drive_temps()
     if config.rpi_power_status:
-        rpi_power_status = check_rpi_power_status()
-        monitored_values["rpi_power_status"] = rpi_power_status
+        monitored_values["rpi_power_status"] = check_rpi_power_status()
     if config.ext_sensors:
-        ext_sensors = read_ext_sensors()
-        monitored_values["ext_sensors"] = ext_sensors
+        monitored_values["ext_sensors"] = read_ext_sensors()
+    if config.net_io:
+        data_sent, data_received = get_network_data()
+        monitored_values["data_sent"] = data_sent
+        monitored_values["data_received"] = data_received
 
     return monitored_values
+
+
+def get_network_data():
+    net_io = psutil.net_io_counters()
+    data_sent = net_io.bytes_sent / (1024 * 1024)  # Convert bytes to megabytes
+    data_received = net_io.bytes_recv / (1024 * 1024)  # Convert bytes to megabytes
+    return round(data_sent, 2), round(data_received, 2)
 
 
 def gather_and_send_info():
