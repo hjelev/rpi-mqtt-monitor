@@ -82,6 +82,7 @@ swap = False
 memory = True
 uptime = True
 uptime_seconds = False
+net_io = True
 
 # Check storage devices temperatures - experimental feature, disabled by default
 drive_temps = False
