@@ -244,6 +244,13 @@ set_service(){
 create_shortcut(){
   printm "Creating shortcut rpi-mqtt-monitor"
   cwd=$(pwd)
+
+  # Ensure /usr/local/bin exists
+  if [ ! -d "/usr/local/bin" ]; then
+    sudo mkdir -p /usr/local/bin
+    print_green "/usr/local/bin created."
+  fi
+
   echo "${python} ${cwd}/src/rpi-cpu2mqtt.py \$@" > rpi-mqtt-monitor
   sudo mv rpi-mqtt-monitor /usr/local/bin/
   sudo chmod +x /usr/local/bin/rpi-mqtt-monitor
