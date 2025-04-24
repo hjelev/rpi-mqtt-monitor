@@ -39,47 +39,6 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 - [To Do](#to-do)
 - [Feature request](#feature-request)
 
-## What is new
-
-* 2024-12-06: Output File by @pallago 
-* 2024-12-06: Allow overwriting of hostname from config by @sudhaus 
-* 2024-12-01: Support for Home Assistant API (no MQTT needed)
-* 2024-11-06: External sensors by @pallago
-* 2024-10-25: Apt updates sensor
-* 2024-10-24: Added rpi_power_status sensor
-* 2024-10-19: Added support for drive temperatures
-* 2024-03-24: --hass to display configuration for Home Assistant wake on lan switch
-* 2024-02-20: Shutdown button added (only works when running as service)
-* 2024-02-05: System Restart button added (only works when running as service)
-* 2024-01-28: Remote updates via Home Assistant are now available
-* 2024-01-28: Improved error handling for the MQTT connection
-* 2024-01-28: Script version is displayed in home assistant device information
-* 2024-01-28: Update the script by calling it with command line argument --update
-* 2024-01-27: Now you can run the script as a service (systemd) or as a cron job
-* 2024-01-27: Support for command line arguments
-* 2024-01-27: Added a binary sensor for github to monitor for new versions of the script
-* 2024-01-27: Updated the sensors names not to include the device name as per home assistant guidelines
-* 2024-01-10: Added support for Raspberry Pi 5 fan speed monitoring (only works on Raspberry Pi 5 with stock fan)
-
-## CLI arguments
-
-```
-usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
-
-Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.
-
-options:
-  -h, --help       show this help message and exit
-  -H, --hass_api   send readings via Home Assistant API (not via MQTT)
-  -d, --display    display values on screen
-  -s, --service    run script as a service, sleep interval is configurable in config.py
-  -v, --version    display installed version and exit
-  -u, --update     update script and config then exit
-  -w, --hass_wake  display Home assistant wake on lan configuration
-  --uninstall      uninstall rpi-mqtt-monitor and remove all related files
-
-```
-
 
 ## Installation
 
@@ -90,6 +49,8 @@ Run this command to use the automated installation:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
+
+### Automated installation preview
 
 [![asciicast](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ.svg)](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ)
 
@@ -116,6 +77,25 @@ To uninstall Raspberry Pi MQTT Monitor, run the following command:
 
 ```bash
 rpi-mqtt-monitor --uninstall
+```
+
+## CLI arguments
+
+```
+usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
+
+Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.
+
+options:
+  -h, --help       show this help message and exit
+  -H, --hass_api   send readings via Home Assistant API (not via MQTT)
+  -d, --display    display values on screen
+  -s, --service    run script as a service, sleep interval is configurable in config.py
+  -v, --version    display installed version and exit
+  -u, --update     update script and config then exit
+  -w, --hass_wake  display Home assistant wake on lan configuration
+  --uninstall      uninstall rpi-mqtt-monitor and remove all related files
+
 ```
 
 ## Home Assistant Integration
