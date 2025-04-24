@@ -1,1 +1,0 @@
-/home/masoko/git/rpi-mqtt-monitor/rpi_mon_env/bin/python3 /home/masoko/git/rpi-mqtt-monitor/src/rpi-cpu2mqtt.py $@
