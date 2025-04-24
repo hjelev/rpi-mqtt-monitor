@@ -892,6 +892,7 @@ def collect_monitored_values():
 
 def get_network_data():
     net_io = psutil.net_io_counters()
+    print(net_io)
     data_sent = net_io.bytes_sent / (1024 * 1024)  # Convert bytes to megabytes
     data_received = net_io.bytes_recv / (1024 * 1024)  # Convert bytes to megabytes
     return round(data_sent, 2), round(data_received, 2)
