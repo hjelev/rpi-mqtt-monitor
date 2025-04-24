@@ -25,10 +25,10 @@ The easiest way to track your Raspberry Pi or Ubuntu computer system health and 
 
 ## Table of Contents
 
-- [What is new](#what-is-new)
 - [CLI arguments](#cli-arguments)
 - [Installation](#installation)
   - [Automated](#automated)
+  - [Automated installation preview](#automated-installation-preview)
   - [Manual](#manual)
   - [How to update](https://github.com/hjelev/rpi-mqtt-monitor/wiki/How-to-update)
 - [Configuration](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
