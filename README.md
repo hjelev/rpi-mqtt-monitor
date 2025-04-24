@@ -91,6 +91,8 @@ Run this command to use the automated installation:
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
 
+[![asciicast](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ.svg)](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ)
+
 Raspberry Pi MQTT monitor will be installed in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
 
 The auto-installer needs the software below and will install it if its not found:
