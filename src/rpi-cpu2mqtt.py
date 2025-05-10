@@ -840,9 +840,9 @@ def parse_arguments():
     turn_off:
       service: mqtt.publish
       data:
-        topic: config.mqtt_discovery_prefix + "/update/{}/command"
+        topic: "{}/update/{}/command"
         payload: "shutdown"
-    """.format(get_mac_address(), get_network_ip(), hostname, hostname )
+    """.format(get_mac_address(), get_network_ip(), hostname, config.mqtt_discovery_prefix, hostname )
         print(hass_config)
         exit()
 
