@@ -840,9 +840,9 @@ def parse_arguments():
     turn_off:
       service: mqtt.publish
       data:
-        topic: config.mqtt_discovery_prefix + "/update/{}/command"
+        topic: "{}/update/{}/command"
         payload: "shutdown"
-    """.format(get_mac_address(), get_network_ip(), hostname, hostname )
+    """.format(get_mac_address(), get_network_ip(), hostname, config.mqtt_discovery_prefix, hostname )
         print(hass_config)
         exit()
 
@@ -926,13 +926,19 @@ def gather_and_send_info():
                 print("Error writing to output file:", e)
 
         if args.hass_api:
-            publish_to_hass_api(monitored_values)
-        else:
-            if hasattr(config, 'group_messages') and config.group_messages:
-                bulk_publish_to_mqtt(monitored_values)
+            if config.hass_host != "your_hass_host" and config.hass_token != "your_hass_token":
+                publish_to_hass_api(monitored_values)
             else:
-                publish_to_mqtt(monitored_values)
-
+                print("Error: Home Assistant API host or token not configured.")
+                sys.exit(1) 
+        else:
+            if config.mqtt_host != "ip address or host":
+                if hasattr(config, 'group_messages') and config.group_messages:
+                    bulk_publish_to_mqtt(monitored_values)
+                else:
+                    publish_to_mqtt(monitored_values)
+            else:
+                pass
         if not args.service:
             break
         # Break the sleep into 1-second intervals and check stop_event after each interval
