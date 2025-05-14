@@ -106,11 +106,31 @@ def check_rpi_power_status():
         full_cmd = "vcgencmd get_throttled | cut -d= -f2"
         throttled = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
         throttled = throttled.decode('utf-8').strip()
-        
-        if throttled == "0x0":
-            return "OK"
-        else:
-            return "KO"
+        throttled_val = int(throttled, 16)
+
+        if throttled_val & 1<<0:
+            return "Under-voltage"
+        if throttled_val & 1<<3:
+            return "Soft temperature limit"
+        if throttled_val & 1<<1:
+            return "ARM frequency capped"
+        if throttled_val & 1<<2:
+            return "Throttled"
+
+        # These are "previous" statuses here for completeness
+        # Home Assistant has the history so do not report them
+        #
+        #if throttled_val & 1<<16:
+        #    return "Previous under-voltage"
+        #if throttled_val & 1<<17:
+        #    return "Previous ARM frequency cap"
+        #if throttled_val & 1<<18:
+        #    return "Previous throttling"
+        #if throttled_val & 1<<19:
+        #    return "Previous soft temperature limit"
+
+        return "OK"
+
     except Exception as e:
         return "Error: " + str(e)
 
