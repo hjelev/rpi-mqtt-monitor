@@ -617,10 +617,28 @@ def create_mqtt_client():
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
     client.on_connect = on_connect
+    # Set a short socket timeout to avoid hanging if MQTT server is unreachable
+    client.socket_timeout = 5  # seconds
     try:
-        client.connect(config.mqtt_host, int(config.mqtt_port))
+        # Use connect_async and loop_start to avoid blocking
+        client.connect_async(config.mqtt_host, int(config.mqtt_port))
+        client.loop_start()
+        # Wait for connection or timeout
+        max_wait = 10  # seconds
+        waited = 0
+        while not client.is_connected() and waited < max_wait:
+            time.sleep(0.2)
+            waited += 0.2
+        if not client.is_connected():
+            print("Error: MQTT connection timed out.")
+            client.loop_stop()
+            return None
     except Exception as e:
         print("Error connecting to MQTT broker:", e)
+        try:
+            client.loop_stop()
+        except Exception:
+            pass
         return None
     return client
 
