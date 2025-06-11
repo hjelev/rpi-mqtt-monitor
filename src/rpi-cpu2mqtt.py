@@ -602,46 +602,41 @@ def config_json(what_config, device="0", hass_api=False):
 
 
 def create_mqtt_client():
-
     def on_log(client, userdata, level, buf):
         if level == paho.MQTT_LOG_ERR:
-            print("MQTT error: ", buf)
-
+            print("MQTT error:", buf)
 
     def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            print("MQTT connected")
+        else:
+            print("Error: connect failed, rc=", rc)
+
+    def on_disconnect(client, userdata, rc):
         if rc != 0:
-            print("Error: Unable to connect to MQTT broker, return code:", rc)
+            print(f"MQTT disconnected (rc={rc}), reconnecting…")
+            try:
+                client.reconnect()
+            except Exception as e:
+                print("Reconnect failed:", e)
 
-
-    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname + str(int(time.time())))
+    client = paho.Client(client_id=f"rpi-mqtt-monitor-{hostname}-{int(time.time())}")
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
     client.on_connect = on_connect
-    # Set a short socket timeout to avoid hanging if MQTT server is unreachable
-    client.socket_timeout = 5  # seconds
+    client.on_disconnect = on_disconnect
+
+    # enable built-in backoff
+    client.reconnect_delay_set(min_delay=1, max_delay=120)
+
     try:
-        # Use connect_async and loop_start to avoid blocking
-        client.connect_async(config.mqtt_host, int(config.mqtt_port))
-        client.loop_start()
-        # Wait for connection or timeout
-        max_wait = 10  # seconds
-        waited = 0
-        while not client.is_connected() and waited < max_wait:
-            time.sleep(0.2)
-            waited += 0.2
-        if not client.is_connected():
-            print("Error: MQTT connection timed out.")
-            client.loop_stop()
-            return None
+        # blocking connect; loop_forever handles retries
+        client.connect(config.mqtt_host, int(config.mqtt_port), keepalive=60)
     except Exception as e:
         print("Error connecting to MQTT broker:", e)
-        try:
-            client.loop_stop()
-        except Exception:
-            pass
         return None
-    return client
 
+    return client
 
 def publish_update_status_to_mqtt(git_update, apt_updates):
     client = create_mqtt_client()
@@ -1058,48 +1053,44 @@ else:
     hostname = re.sub(r'[^a-zA-Z0-9_-]', '_', socket.gethostname())
 
 if __name__ == '__main__':
-    args = parse_arguments();
+    args = parse_arguments()
 
     if args.uninstall:
         uninstall_script()
         sys.exit(0)
 
     if args.service:
+        # 1. Create a resilient MQTT client (with auto-reconnect)
+        client = create_mqtt_client()
+        if client is None:
+            sys.exit(1)
+
+        # 2. If using MQTT (not hass_api), hook up command handling
         if not args.hass_api:
-            client = paho.Client()
-            client.username_pw_set(config.mqtt_user, config.mqtt_password)
             client.on_message = on_message
-            # set will_set to send a message when the client disconnects
-            client.will_set(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
-            try:
-                client.connect(config.mqtt_host, int(config.mqtt_port))
-            except Exception as e:
-                print("Error connecting to MQTT broker:", e)
-                sys.exit(1)
+            client.will_set(
+                f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/status",
+                "0", qos=config.qos, retain=config.retain
+            )
+            client.subscribe(f"{config.mqtt_discovery_prefix}/update/{hostname}/command")
+            print(f"Listening to topic: {config.mqtt_discovery_prefix}/update/{hostname}/command")
 
-            client.subscribe(config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
-            print("Listening to topic : " + config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
-            client.loop_start()
-
-
-        thread1 = threading.Thread(target=gather_and_send_info)
-        thread1.daemon = True  # Set thread1 as a daemon thread
+        # 3. Start your metric‐gathering threads
+        thread1 = threading.Thread(target=gather_and_send_info, daemon=True)
         thread1.start()
+        if not args.hass_api and config.update:
+            thread2 = threading.Thread(target=update_status, daemon=True)
+            thread2.start()
 
-        if not args.hass_api:
-            if config.update:
-                thread2 = threading.Thread(target=update_status)
-                thread2.daemon = True  # Set thread2 as a daemon thread
-                thread2.start()
-
+        # 4. Hand control over to Paho’s loop_forever (it will reconnect automatically)
         try:
-            while True:
-                time.sleep(1)  # Check the exit flag every second
+            client.loop_forever(retry_first_connection=True)
         except KeyboardInterrupt:
-            print(" Ctrl+C pressed. Setting exit flag...")
-            client.loop_stop()
+            print("Ctrl+C pressed. Shutting down…")
             exit_flag = True
-            stop_event.set()  # Signal the threads to stop
-            sys.exit(0)  # Exit the script
+            stop_event.set()
+            sys.exit(0)
+
     else:
+        # One-shot (non-service) mode
         gather_and_send_info()
