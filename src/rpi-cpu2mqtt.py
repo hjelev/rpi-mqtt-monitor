@@ -609,18 +609,22 @@ def create_mqtt_client():
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
             print("MQTT connected")
+            # (Re-)subscribe to command topic on every connect
+            cmd_topic = f"{config.mqtt_discovery_prefix}/update/{hostname}/command"
+            client.subscribe(cmd_topic)
+            print(f"Subscribed to command topic: {cmd_topic}")
         else:
             print("Error: connect failed, rc=", rc)
 
     def on_disconnect(client, userdata, rc):
         if rc != 0:
-            print(f"MQTT disconnected (rc={rc}), reconnecting…")
-            try:
-                client.reconnect()
-            except Exception as e:
-                print("Reconnect failed:", e)
+            print(f"MQTT disconnected (rc={rc}), will auto-reconnect…")
 
-    client = paho.Client(client_id=f"rpi-mqtt-monitor-{hostname}-{int(time.time())}")
+        # Persistent session + auto-re-subscribe on reconnect
+    client = paho.Client(
+        client_id=f"rpi-mqtt-monitor-{hostname}-{int(time.time())}",
+        clean_session=False
+    )
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
     client.on_log = on_log
     client.on_connect = on_connect
