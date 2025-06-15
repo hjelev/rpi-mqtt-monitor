@@ -1023,7 +1023,6 @@ def on_message(client, userdata, msg):
             print("Update completed. Stopping MQTT client loop...")
             client.loop_stop()  # Stop the MQTT client loop
             print("Setting exit flag...")
-            exit_flag = True
             stop_event.set()  # Signal the threads to stop
             if thread1 is not None:
                 thread1.join()  # Wait for thread1 to finish
@@ -1035,19 +1034,27 @@ def on_message(client, userdata, msg):
         update_thread.start()
     elif msg.payload.decode() == "restart":
         print("Restarting the system...")
-        os.system("sudo reboot")
+        subprocess.run(["sudo", "reboot"], check=True)
     elif msg.payload.decode() == "shutdown":
         print("Shutting down the system...")
-        os.system("sudo shutdown now")
+        subprocess.run(["sudo", "shutdown", "now"], check=True)
     elif msg.payload.decode() == "display_off":
         print("Turn off display")
-        os.system('su -l {} -c "xset -display :0 dpms force off"'.format(config.os_user))
+        subprocess.run(
+            ["su", "-l", config.os_user, "-c", "xset -display :0 dpms force off"],
+            check=True
+        )
     elif msg.payload.decode() == "display_on":
         print("Turn on display")
-        os.system('su -l {} -c "xset -display :0 dpms force on"'.format(config.os_user))
+        subprocess.run(
+            ["su", "-l", config.os_user, "-c", "xset -display :0 dpms force on"],
+            check=True
+        )
 
 exit_flag = False
 stop_event = threading.Event()
+thread1 = None
+thread2 = None
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # get device host name - used in mqtt topic
 # and adhere to the allowed character set
@@ -1094,7 +1101,6 @@ if __name__ == '__main__':
                 time.sleep(1)
         except KeyboardInterrupt:
             print("Ctrl+C pressed. Shutting down…")
-            exit_flag = True
             stop_event.set()
         finally:
             # cleanly stop the network loop and exit
