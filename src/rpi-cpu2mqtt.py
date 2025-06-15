@@ -1086,13 +1086,19 @@ if __name__ == '__main__':
             thread2 = threading.Thread(target=update_status, daemon=True)
             thread2.start()
 
-        # 4. Hand control over to Paho’s loop_forever (it will reconnect automatically)
+        # 4. Start the network loop in the background (handles reconnects automatically)
+        client.loop_start()
         try:
-            client.loop_forever(retry_first_connection=True)
+            # main thread waits until stop_event is set (from on_message or KeyboardInterrupt)
+            while not stop_event.is_set():
+                time.sleep(1)
         except KeyboardInterrupt:
             print("Ctrl+C pressed. Shutting down…")
             exit_flag = True
             stop_event.set()
+        finally:
+            # cleanly stop the network loop and exit
+            client.loop_stop()
             sys.exit(0)
 
     else:
