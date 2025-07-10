@@ -13,13 +13,12 @@ def sensor_DS18B20(sensor_id, verbose=False):
     """
     # read the file
     try:
-        file = open('/sys/bus/w1/devices/28-%s/w1_slave' % sensor_id)
-        filecontent = file.read()
-        file.close()
+        with open('/sys/bus/w1/devices/28-%s/w1_slave' % sensor_id, 'r') as sensor_file:
+            filecontent = sensor_file.read()
         # read temperature value and convert it
         stringvalue = filecontent.split("\n")[1].split(" ")[9]
         temperature = float(stringvalue[2:]) / 1000
-    except IOError as e:
+    except IOError:
         # if an error occurs, we return -300
         temperature = float(-300)
 

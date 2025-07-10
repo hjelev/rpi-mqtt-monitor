@@ -13,14 +13,16 @@
 
 The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant.
 
-* Start monitoring your system in just a few minutes.
-* Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, network IO, voltage, rpi power health, rpi5 fan speed, apt updates available on host, external sensors, hdd/ssd temperature and system clock speed.
-* Remotely restart / shutdown your system and control your monitors.
-* Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
-* Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell.
-* Easy uninstallation, just run rpi-mqtt-monitor --uninstall
-* Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message).
-* Easy update: You can update the script by calling it with command line "rpi-mqtt-monitor --update" or via Home Assistant UI.
+Python 3 is required to run this project.
+
+* Start Monitoring your System in just a few minutes
+* Monitor: CPU Load, CPU Temperature, Free Space, Used Memory, Swap Usage, Uptime, WFi Signal Quality, Network IO, Voltage, RPi Power Health, RPi5 Fan Speed, APT Updates available on HOST, External Sensors, HDD/SSD Temperature and System Clock Speed
+* Remotely Restart / Shutdown your system and control your monitors
+* Automatic HASS Configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed
+* Automated Installation and Configuration: You can install it and schedule it with a service or cron job with just one command from shell
+* Easy Removal, just run rpi-mqtt-monitor --uninstall
+* Configurable: You can select what is monitored and how the message(s) are sent (separately or as one csv message)
+* Easy update: Run `rpi-mqtt-monitor --version` to check for updates and install them, or call `rpi-mqtt-monitor --update` directly or via Home Assistant UI
 * Support multiple languages: English, German and Bulgarian
 
 ## Table of Contents
@@ -56,15 +58,16 @@ bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/
 
 Raspberry Pi MQTT monitor will be installed in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
 
-The auto-installer needs the software below and will install it if its not found:
+The auto-installer needs the following software below and will install it if its not found:
 
 * git
-* python (2 or 3)
-* python-pip
+* python3
+* python3-pip
+* python3-venv
 * paho-mqtt (python module)
 * requests (python module)
 
-Only python is not automatically installed, the rest of the dependencies should be handled by the auto installation.
+The auto-installer will attempt to install Python 3 and its required packages if they are missing.
 It will also help you configure the host and credentials for the mqtt server in config.py and create the service or cronjob configuration for you.
 It is recommended to run the script as a service, this way you can use the restart, shutdown and display control buttons in Home Assistant.
 

@@ -1,7 +1,7 @@
 from random import randrange
 
 # Script version
-version = "0.6.3"
+version = "0.6.4"
 
 # MQTT server configuration
 mqtt_host = "ip address or host"

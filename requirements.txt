@@ -1,3 +1,4 @@
 paho-mqtt==1.6.1
-requests
-psutil
+requests==2.32.4
+psutil==7.0.0
+urllib3>=2.5.0

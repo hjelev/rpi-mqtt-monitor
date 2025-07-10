@@ -22,13 +22,21 @@ welcome(){
   fi	
 }
 
+check_python(){
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "Python 3 not found. Installing..."
+    sudo apt-get update
+    sudo apt-get install -y python3 python3-pip python3-venv
+  fi
+}
+
 uninstall(){
   printm "Uninstalling rpi-mqtt-monitor"
 
   # Ask for confirmation before proceeding
   read -r -p "Are you sure you want to uninstall rpi-mqtt-monitor? [y/N] " response
   if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-    echo "Uninstallation canceled."
+    echo "Uninstall canceled."
     exit
   fi
     
@@ -78,10 +86,11 @@ uninstall(){
 
 main(){
   welcome
-  if [[ $(git --version)  ]]; then 
+  check_python
+  if [[ $(git --version)  ]]; then
     git=$(which git)
   else
-    sudo apt-get install git  
+    sudo apt-get install git
   fi
 
   printm "Cloning rpi-mqtt-monitor git repository"

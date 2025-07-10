@@ -1,20 +1,18 @@
 #!/bin/bash
 find_python(){
-  if [[ $(python3 --version)  ]]; then 
-    python=$(which python3)
-    pip="python3-pip"
-    pip_run='pip3'
-  else
-    python=$(which python)
-    pip="python-pip"
-    pip_run='pip'
+  if ! command -v python3 >/dev/null 2>&1; then
+    print_yellow "Python 3 not found! Installing python3."
+    sudo apt-get update
+    sudo apt-get install -y python3 python3-pip python3-venv
   fi
 
-  if [[ "$python" == *"python"* ]]; then
+  if command -v python3 >/dev/null 2>&1; then
+    python=$(command -v python3)
+    pip_pkg="python3-pip"
+    pip_run='pip3'
     print_green "+ Found: $python"
-
   else
-    print_yellow "Python not found!\n Exiting\n"
+    print_yellow "Python 3 installation failed!\n Exiting\n"
     exit
   fi
 }
@@ -36,13 +34,18 @@ print_yellow(){
   tput sgr 0
 }
 
+# Escape special characters for sed replacement
+escape_sed() {
+  printf '%s' "$1" | sed -e 's/[\/&]/\\&/g'
+}
+
 check_and_install_pip(){
   pip_ver=$(${python} -m pip --version 2>&1);
   if [[ "$pip_ver" == *"No"* ]]; then
     echo "- Pip is not installed, installing it."
-    sudo apt install $pip
-    else
-    print_green "+ Found: $pip"
+    sudo apt-get install -y $pip_pkg
+  else
+    print_green "+ Found: $pip_pkg"
   fi
 }
 
@@ -62,11 +65,7 @@ create_venv(){
 
   # Activate the virtual environment
   source rpi_mon_env/bin/activate
-  if [[ $(python3 --version)  ]]; then 
-    python=$(which python3)
-  else
-    python=$(which python)
-  fi
+  python=$(command -v python3)
   print_green "+ Activated virtual environment"
 }
 
@@ -84,36 +83,41 @@ mqtt_configuration(){
   
   printf "Enter mqtt_host: "
   read HOST
-  sed -i "s/ip address or host/${HOST}/" src/config.py
+  HOST_ESC=$(escape_sed "$HOST")
+  sed -i "s|ip address or host|${HOST_ESC}|" src/config.py
 
   printf "Enter mqtt_user: "
   read USER
-  sed -i "s/username/${USER}/" src/config.py
+  USER_ESC=$(escape_sed "$USER")
+  sed -i "s|username|${USER_ESC}|" src/config.py
 
   printf "Enter mqtt_password: "
   read PASS
-  sed -i "s/\"password/\"${PASS}/" src/config.py
+  PASS_ESC=$(escape_sed "$PASS")
+  sed -i "s|\"password|\"${PASS_ESC}|" src/config.py
 
   printf "Enter mqtt_port (default is 1883): "
   read PORT
   if [ -z "$PORT" ]; then
     PORT=1883
   fi
-  sed -i "s/1883/${PORT}/" src/config.py
+  sed -i "s|1883|${PORT}|" src/config.py
 
   printf "Enter mqtt_topic_prefix (default is rpi-MQTT-monitor): "
   read TOPIC
   if [ -z "$TOPIC" ]; then
     TOPIC=rpi-MQTT-monitor
   fi
-  sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
+  TOPIC_ESC=$(escape_sed "$TOPIC")
+  sed -i "s|rpi-MQTT-monitor|${TOPIC_ESC}|" src/config.py
 
   printf "Enter mqtt_uns_structure (default is empty): "
   read UNS
   if [[ -n "$UNS" && ! "$UNS" =~ /$ ]]; then
     UNS="${UNS}/"
   fi
-  sed -i "s/mqtt_uns_structure = .*/mqtt_uns_structure = '${UNS}'/" src/config.py
+  UNS_ESC=$(escape_sed "$UNS")
+  sed -i "s|mqtt_uns_structure = .*|mqtt_uns_structure = '${UNS_ESC}'|" src/config.py
   
   printf "Do you need to control your monitors? (default is No): "
   read CONTROL
@@ -124,16 +128,18 @@ mqtt_configuration(){
 }
 
 hass_api_configuration(){
-    printf "Enter Home Assistant API URL (defalut is http://localhost:8123): "
+    printf "Enter Home Assistant API URL (default is http://localhost:8123): "
     read HA_URL
     if [ -z "$HA_URL" ]; then
       HA_URL="http://localhost:8123"
     fi
-    sed -i "s|your_hass_host|${HA_URL}|" src/config.py
+    HA_URL_ESC=$(escape_sed "$HA_URL")
+    sed -i "s|your_hass_host|${HA_URL_ESC}|" src/config.py
 
     printf "Enter Home Assistant API Token: "
     read HA_TOKEN
-    sed -i "s|your_hass_token|${HA_TOKEN}|" src/config.py
+    HA_TOKEN_ESC=$(escape_sed "$HA_TOKEN")
+    sed -i "s|your_hass_token|${HA_TOKEN_ESC}|" src/config.py
     hass_api=" --hass_api"
     finish_message="Home Assistant API"
 }
@@ -152,7 +158,8 @@ update_config(){
   cp src/config.py.example src/config.py
 
   user=$(whoami)
-  sed -i "s/os_user_to_be_replaced/${user}/" src/config.py
+  user_ESC=$(escape_sed "$user")
+  sed -i "s|os_user_to_be_replaced|${user_ESC}|" src/config.py
 
   echo "Do you want to use Home Assistant API or MQTT?"
   echo "1) Home Assistant API"

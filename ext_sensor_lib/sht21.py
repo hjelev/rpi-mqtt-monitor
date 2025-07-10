@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """
 from https://raw.githubusercontent.com/kif/sht21_python/refs/heads/python3/sht21.py
