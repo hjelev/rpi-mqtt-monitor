@@ -576,7 +576,7 @@ def handle_specific_configurations(data, what_config, device):
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "sht21_hum_status":
-        add_common_attributes(data, "mdi:water-percent", device + " " + get_translation("humidity"), "%", "temperature", "measurement")
+        add_common_attributes(data, "mdi:water-percent", device + " " + get_translation("humidity"), "%", "humidity", "measurement")
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + what_config + "_" + device
         data["unique_id"] = hostname + "_" + what_config + "_" + device
     elif what_config == "data_sent":
