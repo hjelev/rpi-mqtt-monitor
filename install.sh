@@ -124,7 +124,7 @@ mqtt_configuration(){
 }
 
 hass_api_configuration(){
-    printf "Enter Home Assistant API URL (defalut is http://localhost:8123): "
+    printf "Enter Home Assistant API URL (default is http://localhost:8123): "
     read HA_URL
     if [ -z "$HA_URL" ]; then
       HA_URL="http://localhost:8123"
