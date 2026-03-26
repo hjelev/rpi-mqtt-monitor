@@ -52,7 +52,7 @@ bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/
 
 ### Automated installation preview
 
-[![asciicast](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ.svg)](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ)
+[![asciicast](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ.png)](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ)
 
 Raspberry Pi MQTT monitor will be installed in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
 
