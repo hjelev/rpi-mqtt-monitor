@@ -1,3 +1,4 @@
 paho-mqtt==1.6.1
 requests
 psutil
+urllib3>=2.6.0 # not directly required, pinned by Snyk to avoid a vulnerability
