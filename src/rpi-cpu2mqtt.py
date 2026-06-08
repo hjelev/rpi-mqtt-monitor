@@ -83,8 +83,14 @@ def check_voltage():
 
 def check_swap():
     full_cmd = "free | grep -i swap | awk 'NR == 1 {if($2 > 0) {print $3/$2*100} else {print 0}}'"
-    swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-    swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
+    try:
+        swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+        if not swap:
+            return None if config.use_availability else 0
+        swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
+    except Exception as e:
+        print(f"Error reading swap: {e}")
+        return None if config.use_availability else 0
 
     return swap
 
