@@ -36,10 +36,12 @@ def get_available_sensors():
     """Returns all available sensors"""
     # https://github.com/rgbkrk/ds18b20/blob/master/ds18b20/__init__.py
     sensors = []
-    for sensor in os.listdir("/sys/bus/w1/devices"):
-        if sensor.startswith("28-"):
-            # we put all sensor ids into the list (except the "28-" part)
-            sensors.append(sensor[3:])
+    try:
+        for sensor in os.listdir("/sys/bus/w1/devices"):
+            if sensor.startswith("28-"):
+                sensors.append(sensor[3:])
+    except OSError:
+        pass
     return sensors
 
 

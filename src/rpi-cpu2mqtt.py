@@ -58,12 +58,15 @@ def check_wifi_signal(format):
 
 
 def check_used_space(path):
-    st = os.statvfs(path)
-    free_space = st.f_bavail * st.f_frsize
-    total_space = st.f_blocks * st.f_frsize
-    used_space = int(100 - ((free_space / total_space) * 100))
-
-    return used_space
+    try:
+        st = os.statvfs(path)
+        free_space = st.f_bavail * st.f_frsize
+        total_space = st.f_blocks * st.f_frsize
+        if total_space == 0:
+            return None if config.use_availability else 0
+        return int(100 - ((free_space / total_space) * 100))
+    except Exception:
+        return None if config.use_availability else 0
 
 
 def check_cpu_load():
@@ -74,19 +77,18 @@ def check_voltage():
     try:
         full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
         voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
-        voltage = voltage.strip()[:-1]
+        return voltage.strip()[:-1].decode('utf8')
     except Exception:
-        voltage = None if config.use_availability else 0
-
-    return voltage.decode('utf8')
+        return None if config.use_availability else 0
 
 
 def check_swap():
-    full_cmd = "free | grep -i swap | awk 'NR == 1 {if($2 > 0) {print $3/$2*100} else {print 0}}'"
-    swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-    swap = round(float(swap.decode("utf-8").replace(",", ".")), 1)
-
-    return swap
+    try:
+        full_cmd = "free | grep -i swap | awk 'NR == 1 {if($2 > 0) {print $3/$2*100} else {print 0}}'"
+        swap = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        return round(float(swap.decode("utf-8").replace(",", ".")), 1)
+    except Exception:
+        return None if config.use_availability else 0
 
 
 def check_memory():
@@ -175,7 +177,13 @@ def read_ext_sensors():
             # if sensor ID in unknown, then we try to get it
             # this only works for a single DS18B20 sensor
             if item[2]==0:
-                item[2] = ds18b20.get_available_sensors()[0]
+                available = ds18b20.get_available_sensors()
+                if not available:
+                    print("Error: no DS18B20 sensors found on 1-wire bus")
+                    if config.use_availability:
+                        item[3] = None
+                    continue
+                item[2] = available[0]
             temp = ds18b20.sensor_DS18B20(sensor_id=item[2])
             item[3] = temp
             # in case that some error occurs during reading, we get -300
@@ -222,25 +230,29 @@ def check_cpu_temp():
 
 
 def check_sys_clock_speed():
-    full_cmd = "awk '{printf (\"%0.0f\",$1/1000); }' </sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
-    byte_data = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
-    sys_clock_speed = int(byte_data.decode("utf-8").strip())
-    return sys_clock_speed
+    try:
+        full_cmd = "awk '{printf (\"%0.0f\",$1/1000); }' </sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+        byte_data = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        return int(byte_data.decode("utf-8").strip())
+    except Exception:
+        return None if config.use_availability else 0
 
 
 def check_uptime(format):
-    if format == 'timestamp':
-        full_cmd = "uptime -s"
-        tz_cmd = "date +%z"
-        tz_str = subprocess.Popen(tz_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
-        timestamp_str = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
-        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
-        iso_timestamp = timestamp.isoformat() + tz_str  # Append correct offset to indicate `local` time
-        return iso_timestamp
-    else:
-        full_cmd = "awk '{print int($1"+format+")}' /proc/uptime"
-
-    return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
+    try:
+        if format == 'timestamp':
+            full_cmd = "uptime -s"
+            tz_cmd = "date +%z"
+            tz_str = subprocess.Popen(tz_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
+            timestamp_str = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+            iso_timestamp = timestamp.isoformat() + tz_str  # Append correct offset to indicate `local` time
+            return iso_timestamp
+        else:
+            full_cmd = "awk '{print int($1"+format+")}' /proc/uptime"
+        return int(subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
+    except Exception:
+        return None if config.use_availability else 0
 
 
 def check_model_name():
@@ -258,10 +270,14 @@ def check_model_name():
 
 
 def check_rpi5_fan_speed():
-   full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
-   rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").strip()
-
-   return rpi5_fan_speed
+    try:
+        full_cmd = "cat /sys/devices/platform/cooling_fan/hwmon/*/fan1_input"
+        rpi5_fan_speed = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8").strip()
+        if not rpi5_fan_speed:
+            return None if config.use_availability else 0
+        return rpi5_fan_speed
+    except Exception:
+        return None if config.use_availability else 0
 
 
 def get_os():
@@ -277,7 +293,8 @@ def get_os():
 
 def get_manufacturer():
     try:
-        if 'Raspberry' not in check_model_name():
+        model = check_model_name()
+        if model and 'Raspberry' not in model:
             full_cmd = "cat /proc/cpuinfo  | grep 'vendor'| uniq"
             pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
             pretty_name = pretty_name.split(':')[1].replace('\n', '')
@@ -285,7 +302,7 @@ def get_manufacturer():
             pretty_name = 'Raspberry Pi'
     except Exception:
         pretty_name = None if config.use_availability else 'Unknown'
-        
+
     return(pretty_name)
 
 
@@ -452,7 +469,7 @@ def get_release_notes(version):
         response = subprocess.run(['curl', '-s', url], capture_output=True)
         release_notes = response.stdout.decode('utf-8').split("What's Changed")[1].split("</div>")[0].replace("</h2>","").split("<p>")[0]
     except Exception:
-        release_notes = None if config.use_availability else "No release notes available"
+        release_notes = "No release notes available"
 
     lines = extract_text(release_notes).split('\n')
     lines = ["   * "+ line for line in lines if line.strip() != ""]
@@ -649,7 +666,6 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
         print("Error: Unable to connect to MQTT broker")
         return
 
-    client.loop_start()
     if config.git_update:
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
@@ -717,7 +733,6 @@ def publish_to_mqtt(monitored_values):
     if client is None:
         return
 
-    client.loop_start()
     non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ext_sensors']
   # Publish standard monitored values
     for key, value in monitored_values.items():
@@ -830,7 +845,6 @@ def bulk_publish_to_mqtt(monitored_values):
     if client is None:
         return
 
-    client.loop_start()
     client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname, values_str, qos=config.qos, retain=config.retain)
 
     while len(client._out_messages) > 0:
@@ -1101,7 +1115,8 @@ if __name__ == '__main__':
                 time.sleep(1)  # Check the exit flag every second
         except KeyboardInterrupt:
             print(" Ctrl+C pressed. Setting exit flag...")
-            client.loop_stop()
+            if not args.hass_api:
+                client.loop_stop()
             exit_flag = True
             stop_event.set()  # Signal the threads to stop
             sys.exit(0)  # Exit the script

@@ -11,105 +11,165 @@
   <img src="./images/rpi-mqtt-monitor-2-min.png" alt="Raspberry Pi MQTT Monitor" />
 </p>
 
-The easiest way to track your Raspberry Pi or Ubuntu computer system health and performance in Home Assistant.
+The easiest way to monitor your Raspberry Pi or Linux system health in [Home Assistant](https://www.home-assistant.io/) — up and running in minutes with zero manual HA configuration.
 
-* Start monitoring your system in just a few minutes.
-* Monitor: cpu load, cpu temperature, free space, used memory, swap usage, uptime, wifi signal quality, network IO, voltage, rpi power health, rpi5 fan speed, apt updates available on host, external sensors, hdd/ssd temperature and system clock speed.
-* Remotely restart / shutdown your system and control your monitors.
-* Automatic HASS configuration: Supports discovery messages, so no manual configuration in [Home Assistant](https://www.home-assistant.io/) configuration.yaml is needed.
-* Automated installation and configuration: you can install it and schedule it with a service or cron with just one command from shell.
-* Easy uninstallation, just run rpi-mqtt-monitor --uninstall
-* Configurable: You can select what is monitored and how the message(s) is send (separately or as one csv message).
-* Easy update: You can update the script by calling it with command line "rpi-mqtt-monitor --update" or via Home Assistant UI.
-* Support multiple languages: English, German and Bulgarian
+## Features
+
+- **Zero-config Home Assistant setup** — MQTT discovery messages create devices and sensors automatically
+- **Remote control** — restart, shutdown, and update your device from Home Assistant
+- **Flexible delivery** — publish over MQTT or directly via the Home Assistant REST API
+- **Run as a service or cron job** — auto-configured by the installer
+- **External sensor support** — DS18B20 (temperature) and SHT21 (temperature + humidity)
+- **Sensor availability** — sensors are marked unavailable in HA when readings fail
+- **Multi-language** — English, German, French, and Bulgarian
+- **Easy updates** — run `rpi-mqtt-monitor --update` or trigger from the Home Assistant UI
+
+## What Gets Monitored
+
+| Metric | Config key | Default |
+|---|---|---|
+| CPU load | `cpu_load` | enabled |
+| CPU temperature | `cpu_temp` | enabled |
+| Used disk space | `used_space` | enabled |
+| Memory usage | `memory` | enabled |
+| Uptime (timestamp) | `uptime` | enabled |
+| Uptime (seconds) | `uptime_seconds` | disabled |
+| Network data sent/received | `net_io` | enabled |
+| Swap usage | `swap` | disabled |
+| CPU clock speed | `sys_clock_speed` | disabled |
+| CPU voltage | `voltage` | disabled |
+| WiFi signal quality (%) | `wifi_signal` | disabled |
+| WiFi signal strength (dBm) | `wifi_signal_dbm` | disabled |
+| RPi 5 fan speed | `rpi5_fan_speed` | disabled |
+| RPi power/throttle status | `rpi_power_status` | disabled |
+| HDD/SSD temperature | `drive_temps` | disabled |
+| APT updates available | `apt_updates` | disabled |
+| Script update available | `git_update` | enabled |
+| External sensors | `ext_sensors` | disabled |
 
 ## Table of Contents
 
-- [CLI arguments](#cli-arguments)
 - [Installation](#installation)
   - [Automated](#automated)
-  - [Automated installation preview](#automated-installation-preview)
-  - [Manual](#manual)
-  - [How to update](https://github.com/hjelev/rpi-mqtt-monitor/wiki/How-to-update)
+  - [Manual](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation)
+- [Uninstallation](#uninstallation)
+- [CLI Reference](#cli-reference)
 - [Configuration](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
   - [External Sensors](https://github.com/hjelev/rpi-mqtt-monitor/wiki/External-Sensors)
-- [Schedule Raspberry Pi MQTT Monitor execution as a service](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation#schedule-raspberry-pi-mqtt-monitor-execution-as-a-service)
-- [Schedule Raspberry Pi MQTT Monitor execution with a cron](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation#schedule-raspberry-pi-mqtt-monitor-execution-with-a-cron)
 - [Home Assistant Integration](#home-assistant-integration)
-- [To Do](#to-do)
-- [Feature request](#feature-request)
-
+- [How to Update](https://github.com/hjelev/rpi-mqtt-monitor/wiki/How-to-update)
+- [Feature Requests](#feature-requests)
 
 ## Installation
 
 ### Automated
 
-Run this command to use the automated installation:
-
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)
 ```
 
-### Automated installation preview
+The installer will:
+- Install missing dependencies (`git`, `python3`, `pip`, `paho-mqtt`, `requests`, `psutil`)
+- Create a Python virtual environment (`rpi_mon_env`)
+- Prompt you to configure MQTT host and credentials in `config.py`
+- Set up a systemd service or cron job
+
+> Running as a **service** is recommended — it enables the restart, shutdown, and display control buttons in Home Assistant.
+
+### Automated Installation Preview
 
 [![asciicast](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ.png)](https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ)
 
-Raspberry Pi MQTT monitor will be installed in the location where the installer is called, inside a folder named rpi-mqtt-monitor.
-
-The auto-installer needs the software below and will install it if its not found:
-
-* git
-* python (2 or 3)
-* python-pip
-* paho-mqtt (python module)
-* requests (python module)
-
-Only python is not automatically installed, the rest of the dependencies should be handled by the auto installation.
-It will also help you configure the host and credentials for the mqtt server in config.py and create the service or cronjob configuration for you.
-It is recommended to run the script as a service, this way you can use the restart, shutdown and display control buttons in Home Assistant.
-
 ### Manual
-[moved to wiki](../../wiki/Manual-Installation)
+
+See the [Manual Installation wiki page](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation) for step-by-step instructions including service and cron configuration.
 
 ## Uninstallation
-
-To uninstall Raspberry Pi MQTT Monitor, run the following command:
 
 ```bash
 rpi-mqtt-monitor --uninstall
 ```
 
-## CLI arguments
+## CLI Reference
 
 ```
 usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
 
-Monitor CPU load, temperature, frequency, free space, etc., and publish the data to an MQTT server or Home Assistant API.
+Monitor CPU load, temperature, frequency, free space, etc., and publish the
+data to an MQTT server or Home Assistant API.
 
 options:
   -h, --help       show this help message and exit
   -H, --hass_api   send readings via Home Assistant API (not via MQTT)
   -d, --display    display values on screen
-  -s, --service    run script as a service, sleep interval is configurable in config.py
+  -s, --service    run as a service; sleep interval set in config.py
   -v, --version    display installed version and exit
   -u, --update     update script and config then exit
-  -w, --hass_wake  display Home assistant wake on lan configuration
+  -w, --hass_wake  display Home Assistant wake-on-LAN configuration
   --uninstall      uninstall rpi-mqtt-monitor and remove all related files
-
 ```
+
+## Configuration
+
+All options live in `src/config.py`. Key settings:
+
+| Setting | Description |
+|---|---|
+| `mqtt_host` | MQTT broker address |
+| `mqtt_user` / `mqtt_password` | MQTT credentials |
+| `mqtt_port` | MQTT port (default `1883`) |
+| `mqtt_discovery_prefix` | HA discovery prefix (default `homeassistant`) |
+| `mqtt_topic_prefix` | Topic prefix (default `rpi-MQTT-monitor`) |
+| `mqtt_uns_structure` | Optional UNS prefix prepended to all topics |
+| `discovery_messages` | Publish HA auto-discovery config messages |
+| `service_sleep_time` | Seconds between readings when running as a service |
+| `update_check_interval` | Seconds between update checks (default `3600`) |
+| `use_availability` | Mark sensors unavailable in HA on read failure |
+| `retain` | Set MQTT retain flag on published messages |
+| `qos` | MQTT QoS level (`0`, `1`, or `2`) |
+| `language` | UI language: `en`, `de`, `fr`, `bg` |
+| `ha_device_name` | Override hostname as the HA device name |
+| `hass_host` / `hass_token` | Home Assistant API URL and long-lived token |
+| `restart_button` | Add a restart button to HA |
+| `shutdown_button` | Add a shutdown button to HA |
+| `display_control` | Add display on/off buttons to HA |
+| `group_messages` | Send all values as a single CSV message (disables discovery) |
+
+Full configuration reference: [Configuration wiki](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
 
 ## Home Assistant Integration
 
-If you are using discovery_messages, then this step is not required as a new MQTT device will be automatically created in Home Assistant and all you need to do is add it to a dashboard.
+When `discovery_messages = True` (the default), a new MQTT device is created in Home Assistant automatically — no `configuration.yaml` edits required. Just add it to a dashboard.
 
-Use '''rpi-mqtt-monitor --hass_wake''' to display the configuration for Home Assistant wake on lan switch.
+### Home Assistant API
 
-[moved to wiki](../../wiki/Home-Assistant-Integration-(outdated))
+To bypass MQTT and push directly to the HA REST API, use the `--hass_api` flag and configure `hass_host` and `hass_token` in `config.py`.
 
-## To Do
+### Wake on LAN
 
-- improve hass api integration
+Run `rpi-mqtt-monitor --hass_wake` to print the YAML snippet for a Home Assistant Wake-on-LAN switch preconfigured with your device's MAC address and IP.
 
-## Feature request
+### Home Assistant Dashboard
 
-If you want to suggest a new feature or improvement don't hesitate to open an issue or pull request.
+<p align="center">
+  <img src="./images/rpi-cpu2mqtt-hass.jpg" alt="Home Assistant dashboard" />
+</p>
+
+## External Sensors
+
+Supports DS18B20 (1-Wire temperature) and SHT21 (I²C temperature + humidity) sensors.
+
+Configure in `config.py`:
+
+```python
+ext_sensors = [
+    ["Housing", "ds18b20", "0014531448ff", -300],
+    ["ext2",    "sht21",   0,              [-300, 0]],
+]
+```
+
+Full setup guide: [External Sensors wiki](https://github.com/hjelev/rpi-mqtt-monitor/wiki/External-Sensors)
+
+## Feature Requests
+
+Open an [issue](https://github.com/hjelev/rpi-mqtt-monitor/issues) or submit a pull request — contributions are welcome.

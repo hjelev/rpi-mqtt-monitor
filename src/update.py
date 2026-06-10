@@ -16,7 +16,11 @@ def get_assignments(filename):
     with open(filename) as f:
         tree = ast.parse(f.read(), filename)
 
-    assignments = {node.targets[0].id: safe_literal_eval(node.value) for node in ast.walk(tree) if isinstance(node, ast.Assign)}
+    assignments = {
+        node.targets[0].id: safe_literal_eval(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+    }
     return assignments
 
 
