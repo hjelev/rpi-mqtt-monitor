@@ -22,7 +22,7 @@ _center() {
 # Box content line — accounts for multibyte chars in %-Ns padding
 _bline() {
     local s="$1" blen vlen extra
-    blen=${#s}
+    blen=$(printf '%s' "$s" | wc -c)
     vlen=$(printf '%s' "$s" | wc -m)
     extra=$(( blen - vlen ))
     printf "${BCYAN}║${R}  %-$(( 60 + extra ))s${BCYAN}║${R}\n" "$s"
