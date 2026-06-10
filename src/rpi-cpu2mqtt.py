@@ -542,11 +542,13 @@ def print_measured_values(monitored_values):
         lines.append(f"{BCYAN}║{R}{_rpad(f'  {YELLOW}○{R}  not scheduled')}{BCYAN}║{R}")
 
     # Release notes
+    import textwrap as _tw
     rn = get_release_notes(remote_version).strip()
     if rn:
         lines.append(_section(f"RELEASE NOTES  {GRAY}v{remote_version}{R}"))
-        for rline in rn.splitlines()[:6]:
-            lines.append(f"{BCYAN}║{R}{_rpad('  ' + rline)}{BCYAN}║{R}")
+        for rline in rn.splitlines():
+            for wline in (_tw.wrap(rline, W - 2) or ['']):
+                lines.append(f"{BCYAN}║{R}{_rpad('  ' + wline)}{BCYAN}║{R}")
 
     lines.append(f"{BCYAN}╚{LD}╝{R}\n")
     print('\n'.join(lines))
