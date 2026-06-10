@@ -396,63 +396,160 @@ def check_all_drive_temps():
 
 
 def print_measured_values(monitored_values):
+    import re as _re
+
+    R      = '\033[0m'
+    BOLD   = '\033[1m'
+    DIM    = '\033[2m'
+    CYAN   = '\033[0;36m'
+    BCYAN  = '\033[1;36m'
+    WHITE  = '\033[1;37m'
+    BGREEN = '\033[1;32m'
+    YELLOW = '\033[0;33m'
+    RED    = '\033[0;31m'
+    GRAY   = '\033[0;37m'
+
+    W  = 60
+    LD = '═' * W
+    LS = '─' * W
+
+    def _vlen(s):
+        return len(_re.sub(r'\033\[[0-9;]*m', '', s))
+
+    def _rpad(s):
+        return s + ' ' * max(0, W - _vlen(s))
+
+    def _center(colored_s, visible_s):
+        l = (W - len(visible_s)) // 2
+        r = W - len(visible_s) - l
+        return ' ' * l + colored_s + ' ' * r
+
+    def _row(label, value):
+        inner = f"  {GRAY}{label:<16}{R}{value}"
+        return f"{BCYAN}║{R}{_rpad(inner)}{BCYAN}║{R}"
+
+    def _section(title):
+        inner = f"  {BOLD}{CYAN}{title}{R}"
+        return (f"{BCYAN}╠{LD}╣{R}\n"
+                f"{BCYAN}║{R}{_rpad(inner)}{BCYAN}║{R}\n"
+                f"{BCYAN}╠{LS}╣{R}")
+
+    def _bar(value, width=12, warn=70, crit=90):
+        try:
+            pct = min(float(value) / 100.0, 1.0)
+        except (TypeError, ValueError):
+            return ''
+        filled = round(pct * width)
+        c = BGREEN if pct * 100 < warn else (YELLOW if pct * 100 < crit else RED)
+        return f"{c}{'█' * filled}{DIM}{'░' * (width - filled)}{R}"
+
+    def _cpct(value, unit='%', warn=70, crit=90):
+        try:
+            v = float(value)
+            c = RED if v >= crit else (YELLOW if v >= warn else BGREEN)
+            return f"{BOLD}{c}{value}{unit}{R}"
+        except (TypeError, ValueError):
+            return f"{value}{unit}"
+
+    def _ctemp(value, warn=65, crit=80):
+        try:
+            v = float(value)
+            c = RED if v >= crit else (YELLOW if v >= warn else BGREEN)
+            return f"{BOLD}{c}{value}°C{R}"
+        except (TypeError, ValueError):
+            return f"{value}°C"
+
     remote_version = update.check_git_version_remote(script_dir)
-    output = """:: rpi-mqtt-monitor :: v {}
+    lines = [f"\n{BCYAN}╔{LD}╗{R}"]
 
-:: Device Information
-   Model Name: {}
-   Manufacturer: {}
-   OS: {}
-   Hostname: {}
-   IP Address: {}
-   MAC Address: {}
-""".format(config.version, check_model_name(), get_manufacturer(), get_os(), hostname, get_network_ip(), get_mac_address())
+    title_v = f"rpi-mqtt-monitor  v{config.version}"
+    title_c = f"{BOLD}{WHITE}rpi-mqtt-monitor{R}  {CYAN}v{config.version}{R}"
+    lines.append(f"{BCYAN}║{R}{_center(title_c, title_v)}{BCYAN}║{R}")
 
-    output += "   Service Sleep Time: {} seconds\n".format(config.service_sleep_time)
+    # Device section
+    lines.append(_section("DEVICE"))
+    lines.append(_row("Model",       f"{WHITE}{check_model_name()}{R}"))
+    lines.append(_row("Manufacturer",f"{WHITE}{get_manufacturer()}{R}"))
+    lines.append(_row("OS",          f"{WHITE}{get_os()}{R}"))
+    lines.append(_row("Hostname",    f"{CYAN}{hostname}{R}"))
+    lines.append(_row("IP Address",  f"{CYAN}{get_network_ip()}{R}"))
+    lines.append(_row("MAC Address", f"{GRAY}{get_mac_address()}{R}"))
+    lines.append(_row("Sleep",       f"{WHITE}{config.service_sleep_time}s{R}"))
     if config.update:
-        output += "   Update Check Interval: {} seconds\n".format(config.update_check_interval)
-    # Add dynamic measured values with units
-    measured_values = {
-        get_translation("cpu_load"): ("cpu_load", "%"),
-        get_translation("cpu_temperature"): ("cpu_temp", "°C"),
-        get_translation("used_space"): ("used_space", "%"),
-        get_translation("voltage"): ("voltage", "V"),
-        get_translation("cpu_clock_speed"): ("sys_clock_speed", "MHz"),
-        get_translation("disk_swap"): ("swap", "%"),
-        get_translation("memory_usage"): ("memory", "%"),
-        get_translation("uptime"): ("uptime", ""),
-        get_translation("wifi_signal"): ("wifi_signal", "%"),
-        get_translation("wifi_signal_strength")+" [dBm]": ("wifi_signal_dbm", "dBm"),
-        get_translation("fan_speed"): ("rpi5_fan_speed", "RPM"),
-        get_translation("rpi_power_status"): ("rpi_power_status", ""),
-        get_translation("update"): ("update", ""),
-        get_translation("external_sensors"): ("ext_sensors", ""),
-        get_translation("data_sent"): ("data_sent", "MB"),
-        get_translation("data_received"): ("data_received", "MB")
-    }
+        lines.append(_row("Update Check", f"{WHITE}{config.update_check_interval}s{R}"))
 
-    output += "\n:: Measured values\n"
-    for label, (key, unit) in measured_values.items():
+    # Measurements section
+    lines.append(_section("MEASUREMENTS"))
+
+    bar_metrics = [
+        ("cpu_load",    "CPU Load",    "%",   70, 90),
+        ("memory",      "Memory",      "%",   70, 90),
+        ("used_space",  "Disk",        "%",   70, 90),
+        ("swap",        "Swap",        "%",   50, 80),
+        ("wifi_signal", "WiFi Signal", "%",   None, None),
+    ]
+    for key, label, unit, warn, crit in bar_metrics:
         if key in monitored_values:
-            output += f"   {label}: {monitored_values[key]} {unit}\n"
+            v = monitored_values[key]
+            w, c = (warn or 70), (crit or 90)
+            lines.append(_row(label, f"{_bar(v, warn=w, crit=c)}  {_cpct(v, unit, w, c)}"))
 
-    if config.drive_temps:
-        drive_temps = check_all_drive_temps()
-        if len(drive_temps) > 0:
-            for device, temp in drive_temps.items():
-                output += f"   {device.capitalize()} Temp: {temp:.2f}°C\n"
-    output += "\n:: Scheduling\n "
+    if "cpu_temp" in monitored_values:
+        lines.append(_row("CPU Temp", _ctemp(monitored_values["cpu_temp"])))
 
+    plain_metrics = [
+        ("sys_clock_speed", "Clock Speed", "MHz"),
+        ("voltage",         "Voltage",     "V"),
+        ("wifi_signal_dbm", "WiFi",        "dBm"),
+        ("rpi5_fan_speed",  "Fan Speed",   "RPM"),
+        ("data_sent",       "Data Sent",   "MB"),
+        ("data_received",   "Data Recv",   "MB"),
+    ]
+    for key, label, unit in plain_metrics:
+        if key in monitored_values:
+            lines.append(_row(label, f"{WHITE}{monitored_values[key]} {unit}{R}"))
+
+    if "uptime" in monitored_values:
+        lines.append(_row("Uptime", f"{WHITE}{monitored_values['uptime']}{R}"))
+
+    if "rpi_power_status" in monitored_values:
+        lines.append(_row("Power Status", f"{WHITE}{monitored_values['rpi_power_status']}{R}"))
+
+    if "update" in monitored_values:
+        v = monitored_values["update"]
+        c, label = (YELLOW, f"available  {GRAY}({v}){R}") if v else (BGREEN, "up to date")
+        lines.append(_row("Update", f"{BOLD}{c}{label}{R}"))
+
+    if "drive_temps" in monitored_values:
+        for device, temp in (monitored_values["drive_temps"] or {}).items():
+            lines.append(_row(f"{device.capitalize()} Temp", _ctemp(f"{temp:.1f}")))
+
+    if "ext_sensors" in monitored_values:
+        for item in (monitored_values["ext_sensors"] or []):
+            if item[3] is not None:
+                lines.append(_row(item[0], f"{WHITE}{item[3]}°C{R}"))
+
+    # Scheduling section
+    lines.append(_section("SCHEDULING"))
+    scheduled = False
     if check_service_file_exists():
-        output += "  Running as Service\n"
+        lines.append(f"{BCYAN}║{R}{_rpad(f'  {BGREEN}●{R}  systemd service')}{BCYAN}║{R}")
+        scheduled = True
     if check_crontab_entry():
-        output += "  Running as Cron Job\n"
-        
-    output += """\n:: Installation directory :: {}
+        lines.append(f"{BCYAN}║{R}{_rpad(f'  {BGREEN}●{R}  cron job')}{BCYAN}║{R}")
+        scheduled = True
+    if not scheduled:
+        lines.append(f"{BCYAN}║{R}{_rpad(f'  {YELLOW}○{R}  not scheduled')}{BCYAN}║{R}")
 
-:: Release notes {}: 
-{}""".format(os.path.dirname(script_dir), remote_version, get_release_notes(remote_version))
-    print(output)
+    # Release notes
+    rn = get_release_notes(remote_version).strip()
+    if rn:
+        lines.append(_section(f"RELEASE NOTES  {GRAY}v{remote_version}{R}"))
+        for rline in rn.splitlines()[:6]:
+            lines.append(f"{BCYAN}║{R}{_rpad('  ' + rline)}{BCYAN}║{R}")
+
+    lines.append(f"{BCYAN}╚{LD}╝{R}\n")
+    print('\n'.join(lines))
     
 
 def extract_text(html_string):
