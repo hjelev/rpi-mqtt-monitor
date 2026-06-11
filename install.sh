@@ -42,9 +42,9 @@ print_err()    { printf "  ${RED}✗${R}  %s\n" "$1"; }
 ask()          { printf "  ${CYAN}→${R}  %s" "$1"; }
 
 # ── Globals ───────────────────────────────────────────────────
-# Set to 1 by configure_display_control() so the scheduling step can recommend
-# the systemd service (display buttons only work as a service, not under cron).
-display_control_enabled=0
+# Set to 1 by features that only work under the systemd service (display control,
+# Intel GPU monitoring) so the scheduling step can recommend the service over cron.
+service_recommended=0
 
 # ── Prerequisites ─────────────────────────────────────────────
 find_python() {
@@ -176,7 +176,7 @@ mqtt_configuration() {
 # Pi, ddcutil for GNOME/generic Wayland). Mirrors that function's backend priority.
 configure_display_control() {
     sed -i "s/display_control = False/display_control = True/g" src/config.py
-    display_control_enabled=1
+    service_recommended=1
 
     local session="${XDG_SESSION_TYPE:-unknown}"
     print_info "Detected session type: ${session}"
@@ -229,6 +229,25 @@ setup_ddcutil() {
     print_yellow "Enable DDC/CI in your monitor's OSD menu, then verify with: ddcutil detect"
 }
 
+# Optional Intel GPU monitoring: installs intel-gpu-tools and enables the GPU sensors.
+# intel_gpu_top needs root, so the sensors only report when running as the service.
+configure_intel_gpu() {
+    ask "Enable Intel GPU monitoring (installs intel-gpu-tools)? [y/N] "
+    read GPU
+    printf "\n"
+    if [[ "$GPU" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        print_info "Installing Intel GPU tools..."
+        sudo apt-get update && sudo apt-get install -y intel-media-va-driver-non-free vainfo intel-gpu-tools
+        sed -i "s/intel_gpu_render = False/intel_gpu_render = True/" src/config.py
+        sed -i "s/intel_gpu_video = False/intel_gpu_video = True/" src/config.py
+        sed -i "s/intel_gpu_freq = False/intel_gpu_freq = True/" src/config.py
+        sed -i "s/intel_gpu_power = False/intel_gpu_power = True/" src/config.py
+        service_recommended=1
+        print_green "Intel GPU monitoring enabled"
+        print_yellow "intel_gpu_top needs root — run as the systemd service for GPU sensors to report."
+    fi
+}
+
 hass_api_configuration() {
     printm "Home Assistant API Settings"
 
@@ -276,6 +295,8 @@ update_config() {
         *)  print_yellow "Invalid choice — defaulting to MQTT."
             mqtt_configuration ;;
     esac
+
+    configure_intel_gpu
 
     print_green "config.py updated with provided settings"
 
@@ -382,12 +403,12 @@ main() {
     create_shortcut
 
     printf "\n"
-    if [ "$display_control_enabled" = "1" ]; then
+    if [ "$service_recommended" = "1" ]; then
         print_info "Display control needs the systemd service to receive MQTT commands (cron cannot)."
     fi
     printf "  ${BOLD}Select scheduling method:${R}\n"
     printf "  ${CYAN}[c]${R}  Cron job\n"
-    if [ "$display_control_enabled" = "1" ]; then
+    if [ "$service_recommended" = "1" ]; then
         printf "  ${CYAN}[s]${R}  Systemd service  ${CYAN}(recommended)${R}\n\n"
     else
         printf "  ${CYAN}[s]${R}  Systemd service\n\n"
@@ -399,7 +420,7 @@ main() {
         case $cs in
             [Cc]*) set_cron; break ;;
             [Ss]*) set_service; break ;;
-            "") if [ "$display_control_enabled" = "1" ]; then set_service; break;
+            "") if [ "$service_recommended" = "1" ]; then set_service; break;
                 else print_yellow "Please enter c for cron or s for service."; fi ;;
             *) print_yellow "Please enter c for cron or s for service." ;;
         esac

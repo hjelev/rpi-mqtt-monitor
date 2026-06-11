@@ -44,8 +44,14 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 | RPi power/throttle status | `rpi_power_status` | disabled |
 | HDD/SSD temperature | `drive_temps` | disabled |
 | APT updates available | `apt_updates` | disabled |
+| Intel GPU render busy (%) | `intel_gpu_render` | disabled |
+| Intel GPU video busy (%) | `intel_gpu_video` | disabled |
+| Intel GPU frequency (MHz) | `intel_gpu_freq` | disabled |
+| Intel GPU power (W) | `intel_gpu_power` | disabled |
 | Script update available | `git_update` | enabled |
 | External sensors | `ext_sensors` | disabled |
+
+> Intel GPU sensors use `intel-gpu-tools` (`intel_gpu_top`), which the installer can set up for you. They require root, so values only populate when running as the systemd service.
 
 ## Table of Contents
 

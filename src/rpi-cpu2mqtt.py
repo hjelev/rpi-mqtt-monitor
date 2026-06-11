@@ -505,6 +505,10 @@ def print_measured_values(monitored_values):
         ("rpi5_fan_speed",  "Fan Speed",   "RPM"),
         ("data_sent",       "Data Sent",   "MB"),
         ("data_received",   "Data Recv",   "MB"),
+        ("intel_gpu_render", "GPU Render", "%"),
+        ("intel_gpu_video",  "GPU Video",  "%"),
+        ("intel_gpu_freq",   "GPU Freq",   "MHz"),
+        ("intel_gpu_power",  "GPU Power",  "W"),
     ]
     for key, label, unit in plain_metrics:
         if key in monitored_values:
@@ -702,6 +706,14 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:upload", get_translation("data_sent"), "MB", None, "measurement")
     elif what_config == "data_received":
         add_common_attributes(data, "mdi:download", get_translation("data_received"), "MB", None, "measurement")
+    elif what_config == "intel_gpu_render":
+        add_common_attributes(data, "mdi:expansion-card", "Intel GPU Render", "%", None, "measurement")
+    elif what_config == "intel_gpu_video":
+        add_common_attributes(data, "mdi:video", "Intel GPU Video", "%", None, "measurement")
+    elif what_config == "intel_gpu_freq":
+        add_common_attributes(data, "mdi:speedometer", "Intel GPU Frequency", "MHz", "frequency", "measurement")
+    elif what_config == "intel_gpu_power":
+        add_common_attributes(data, "mdi:flash", "Intel GPU Power", "W", "power", "measurement")
 
 def config_json(what_config, device="0", hass_api=False):
     data = build_data_template(what_config)
@@ -982,7 +994,8 @@ def publish_to_mqtt(monitored_values):
 def bulk_publish_to_mqtt(monitored_values):
     values = [monitored_values.get(key, 0) for key in [
         'cpu_load', 'cpu_temp', 'used_space', 'voltage', 'sys_clock_speed', 'swap', 'memory', 'uptime', 'uptime_seconds',
-        'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status', 'data_sent', 'data_received'
+        'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status', 'data_sent', 'data_received',
+        'intel_gpu_render', 'intel_gpu_video', 'intel_gpu_freq', 'intel_gpu_power'
     ]]
 
     ext_sensors = monitored_values.get('ext_sensors', [])
@@ -1053,6 +1066,71 @@ def parse_arguments():
     return args
 
 
+def get_intel_gpu_stats():
+    """Run intel_gpu_top once and return its parsed JSON sample, or None on failure.
+    Needs root: works when running as the systemd service; under cron `sudo -n` fails
+    fast (non-interactive) so the cycle is not blocked waiting for a password."""
+    try:
+        out = subprocess.run(
+            ["sudo", "-n", "intel_gpu_top", "-s", "0", "-n", "1", "-J"],
+            capture_output=True, text=True, timeout=10).stdout.strip()
+        if not out:
+            return None
+        try:
+            data = json.loads(out)
+        except json.JSONDecodeError:
+            # intel_gpu_top -J may emit concatenated/array samples; take the first
+            # balanced {...} object.
+            depth = 0
+            start = None
+            for i, ch in enumerate(out):
+                if ch == '{':
+                    if depth == 0:
+                        start = i
+                    depth += 1
+                elif ch == '}':
+                    depth -= 1
+                    if depth == 0 and start is not None:
+                        out = out[start:i + 1]
+                        break
+            data = json.loads(out)
+        if isinstance(data, list):
+            data = data[-1] if data else {}
+        return data
+    except Exception:
+        return None
+
+
+def _intel_gpu_engine_busy(gpu, prefix):
+    """Max busy% across intel_gpu_top engines whose name starts with prefix
+    ("Render" -> Render/3D, "Video" -> Video + VideoEnhance)."""
+    engines = gpu.get("engines", {}) if isinstance(gpu, dict) else {}
+    vals = [e.get("busy", 0) for name, e in engines.items()
+            if name.startswith(prefix) and isinstance(e, dict)]
+    if not vals:
+        return None if config.use_availability else 0
+    return round(max(vals), 1)
+
+
+def _intel_gpu_value(gpu, path, ndigits, fallback_path=None):
+    """Pull a nested numeric from the intel_gpu_top JSON (e.g. ["frequency","actual"]),
+    optionally falling back to another path."""
+    for p in (path, fallback_path):
+        if not p:
+            continue
+        node = gpu
+        ok = True
+        for key in p:
+            if isinstance(node, dict) and key in node:
+                node = node[key]
+            else:
+                ok = False
+                break
+        if ok and isinstance(node, (int, float)):
+            return round(node, ndigits)
+    return None if config.use_availability else 0
+
+
 def collect_monitored_values():
     monitored_values = {}
 
@@ -1090,6 +1168,17 @@ def collect_monitored_values():
         data_sent, data_received = get_network_data()
         monitored_values["data_sent"] = data_sent
         monitored_values["data_received"] = data_received
+    if (getattr(config, "intel_gpu_render", False) or getattr(config, "intel_gpu_video", False)
+            or getattr(config, "intel_gpu_freq", False) or getattr(config, "intel_gpu_power", False)):
+        gpu = get_intel_gpu_stats() or {}
+        if getattr(config, "intel_gpu_render", False):
+            monitored_values["intel_gpu_render"] = _intel_gpu_engine_busy(gpu, "Render")
+        if getattr(config, "intel_gpu_video", False):
+            monitored_values["intel_gpu_video"] = _intel_gpu_engine_busy(gpu, "Video")
+        if getattr(config, "intel_gpu_freq", False):
+            monitored_values["intel_gpu_freq"] = _intel_gpu_value(gpu, ["frequency", "actual"], 0)
+        if getattr(config, "intel_gpu_power", False):
+            monitored_values["intel_gpu_power"] = _intel_gpu_value(gpu, ["power", "GPU"], 2, ["power", "Package"])
 
     return monitored_values
 
