@@ -117,7 +117,10 @@ All options live in `src/config.py`. Key settings:
 |---|---|
 | `mqtt_host` | MQTT broker address |
 | `mqtt_user` / `mqtt_password` | MQTT credentials |
-| `mqtt_port` | MQTT port (default `1883`) |
+| `mqtt_port` | MQTT port (default `1883`, `8883` for TLS) |
+| `mqtt_tls` | Enable TLS/SSL for the MQTT connection |
+| `mqtt_tls_ca_certs` / `mqtt_tls_insecure` | Optional CA file for a self-signed broker cert, or skip cert verification |
+| `mqtt_websockets` / `mqtt_websocket_path` | Connect over MQTT-over-WebSockets (ports ~9001/8084) and its URL path |
 | `mqtt_discovery_prefix` | HA discovery prefix (default `homeassistant`) |
 | `mqtt_topic_prefix` | Topic prefix (default `rpi-MQTT-monitor`) |
 | `mqtt_uns_structure` | Optional UNS prefix prepended to all topics |

@@ -720,6 +720,27 @@ def config_json(what_config, device="0", hass_api=False):
     return json.dumps(data)
 
 
+def mqtt_transport():
+    """Return the paho transport for the configured connection: "websockets" when
+    mqtt_websockets is set, otherwise "tcp". Must be passed to the Client() constructor."""
+    return "websockets" if getattr(config, "mqtt_websockets", False) else "tcp"
+
+
+def configure_mqtt_connection(client):
+    """Apply post-construction connection options to the MQTT client. Sets the WebSocket
+    path when mqtt_websockets is enabled, and TLS when mqtt_tls is set (e.g. port 8883):
+    system CA certs by default, honouring an optional CA file and insecure mode.
+    (The transport itself is set in the Client() constructor via mqtt_transport().)"""
+    if getattr(config, "mqtt_websockets", False):
+        path = getattr(config, "mqtt_websocket_path", "") or "/mqtt"
+        client.ws_set_options(path=path)
+    if getattr(config, "mqtt_tls", False):
+        ca_certs = getattr(config, "mqtt_tls_ca_certs", "") or None
+        client.tls_set(ca_certs=ca_certs)
+        if getattr(config, "mqtt_tls_insecure", False):
+            client.tls_insecure_set(True)
+
+
 def create_mqtt_client():
 
     def on_log(client, userdata, level, buf):
@@ -732,8 +753,9 @@ def create_mqtt_client():
             print("Error: Unable to connect to MQTT broker, return code:", rc)
 
 
-    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname + str(int(time.time())))
+    client = paho.Client(client_id="rpi-mqtt-monitor-" + hostname + str(int(time.time())), transport=mqtt_transport())
     client.username_pw_set(config.mqtt_user, config.mqtt_password)
+    configure_mqtt_connection(client)
     client.on_log = on_log
     client.on_connect = on_connect
     # Set a short socket timeout to avoid hanging if MQTT server is unreachable
@@ -1351,8 +1373,9 @@ if __name__ == '__main__':
                 client.publish(status_topic, "1", qos=config.qos, retain=config.retain)
                 print("Listening to topic : " + command_topic)
 
-            client = paho.Client()
+            client = paho.Client(transport=mqtt_transport())
             client.username_pw_set(config.mqtt_user, config.mqtt_password)
+            configure_mqtt_connection(client)
             client.on_message = on_message
             client.on_connect = on_service_connect
             # set will_set to send a message when the client disconnects

@@ -123,9 +123,33 @@ mqtt_configuration() {
     read PASS
     sed -i "s/\"password/\"${PASS}/" src/config.py
 
-    ask "MQTT port (default: 1883): "
+    ask "Use SSL/TLS for the MQTT connection? [y/N] "
+    read SSL
+    printf "\n"
+    default_port=1883
+    tls_on=0
+    if [[ "$SSL" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        sed -i "s/mqtt_tls = False/mqtt_tls = True/" src/config.py
+        tls_on=1
+        default_port=8883
+        print_info "TLS enabled — for a self-signed broker cert, set mqtt_tls_ca_certs or mqtt_tls_insecure in src/config.py."
+    fi
+
+    ask "Use WebSockets for the MQTT connection? [y/N] "
+    read WS
+    printf "\n"
+    if [[ "$WS" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        sed -i "s/mqtt_websockets = False/mqtt_websockets = True/" src/config.py
+        if [ "$tls_on" = "1" ]; then default_port=8084; else default_port=9001; fi
+        ask "WebSocket path (default: /mqtt): "
+        read WSPATH
+        if [ -z "$WSPATH" ]; then WSPATH=/mqtt; fi
+        sed -i "s|mqtt_websocket_path = .*|mqtt_websocket_path = '${WSPATH}'|" src/config.py
+    fi
+
+    ask "MQTT port (default: ${default_port}): "
     read PORT
-    if [ -z "$PORT" ]; then PORT=1883; fi
+    if [ -z "$PORT" ]; then PORT=${default_port}; fi
     sed -i "s/1883/${PORT}/" src/config.py
 
     ask "MQTT topic prefix (default: rpi-MQTT-monitor): "

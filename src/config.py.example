@@ -8,6 +8,17 @@ mqtt_host = "ip address or host"
 mqtt_user = "username"
 mqtt_password = "password"
 mqtt_port = "1883"
+# Enable TLS/SSL for the MQTT connection (typically with mqtt_port = "8883").
+# Uses the system CA certificates. For a broker with a self-signed certificate,
+# set mqtt_tls_ca_certs to your CA file, or set mqtt_tls_insecure = True to skip
+# certificate verification (less secure).
+mqtt_tls = False
+mqtt_tls_ca_certs = ""
+mqtt_tls_insecure = False
+# Use WebSockets as the MQTT transport instead of plain TCP. Common ports:
+# 9001 (ws) or 8084 (wss). Set mqtt_websocket_path to your broker's WS endpoint.
+mqtt_websockets = False
+mqtt_websocket_path = "/mqtt"
 mqtt_discovery_prefix = "homeassistant"
 mqtt_topic_prefix = "rpi-MQTT-monitor"
 mqtt_uns_structure = ""
