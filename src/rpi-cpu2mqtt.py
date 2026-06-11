@@ -11,6 +11,7 @@ import paho.mqtt.client as paho
 import json
 import os
 import sys
+import shutil
 import argparse
 import threading
 import update
@@ -1157,6 +1158,98 @@ def uninstall_script():
         print(f"Unexpected error: {e}")
 
 
+_ddcutil_display_cache = None
+
+
+def _ddcutil_displays():
+    """Return the DDC display indexes reported by `ddcutil detect`, cached after
+    the first call because detection is slow (~1-2s). Falls back to [1]."""
+    global _ddcutil_display_cache
+    if _ddcutil_display_cache is not None:
+        return _ddcutil_display_cache
+    displays = []
+    try:
+        out = subprocess.run(["ddcutil", "detect", "--brief"],
+                             capture_output=True, text=True, timeout=30).stdout
+        for line in out.splitlines():
+            line = line.strip()
+            if line.startswith("Display "):
+                try:
+                    displays.append(int(line.split()[1]))
+                except (IndexError, ValueError):
+                    pass
+    except Exception as e:
+        print("ddcutil detect failed:", e)
+    _ddcutil_display_cache = displays or [1]
+    return _ddcutil_display_cache
+
+
+def set_display_power(turn_on):
+    """Turn attached display(s) on/off across X11, wlroots-Wayland, Raspberry Pi
+    and GNOME/generic Wayland (DDC/CI). Logs which backend ran."""
+    state = "on" if turn_on else "off"
+
+    # 1. Explicit user override always wins (empty string = auto-detect)
+    override = getattr(config, "display_{}_command".format(state), "")
+    if override:
+        rc = os.system(override)
+        print("display {}: custom command rc={}".format(state, rc))
+        return
+
+    session = os.environ.get("XDG_SESSION_TYPE", "")
+
+    # 2a. X11 -> legacy xset DPMS (keep su -l for service-as-root setups)
+    if session == "x11" or (session != "wayland" and os.environ.get("DISPLAY") and shutil.which("xset")):
+        os.system('su -l {} -c "xset -display :0 dpms force {}"'.format(config.os_user, state))
+        print("display {}: xset/DPMS (X11)".format(state))
+        return
+
+    # 2b. wlroots Wayland (Pi labwc/wayfire, sway) -> wlr-randr per connected output
+    if shutil.which("wlr-randr"):
+        env = os.environ.copy()
+        env.setdefault("WAYLAND_DISPLAY", "wayland-0")
+        if "XDG_RUNTIME_DIR" not in env:
+            # When the service runs as root, getuid() is 0 -> /run/user/0, which is not
+            # the graphical session. Resolve os_user's uid so we point at /run/user/<uid>.
+            uid = os.getuid()
+            if uid == 0 and getattr(config, "os_user", ""):
+                try:
+                    import pwd
+                    uid = pwd.getpwnam(config.os_user).pw_uid
+                except Exception:
+                    pass
+            env["XDG_RUNTIME_DIR"] = "/run/user/{}".format(uid)
+        try:
+            listing = subprocess.run(["wlr-randr"], capture_output=True, text=True,
+                                     env=env, timeout=15).stdout
+            outputs = [ln.split()[0] for ln in listing.splitlines()
+                       if ln and not ln[0].isspace()]
+            for out in outputs:
+                subprocess.run(["wlr-randr", "--output", out,
+                                "--on" if turn_on else "--off"], env=env, timeout=15)
+            print("display {}: wlr-randr ({} output(s))".format(state, len(outputs)))
+        except Exception as e:
+            print("display {}: wlr-randr failed: {}".format(state, e))
+        return
+
+    # 2c. Raspberry Pi -> vcgencmd
+    if shutil.which("vcgencmd"):
+        os.system("vcgencmd display_power {}".format(1 if turn_on else 0))
+        print("display {}: vcgencmd".format(state))
+        return
+
+    # 2d. GNOME / generic Wayland -> ddcutil DDC/CI (d6 = power mode: 01 on, 05 off)
+    if shutil.which("ddcutil"):
+        val = "01" if turn_on else "05"
+        for disp in _ddcutil_displays():
+            os.system("ddcutil --display {} setvcp d6 {}".format(disp, val))
+        print("display {}: ddcutil DDC/CI".format(state))
+        return
+
+    print("display {}: no supported backend (install ddcutil or set "
+          "display_{}_command in config.py)".format(state, state))
+
+
 def on_message(client, userdata, msg):
     global exit_flag, thread1, thread2
     command = msg.payload.decode()
@@ -1217,10 +1310,10 @@ def on_message(client, userdata, msg):
                 action, result.returncode, result.stderr.strip()))
     elif command == "display_off":
         print("Turn off display")
-        os.system('su -l {} -c "xset -display :0 dpms force off"'.format(config.os_user))
+        set_display_power(False)
     elif command == "display_on":
         print("Turn on display")
-        os.system('su -l {} -c "xset -display :0 dpms force on"'.format(config.os_user))
+        set_display_power(True)
 
 exit_flag = False
 thread1 = None

@@ -132,10 +132,36 @@ All options live in `src/config.py`. Key settings:
 | `hass_host` / `hass_token` | Home Assistant API URL and long-lived token |
 | `restart_button` | Add a restart button to HA |
 | `shutdown_button` | Add a shutdown button to HA |
-| `display_control` | Add display on/off buttons to HA |
+| `display_control` | Add display on/off buttons to HA (auto-detects backend: see below) |
+| `display_on_command` / `display_off_command` | Optional custom commands for display control (override auto-detection) |
 | `group_messages` | Send all values as a single CSV message (disables discovery) |
 
 Full configuration reference: [Configuration wiki](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
+
+### Display control backends
+
+With `display_control = True`, the monitor on/off buttons auto-detect a working backend for the current environment:
+
+| Environment | Backend used |
+| --- | --- |
+| X11 desktop | `xset dpms force on/off` |
+| wlroots Wayland (Pi labwc/wayfire, sway) | `wlr-randr --output <out> --on/--off` |
+| Raspberry Pi | `vcgencmd display_power 1/0` |
+| GNOME / generic Wayland | `ddcutil` (DDC/CI, hardware level) |
+
+GNOME and most non-wlroots Wayland compositors expose no CLI to force monitors off, so external monitors are controlled over **DDC/CI** with `ddcutil`. One-time setup:
+
+```bash
+sudo apt install ddcutil
+echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf
+sudo modprobe i2c-dev
+sudo usermod -aG i2c $USER     # the service runs as this user; re-login or restart the service afterwards
+ddcutil detect                 # confirm your monitor(s) are listed
+```
+
+Each monitor must have **DDC/CI enabled in its on-screen (OSD) menu** — some ship with it off.
+
+If none of the above fits your setup, set `display_on_command` / `display_off_command` in `config.py` to any custom command, which always takes precedence over auto-detection.
 
 ## Home Assistant Integration
 

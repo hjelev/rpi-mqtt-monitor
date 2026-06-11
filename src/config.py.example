@@ -60,8 +60,14 @@ update = True
 # Enable control of attached display(s) via Home Assistant
 display_control = False
 
-# user for which display_control is enabled
+# user for which display_control is enabled (used by the X11/xset backend)
 os_user = 'os_user_to_be_replaced'
+
+# Optional: override the display on/off commands. Leave empty to auto-detect a backend
+# (xset for X11, wlr-randr for wlroots Wayland, vcgencmd for Raspberry Pi, ddcutil for
+# GNOME/generic Wayland). Set these if your setup needs a custom command.
+display_on_command = ''
+display_off_command = ''
 
 # By default, the 'hostname' will be used as device name in home assistant.
 # To set a custom device name, uncomment the following line and set the custom name.
