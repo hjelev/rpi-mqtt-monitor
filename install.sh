@@ -257,6 +257,10 @@ set_service() {
     sudo service rpi-mqtt-monitor restart
     print_green "Service enabled and started (interval: ${MIN}s)"
     git config --global --add safe.directory "${cwd}"
+    # The service runs as root (set above); root's git needs the repo marked as a
+    # safe directory too, otherwise version checks and the update button fail with
+    # a 'dubious ownership' error on the user-owned repo.
+    sudo git config --global --add safe.directory "${cwd}"
 }
 
 # ── Shortcut ──────────────────────────────────────────────────

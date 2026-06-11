@@ -666,17 +666,14 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:power", get_translation("system_shutdown"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "shutdown"
-        data["device_class"] = "restart"
     elif what_config == "display_on":
         add_common_attributes(data, "mdi:monitor", get_translation("monitor_on"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_on"
-        data["device_class"] = "restart"
     elif what_config == "display_off":
         add_common_attributes(data, "mdi:monitor", get_translation("monitor_off"))
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_press"] = "display_off"
-        data["device_class"] = "restart"
     elif what_config == device + "_temp":
         add_common_attributes(data, "hass:thermometer", device + " " + get_translation("temperature"), "°C", "temperature", "measurement")
     elif what_config == "rpi_power_status":
@@ -790,6 +787,20 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
 
     client.loop_stop()
     client.disconnect()
+
+
+def publish_update_in_progress(client, in_progress):
+    """Re-publish the update entity discovery config with in_progress set so
+    Home Assistant shows feedback while the update button is running."""
+    if not config.update or not config.discovery_messages:
+        return
+    try:
+        data = json.loads(config_json('update'))
+        data["in_progress"] = bool(in_progress)
+        client.publish(config.mqtt_discovery_prefix + "/update/" + hostname + "/config",
+                       json.dumps(data), qos=1)
+    except Exception as e:
+        print("Could not publish update in_progress state:", e)
 
 
 def publish_to_hass_api(monitored_values):
@@ -1133,11 +1144,31 @@ def uninstall_script():
 
 def on_message(client, userdata, msg):
     global exit_flag, thread1, thread2
-    print("Received message: ", msg.payload.decode())
-    if msg.payload.decode() == "install":
+    command = msg.payload.decode()
+    print("Received message: ", command)
+
+    # Map each command to the config flag that must be enabled for it to run,
+    # so a stray or retained payload can't trigger a control the user disabled.
+    command_gates = {
+        "install": "update",
+        "restart": "restart_button",
+        "shutdown": "shutdown_button",
+        "display_on": "display_control",
+        "display_off": "display_control",
+    }
+    if command in command_gates and not getattr(config, command_gates[command], False):
+        print("Ignored '{}': {} is disabled in config.".format(command, command_gates[command]))
+        return
+
+    if command == "install":
         def update_and_exit():
+            publish_update_in_progress(client, True)
             version = update.check_git_version_remote(script_dir).strip()
-            update.do_update(script_dir, version, git_update=True, config_update=True)
+            success = update.do_update(script_dir, version, git_update=True, config_update=True)
+            if not success:
+                print("Update failed; keeping service running on current version.")
+                publish_update_in_progress(client, False)
+                return
             print("Update completed. Stopping MQTT client loop...")
             client.loop_stop()  # Stop the MQTT client loop
             print("Setting exit flag...")
@@ -1151,20 +1182,22 @@ def on_message(client, userdata, msg):
 
         update_thread = threading.Thread(target=update_and_exit)
         update_thread.start()
-    elif msg.payload.decode() == "restart":
+    elif command == "restart":
         print("Restarting the system...")
         os.system("sudo reboot")
-    elif msg.payload.decode() == "shutdown":
+    elif command == "shutdown":
         print("Shutting down the system...")
         os.system("sudo shutdown now")
-    elif msg.payload.decode() == "display_off":
+    elif command == "display_off":
         print("Turn off display")
         os.system('su -l {} -c "xset -display :0 dpms force off"'.format(config.os_user))
-    elif msg.payload.decode() == "display_on":
+    elif command == "display_on":
         print("Turn on display")
         os.system('su -l {} -c "xset -display :0 dpms force on"'.format(config.os_user))
 
 exit_flag = False
+thread1 = None
+thread2 = None
 stop_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # get device host name - used in mqtt topic
@@ -1183,19 +1216,30 @@ if __name__ == '__main__':
 
     if args.service:
         if not args.hass_api:
+            command_topic = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
+            status_topic = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status"
+
+            def on_service_connect(client, userdata, flags, rc):
+                # Re-subscribe on every (re)connect: paho does not restore
+                # subscriptions automatically after an auto-reconnect, so without
+                # this the command buttons silently stop working after a broker
+                # restart or network blip.
+                if rc != 0:
+                    print("Error: Unable to connect to MQTT broker, return code:", rc)
+                    return
+                client.subscribe(command_topic)
+                client.publish(status_topic, "1", qos=config.qos, retain=config.retain)
+                print("Listening to topic : " + command_topic)
+
             client = paho.Client()
             client.username_pw_set(config.mqtt_user, config.mqtt_password)
             client.on_message = on_message
+            client.on_connect = on_service_connect
             # set will_set to send a message when the client disconnects
-            client.will_set(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "0", qos=config.qos, retain=config.retain)
-            try:
-                client.connect(config.mqtt_host, int(config.mqtt_port))
-            except Exception as e:
-                print("Error connecting to MQTT broker:", e)
-                sys.exit(1)
-
-            client.subscribe(config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
-            print("Listening to topic : " + config.mqtt_discovery_prefix + "/update/" + hostname + "/command")
+            client.will_set(status_topic, "0", qos=config.qos, retain=config.retain)
+            # connect_async + loop_start so the service keeps retrying if the
+            # broker is not yet reachable at boot (covered by systemd Restart too).
+            client.connect_async(config.mqtt_host, int(config.mqtt_port))
             client.loop_start()
 
 

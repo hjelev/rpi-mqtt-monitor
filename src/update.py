@@ -62,16 +62,38 @@ def display_config_differences(current_config, example_config, display=True):
         return False
 
 
+def ensure_git_safe_directory(script_dir):
+    """Mark the repo as a safe directory for the current user (idempotent).
+
+    The service may run as root while the repo is owned by another user. Without
+    this, modern git refuses describe/ls-remote/pull with a 'dubious ownership'
+    error, which silently breaks the version check and the update button.
+    """
+    try:
+        subprocess.run(['/usr/bin/git', 'config', '--global', '--add', 'safe.directory', script_dir],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except Exception as e:
+        print("Warning: could not set git safe.directory: {}".format(e))
+
+
 def check_git_version_remote(script_dir):
+    ensure_git_safe_directory(script_dir)
     full_cmd = "/usr/bin/git -C {} ls-remote --tags origin | awk -F'/' '{{print $3}}' | sort -V | tail -n 1".format(script_dir)
     try:
-        result = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-    except subprocess.CalledProcessError as e:
+        proc = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        result = out.decode("utf-8")
+        if proc.returncode != 0:
+            print("Error checking remote version: {}".format(err.decode("utf-8").strip()))
+            return config.version
+    except Exception as e:
         print("Error: {}".format(e))
         return config.version
-    
+
     latest_tag = result.strip()
-    return latest_tag if latest_tag else "0"
+    # On any failure fall back to the installed version so HA never shows a
+    # phantom "update available" pointing at a bogus version.
+    return latest_tag if latest_tag else config.version
 
 
 def update_config_version(version, script_dir):
@@ -105,8 +127,17 @@ def do_update(script_dir, version=config.version, git_update=True, config_update
     print("Current version: {}".format(config.version))
     if git_update:
         print(":: Updating git repository", script_dir)
-        result = subprocess.run(['/usr/bin/git', '-C', script_dir, 'pull'], check=True, universal_newlines=True, stdout=subprocess.PIPE)
-        print(result.stdout)
+        ensure_git_safe_directory(script_dir)
+        try:
+            result = subprocess.run(['/usr/bin/git', '-C', script_dir, 'pull'],
+                                    check=True, universal_newlines=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print(result.stdout)
+        except subprocess.CalledProcessError as e:
+            # Surface the failure (visible in journalctl) instead of letting the
+            # exception kill the caller thread silently, and abort the update.
+            print(":: git pull failed: {}".format((e.stderr or e.stdout or str(e)).strip()))
+            return False
         install_requirements(script_dir)
         
     if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
@@ -115,6 +146,8 @@ def do_update(script_dir, version=config.version, git_update=True, config_update
 
     if version != config.version:
         update_config_version(version, script_dir)
+
+    return True
 
 
 if __name__ == '__main__':
