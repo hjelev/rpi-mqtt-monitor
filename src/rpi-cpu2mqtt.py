@@ -651,7 +651,12 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:update", get_translation("rpi_mqtt_monitor"), None, "firmware")
         data["title"] = "New Version"
         data["state_topic"] = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "git_update"
-        data["value_template"] = "{{ {'installed_version': value_json.installed_ver, 'latest_version': value_json.new_ver } | to_json }}"
+        data["value_template"] = (
+            "{{ {'installed_version': value_json.installed_ver, "
+            "'latest_version': value_json.new_ver, "
+            "'in_progress': value_json.in_progress | default(false), "
+            "'update_percentage': value_json.update_percentage | default(none)} | to_json }}"
+        )
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
@@ -789,18 +794,28 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
     client.disconnect()
 
 
-def publish_update_in_progress(client, in_progress):
-    """Re-publish the update entity discovery config with in_progress set so
-    Home Assistant shows feedback while the update button is running."""
-    if not config.update or not config.discovery_messages:
+def publish_update_progress(client, in_progress, new_ver, percentage=None):
+    """Publish update progress to the update entity's state topic so Home Assistant
+    shows an 'installing' state and progress bar while the update runs.
+
+    HA's MQTT update integration reads in_progress/update_percentage from the state
+    payload (via value_template), not from the discovery config, so progress must be
+    sent here. The version fields are kept so the git_update binary_sensor and the
+    version display keep working."""
+    if not config.update:
         return
     try:
-        data = json.loads(config_json('update'))
-        data["in_progress"] = bool(in_progress)
-        client.publish(config.mqtt_discovery_prefix + "/update/" + hostname + "/config",
-                       json.dumps(data), qos=1)
+        payload = {
+            "installed_ver": config.version,
+            "new_ver": new_ver,
+            "in_progress": bool(in_progress),
+            "update_percentage": percentage,
+        }
+        client.publish(
+            config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/git_update",
+            json.dumps(payload), qos=1, retain=config.retain)
     except Exception as e:
-        print("Could not publish update in_progress state:", e)
+        print("Could not publish update progress state:", e)
 
 
 def publish_to_hass_api(monitored_values):
@@ -1162,13 +1177,19 @@ def on_message(client, userdata, msg):
 
     if command == "install":
         def update_and_exit():
-            publish_update_in_progress(client, True)
             version = update.check_git_version_remote(script_dir).strip()
-            success = update.do_update(script_dir, version, git_update=True, config_update=True)
+            publish_update_progress(client, True, version, 0)
+
+            def report(pct):
+                publish_update_progress(client, True, version, pct)
+
+            success = update.do_update(script_dir, version, git_update=True,
+                                       config_update=True, progress_cb=report)
             if not success:
                 print("Update failed; keeping service running on current version.")
-                publish_update_in_progress(client, False)
+                publish_update_progress(client, False, version, None)
                 return
+            publish_update_progress(client, True, version, 100)
             print("Update completed. Stopping MQTT client loop...")
             client.loop_stop()  # Stop the MQTT client loop
             print("Setting exit flag...")

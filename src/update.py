@@ -123,8 +123,17 @@ def install_requirements(script_dir):
         sys.exit(1)
 
 
-def do_update(script_dir, version=config.version, git_update=True, config_update=True):
+def do_update(script_dir, version=config.version, git_update=True, config_update=True,
+              progress_cb=None):
+    def report(pct):
+        if progress_cb:
+            try:
+                progress_cb(pct)
+            except Exception:
+                pass
+
     print("Current version: {}".format(config.version))
+    report(0)
     if git_update:
         print(":: Updating git repository", script_dir)
         ensure_git_safe_directory(script_dir)
@@ -138,8 +147,10 @@ def do_update(script_dir, version=config.version, git_update=True, config_update
             # exception kill the caller thread silently, and abort the update.
             print(":: git pull failed: {}".format((e.stderr or e.stdout or str(e)).strip()))
             return False
+        report(30)
         install_requirements(script_dir)
-        
+        report(70)
+
     if display_config_differences(script_dir + '/config.py', script_dir + '/config.py.example') and config_update:
         print(":: Updating config.py")
         update_config(script_dir + '/config.py',script_dir + '/config.py.example')
@@ -147,6 +158,7 @@ def do_update(script_dir, version=config.version, git_update=True, config_update
     if version != config.version:
         update_config_version(version, script_dir)
 
+    report(90)
     return True
 
 
