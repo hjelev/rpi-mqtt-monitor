@@ -149,7 +149,7 @@ With `display_control = True`, the monitor on/off buttons auto-detect a working 
 | Raspberry Pi | `vcgencmd display_power 1/0` |
 | GNOME / generic Wayland | `ddcutil` (DDC/CI, hardware level) |
 
-GNOME and most non-wlroots Wayland compositors expose no CLI to force monitors off, so external monitors are controlled over **DDC/CI** with `ddcutil`. One-time setup:
+GNOME and most non-wlroots Wayland compositors expose no CLI to force monitors off, so external monitors are controlled over **DDC/CI** with `ddcutil`. When you enable display control during `install.sh`, the installer detects your backend and offers to perform this setup for you. To do it manually:
 
 ```bash
 sudo apt install ddcutil

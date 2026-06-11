@@ -41,6 +41,11 @@ print_info()   { printf "  ${BCYAN}▶${R}  %s\n" "$1"; }
 print_err()    { printf "  ${RED}✗${R}  %s\n" "$1"; }
 ask()          { printf "  ${CYAN}→${R}  %s" "$1"; }
 
+# ── Globals ───────────────────────────────────────────────────
+# Set to 1 by configure_display_control() so the scheduling step can recommend
+# the systemd service (display buttons only work as a service, not under cron).
+display_control_enabled=0
+
 # ── Prerequisites ─────────────────────────────────────────────
 find_python() {
     if python3 --version &>/dev/null; then
@@ -137,9 +142,67 @@ mqtt_configuration() {
     read CONTROL
     printf "\n"
     if [[ "$CONTROL" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        sed -i "s/display_control = False/display_control = True/g" src/config.py
+        configure_display_control
     fi
     finish_message="MQTT broker"
+}
+
+# Enable display control and set up the backend that set_display_power() will use
+# at runtime (xset for X11, wlr-randr for wlroots Wayland, vcgencmd for Raspberry
+# Pi, ddcutil for GNOME/generic Wayland). Mirrors that function's backend priority.
+configure_display_control() {
+    sed -i "s/display_control = False/display_control = True/g" src/config.py
+    display_control_enabled=1
+
+    local session="${XDG_SESSION_TYPE:-unknown}"
+    print_info "Detected session type: ${session}"
+
+    if [ "$session" = "x11" ] || { [ "$session" != "wayland" ] && [ -n "${DISPLAY:-}" ]; }; then
+        ensure_backend_tool "X11/DPMS" xset x11-xserver-utils
+    elif command -v wlr-randr >/dev/null 2>&1; then
+        print_green "wlr-randr found — wlroots Wayland backend ready"
+    elif command -v vcgencmd >/dev/null 2>&1; then
+        print_green "vcgencmd found — Raspberry Pi backend ready"
+    else
+        setup_ddcutil
+    fi
+}
+
+# If <cmd> is present the backend is ready; otherwise offer to install <pkg>.
+ensure_backend_tool() {
+    local label="$1" cmd="$2" pkg="$3"
+    if command -v "$cmd" >/dev/null 2>&1; then
+        print_green "${cmd} found — ${label} backend ready"
+        return
+    fi
+    ask "${cmd} not found. Install ${pkg} for the ${label} backend? [Y/n] "
+    read yn
+    printf "\n"
+    case $yn in
+        [Nn]*) print_yellow "Skipped — install ${pkg} manually for display control to work." ;;
+        *) sudo apt-get update && sudo apt-get install -y "$pkg" \
+               && print_green "${pkg} installed" ;;
+    esac
+}
+
+# Generic fallback: ddcutil over DDC/CI. Needs the i2c-dev module and i2c group
+# membership (mirrors the manual steps in the README).
+setup_ddcutil() {
+    print_info "No native backend detected — ddcutil (DDC/CI over i2c) is the fallback"
+    ask "Install ddcutil and configure i2c access? [Y/n] "
+    read yn
+    printf "\n"
+    case $yn in
+        [Nn]*) print_yellow "Skipped — see the README ddcutil section for manual setup."
+               return ;;
+    esac
+    sudo apt-get update && sudo apt-get install -y ddcutil
+    echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null
+    sudo modprobe i2c-dev
+    sudo usermod -aG i2c "$(whoami)"
+    print_green "ddcutil installed and $(whoami) added to the i2c group"
+    print_yellow "Log out/in (or reboot) for i2c group membership to take effect."
+    print_yellow "Enable DDC/CI in your monitor's OSD menu, then verify with: ddcutil detect"
 }
 
 hass_api_configuration() {
@@ -295,9 +358,16 @@ main() {
     create_shortcut
 
     printf "\n"
+    if [ "$display_control_enabled" = "1" ]; then
+        print_info "Display control needs the systemd service to receive MQTT commands (cron cannot)."
+    fi
     printf "  ${BOLD}Select scheduling method:${R}\n"
     printf "  ${CYAN}[c]${R}  Cron job\n"
-    printf "  ${CYAN}[s]${R}  Systemd service\n\n"
+    if [ "$display_control_enabled" = "1" ]; then
+        printf "  ${CYAN}[s]${R}  Systemd service  ${CYAN}(recommended)${R}\n\n"
+    else
+        printf "  ${CYAN}[s]${R}  Systemd service\n\n"
+    fi
     while true; do
         ask "Your choice [c or s]: "
         read cs
@@ -305,6 +375,8 @@ main() {
         case $cs in
             [Cc]*) set_cron; break ;;
             [Ss]*) set_service; break ;;
+            "") if [ "$display_control_enabled" = "1" ]; then set_service; break;
+                else print_yellow "Please enter c for cron or s for service."; fi ;;
             *) print_yellow "Please enter c for cron or s for service." ;;
         esac
     done
