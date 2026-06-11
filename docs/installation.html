@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation · Raspberry Pi MQTT Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html">Home</a>
+        <a href="monitoring.html">What Gets Monitored</a>
+        <a href="installation.html" class="active">Installation</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="configuration.html">Configuration</a>
+        <a href="home-assistant.html">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <h1>Installation</h1>
+
+      <h2>Automated</h2>
+      <pre><code>bash &lt;(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/remote_install.sh)</code></pre>
+
+      <p>The installer will:</p>
+      <ul>
+        <li>Install missing dependencies (<code>git</code>, <code>python3</code>, <code>pip</code>, <code>paho-mqtt</code>, <code>requests</code>, <code>psutil</code>)</li>
+        <li>Create a Python virtual environment (<code>rpi_mon_env</code>)</li>
+        <li>Prompt you to configure MQTT host and credentials in <code>config.py</code></li>
+        <li>Set up a systemd service or cron job</li>
+      </ul>
+
+      <blockquote>
+        <p>Running as a <strong>service</strong> is recommended — it enables the restart, shutdown,
+          and display control buttons in Home Assistant.</p>
+      </blockquote>
+
+      <h3>Automated Installation Preview</h3>
+      <p>
+        <a href="https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ" target="_blank" rel="noopener">
+          <img src="https://asciinema.org/a/726rhsITLusB88xL4VGPdU2sJ.png" alt="asciicast install preview" />
+        </a>
+      </p>
+
+      <h2>Manual</h2>
+      <p>See the
+        <a href="https://github.com/hjelev/rpi-mqtt-monitor/wiki/Manual-Installation" target="_blank" rel="noopener">Manual Installation wiki page</a>
+        for step-by-step instructions including service and cron configuration.</p>
+
+      <h2>Uninstallation</h2>
+      <pre><code>rpi-mqtt-monitor --uninstall</code></pre>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>

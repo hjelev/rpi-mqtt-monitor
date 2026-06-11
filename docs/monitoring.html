@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What Gets Monitored · Raspberry Pi MQTT Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html">Home</a>
+        <a href="monitoring.html" class="active">What Gets Monitored</a>
+        <a href="installation.html">Installation</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="configuration.html">Configuration</a>
+        <a href="home-assistant.html">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <h1>What Gets Monitored</h1>
+      <p>Each metric maps to a config key in <code>src/config.py</code>. Toggle them on or off to
+        control which sensors are published to Home Assistant.</p>
+
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Config key</th><th>Default</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>CPU load</td><td><code>cpu_load</code></td><td>enabled</td></tr>
+          <tr><td>CPU temperature</td><td><code>cpu_temp</code></td><td>enabled</td></tr>
+          <tr><td>Used disk space</td><td><code>used_space</code></td><td>enabled</td></tr>
+          <tr><td>Memory usage</td><td><code>memory</code></td><td>enabled</td></tr>
+          <tr><td>Uptime (timestamp)</td><td><code>uptime</code></td><td>enabled</td></tr>
+          <tr><td>Uptime (seconds)</td><td><code>uptime_seconds</code></td><td>disabled</td></tr>
+          <tr><td>Network data sent/received</td><td><code>net_io</code></td><td>enabled</td></tr>
+          <tr><td>Swap usage</td><td><code>swap</code></td><td>disabled</td></tr>
+          <tr><td>CPU clock speed</td><td><code>sys_clock_speed</code></td><td>disabled</td></tr>
+          <tr><td>CPU voltage</td><td><code>voltage</code></td><td>disabled</td></tr>
+          <tr><td>WiFi signal quality (%)</td><td><code>wifi_signal</code></td><td>disabled</td></tr>
+          <tr><td>WiFi signal strength (dBm)</td><td><code>wifi_signal_dbm</code></td><td>disabled</td></tr>
+          <tr><td>RPi 5 fan speed</td><td><code>rpi5_fan_speed</code></td><td>disabled</td></tr>
+          <tr><td>RPi power/throttle status</td><td><code>rpi_power_status</code></td><td>disabled</td></tr>
+          <tr><td>HDD/SSD temperature</td><td><code>drive_temps</code></td><td>disabled</td></tr>
+          <tr><td>APT updates available</td><td><code>apt_updates</code></td><td>disabled</td></tr>
+          <tr><td>Intel GPU render busy (%)</td><td><code>intel_gpu_render</code></td><td>disabled</td></tr>
+          <tr><td>Intel GPU video busy (%)</td><td><code>intel_gpu_video</code></td><td>disabled</td></tr>
+          <tr><td>Intel GPU frequency (MHz)</td><td><code>intel_gpu_freq</code></td><td>disabled</td></tr>
+          <tr><td>Intel GPU power (W)</td><td><code>intel_gpu_power</code></td><td>disabled</td></tr>
+          <tr><td>Script update available</td><td><code>git_update</code></td><td>enabled</td></tr>
+          <tr><td>External sensors</td><td><code>ext_sensors</code></td><td>disabled</td></tr>
+        </tbody>
+      </table>
+
+      <blockquote>
+        <p>Intel GPU sensors use <code>intel-gpu-tools</code> (<code>intel_gpu_top</code>), which the
+          installer can set up for you. They require root, so values only populate when running as
+          the systemd service.</p>
+      </blockquote>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,283 @@
+/* Raspberry Pi MQTT Monitor — docs site
+   Plain CSS, auto light/dark via prefers-color-scheme. No external dependencies. */
+
+:root {
+  --accent: #c51a4a;          /* Raspberry Pi red */
+  --accent-2: #6cc04a;        /* Raspberry Pi green */
+  --bg: #ffffff;
+  --bg-soft: #f5f6f8;
+  --bg-code: #f3f4f6;
+  --sidebar-bg: #fbfbfc;
+  --text: #1f2328;
+  --text-soft: #59636e;
+  --border: #e2e5e9;
+  --link: #c51a4a;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #ff5277;
+    --accent-2: #7bd354;
+    --bg: #0d1117;
+    --bg-soft: #161b22;
+    --bg-code: #161b22;
+    --sidebar-bg: #0f141b;
+    --text: #e6edf3;
+    --text-soft: #9198a1;
+    --border: #2a313a;
+    --link: #ff7596;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.site-header .brand {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1.02rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.site-header .brand .dot { color: var(--accent); }
+.site-header .spacer { flex: 1; }
+.site-header a.gh {
+  color: var(--text-soft);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.site-header a.gh:hover { color: var(--text); border-color: var(--accent); }
+
+.hamburger {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  width: 38px;
+  height: 34px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+.layout { display: flex; align-items: flex-start; }
+
+.sidebar {
+  flex: 0 0 240px;
+  position: sticky;
+  top: 56px;
+  align-self: flex-start;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  padding: 20px 12px;
+}
+.sidebar nav a {
+  display: block;
+  padding: 8px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  color: var(--text-soft);
+  text-decoration: none;
+  font-size: 0.94rem;
+}
+.sidebar nav a:hover { background: var(--bg-soft); color: var(--text); }
+.sidebar nav a.active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  padding-left: 9px;
+}
+.sidebar .nav-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  padding: 14px 12px 4px;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 36px clamp(20px, 5vw, 64px) 80px;
+  max-width: 960px;
+}
+
+/* ── Typography & elements ──────────────────────────── */
+h1 { font-size: 2rem; margin: 0 0 0.4em; line-height: 1.2; }
+h2 {
+  font-size: 1.4rem;
+  margin: 1.8em 0 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+}
+h3 { font-size: 1.12rem; margin: 1.5em 0 0.5em; }
+p { margin: 0.7em 0; }
+a { color: var(--link); }
+
+.lead { font-size: 1.15rem; color: var(--text-soft); }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.12em 0.4em;
+}
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code { background: none; border: none; padding: 0; font-size: 0.86rem; }
+
+blockquote {
+  margin: 1.2em 0;
+  padding: 12px 16px;
+  background: var(--bg-soft);
+  border-left: 4px solid var(--accent-2);
+  border-radius: 0 6px 6px 0;
+  color: var(--text-soft);
+}
+blockquote p { margin: 0; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 0.94rem;
+}
+th, td {
+  text-align: left;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+}
+thead th { background: var(--bg-soft); }
+tbody tr:nth-child(even) { background: var(--bg-soft); }
+
+img { max-width: 100%; height: auto; border-radius: 8px; }
+figure { margin: 1.5em 0; text-align: center; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+
+/* ── Hero / home ────────────────────────────────────── */
+.hero { text-align: center; margin-bottom: 2em; }
+.hero img { box-shadow: var(--shadow); }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 1em 0; }
+.badges img { border-radius: 3px; }
+
+.btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid var(--accent);
+}
+.btn:hover { filter: brightness(1.08); }
+.btn.secondary { background: transparent; color: var(--accent); }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 1.4em 0; }
+
+/* feature + link cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 1.5em 0; }
+.card {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  background: var(--bg);
+  text-decoration: none;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+a.card:hover { border-color: var(--accent); transform: translateY(-2px); transition: 0.15s; }
+.card h3 { margin: 0 0 6px; color: var(--accent); }
+.card p { margin: 0; color: var(--text-soft); font-size: 0.92rem; }
+
+.feature-list { list-style: none; padding: 0; }
+.feature-list li { padding: 8px 0 8px 28px; position: relative; }
+.feature-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 24px clamp(20px, 5vw, 64px);
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+.site-footer a { color: var(--text-soft); }
+
+/* backdrop for mobile drawer */
+.backdrop {
+  display: none;
+  position: fixed;
+  inset: 56px 0 0 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 19;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hamburger { display: inline-block; }
+  .sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    z-index: 20;
+    width: 260px;
+    height: calc(100vh - 56px);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow); }
+  .backdrop.show { display: block; }
+  .content { padding-top: 24px; }
+}

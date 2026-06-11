@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CLI Reference · Raspberry Pi MQTT Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html">Home</a>
+        <a href="monitoring.html">What Gets Monitored</a>
+        <a href="installation.html">Installation</a>
+        <a href="cli.html" class="active">CLI Reference</a>
+        <a href="configuration.html">Configuration</a>
+        <a href="home-assistant.html">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <h1>CLI Reference</h1>
+      <pre><code>usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
+
+Monitor CPU load, temperature, frequency, free space, etc., and publish the
+data to an MQTT server or Home Assistant API.
+
+options:
+  -h, --help       show this help message and exit
+  -H, --hass_api   send readings via Home Assistant API (not via MQTT)
+  -d, --display    display values on screen
+  -s, --service    run as a service; sleep interval set in config.py
+  -v, --version    display installed version and exit
+  -u, --update     update script and config then exit
+  -w, --hass_wake  display Home Assistant wake-on-LAN configuration
+  --uninstall      uninstall rpi-mqtt-monitor and remove all related files</code></pre>
+
+      <h2>Options at a glance</h2>
+      <table>
+        <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>-h, --help</code></td><td>Show the help message and exit</td></tr>
+          <tr><td><code>-H, --hass_api</code></td><td>Send readings via the Home Assistant API (not via MQTT)</td></tr>
+          <tr><td><code>-d, --display</code></td><td>Display values on screen</td></tr>
+          <tr><td><code>-s, --service</code></td><td>Run as a service; sleep interval set in <code>config.py</code></td></tr>
+          <tr><td><code>-v, --version</code></td><td>Display installed version and exit</td></tr>
+          <tr><td><code>-u, --update</code></td><td>Update script and config then exit</td></tr>
+          <tr><td><code>-w, --hass_wake</code></td><td>Display Home Assistant wake-on-LAN configuration</td></tr>
+          <tr><td><code>--uninstall</code></td><td>Uninstall rpi-mqtt-monitor and remove all related files</td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog · Raspberry Pi MQTT Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html">Home</a>
+        <a href="monitoring.html">What Gets Monitored</a>
+        <a href="installation.html">Installation</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="configuration.html">Configuration</a>
+        <a href="home-assistant.html">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html" class="active">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <h1>Changelog</h1>
+
+      <h2>v1.3.0 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-12)</span></h2>
+      <p>A feature-packed release focused on <strong>display control</strong>, <strong>secure/flexible
+        MQTT connectivity</strong>, <strong>Intel GPU monitoring</strong>, and a substantially
+        improved installer &amp; on-screen display.</p>
+
+      <h3>✨ New Features</h3>
+
+      <h4>Display / monitor on-off control</h4>
+      <ul>
+        <li>Turn attached displays <strong>on/off from Home Assistant</strong> via new
+          <code>Monitor On</code> / <code>Monitor Off</code> buttons.</li>
+        <li>Auto-detecting backend that works across environments: <strong>X11</strong>
+          (<code>xset</code> DPMS), <strong>wlroots Wayland</strong> (<code>wlr-randr</code>),
+          <strong>Raspberry Pi</strong> (<code>vcgencmd</code>), and
+          <strong>GNOME / generic Wayland</strong> (<code>ddcutil</code> over DDC/CI).</li>
+        <li>Optional <code>display_on_command</code> / <code>display_off_command</code> config
+          overrides for custom setups.</li>
+        <li>Installer now <strong>detects your display backend and offers to install the required
+          tool and permissions</strong> (including <code>ddcutil</code> + <code>i2c-dev</code> +
+          <code>i2c</code> group setup).</li>
+      </ul>
+
+      <h4>MQTT over TLS/SSL</h4>
+      <ul>
+        <li>New <code>mqtt_tls</code> option to connect to brokers over <strong>SSL (port 8883)</strong>,
+          with <code>mqtt_tls_ca_certs</code> (self-signed CA) and <code>mqtt_tls_insecure</code> options.</li>
+        <li>Installer prompts for SSL and auto-suggests port <strong>8883</strong>.</li>
+      </ul>
+
+      <h4>MQTT over WebSockets</h4>
+      <ul>
+        <li>New <code>mqtt_websockets</code> + <code>mqtt_websocket_path</code> options to connect via
+          <strong>MQTT-over-WebSockets</strong> (<code>ws</code>/<code>wss</code>).</li>
+        <li>Installer prompts for WebSockets and path, with WebSocket-aware port defaults
+          (<strong>9001</strong> for ws, <strong>8084</strong> for wss).</li>
+      </ul>
+
+      <h4>Intel GPU monitoring</h4>
+      <ul>
+        <li>Four new sensors from <code>intel_gpu_top</code>: <strong>Render/3D busy %</strong>,
+          <strong>Video busy %</strong>, <strong>Frequency (MHz)</strong>, and <strong>Power (W)</strong>.</li>
+        <li>Installer can install <code>intel-gpu-tools</code> and enable the sensors on request.</li>
+        <li><em>Note:</em> requires running as the systemd service (root).</li>
+      </ul>
+
+      <h3>🛠 Improvements</h3>
+      <ul>
+        <li><strong>Reworked installer</strong> — new welcome screen, clearer prompts, better error
+          handling, and a smarter scheduling step that recommends the <strong>systemd service</strong>
+          when service-only features (display control, Intel GPU) are enabled.</li>
+        <li><strong>Improved on-screen display</strong> (<code>-d</code>) with refreshed UI, progress
+          bars, and an <strong>update-progress view</strong>.</li>
+        <li>Expanded and clarified <strong>README</strong> documentation.</li>
+      </ul>
+
+      <h3>🐛 Bug Fixes</h3>
+      <ul>
+        <li>Fixed <strong>restart and shutdown</strong> behavior on Ubuntu.</li>
+        <li><strong>Uninstaller</strong> now removes the symlink in <code>bin</code>.</li>
+        <li>Various smaller bug fixes across the installer and main script.</li>
+      </ul>
+
+      <h3>⚙️ New config keys</h3>
+      <p><code>display_control</code>, <code>display_on_command</code>, <code>display_off_command</code>,
+        <code>os_user</code>, <code>mqtt_tls</code>, <code>mqtt_tls_ca_certs</code>,
+        <code>mqtt_tls_insecure</code>, <code>mqtt_websockets</code>, <code>mqtt_websocket_path</code>,
+        <code>intel_gpu_render</code>, <code>intel_gpu_video</code>, <code>intel_gpu_freq</code>,
+        <code>intel_gpu_power</code></p>
+
+      <p style="color:var(--text-soft)"><strong>Full changelog:</strong>
+        <code>1.2.4..v1.3.0</code> (16 commits, 2026-03-26 → 2026-06-12)</p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raspberry Pi MQTT Monitor</title>
+  <meta name="description" content="Monitor your Raspberry Pi or Linux system health in Home Assistant via MQTT — up and running in minutes with zero manual HA configuration." />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html" class="active">Home</a>
+        <a href="monitoring.html">What Gets Monitored</a>
+        <a href="installation.html">Installation</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="configuration.html">Configuration</a>
+        <a href="home-assistant.html">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <section class="hero">
+        <figure>
+          <img src="images/rpi-mqtt-monitor-2-min.png" alt="Raspberry Pi MQTT Monitor" />
+        </figure>
+        <div class="badges">
+          <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases"><img src="https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor" alt="Latest release" /></a>
+          <a href="https://github.com/hjelev/rpi-mqtt-monitor/issues"><img src="https://img.shields.io/github/issues/hjelev/rpi-mqtt-monitor" alt="Issues" /></a>
+          <a href="https://github.com/hjelev/rpi-mqtt-monitor"><img src="https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor" alt="Top language" /></a>
+        </div>
+      </section>
+
+      <h1>Raspberry Pi MQTT Monitor</h1>
+      <p class="lead">The easiest way to monitor your Raspberry Pi or Linux system health in
+        <a href="https://www.home-assistant.io/" target="_blank" rel="noopener">Home Assistant</a>
+        — up and running in minutes with zero manual HA configuration.</p>
+
+      <div class="cta-row">
+        <a class="btn" href="installation.html">Get started →</a>
+        <a class="btn secondary" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+
+      <h2>Features</h2>
+      <ul class="feature-list">
+        <li><strong>Zero-config Home Assistant setup</strong> — MQTT discovery messages create devices and sensors automatically</li>
+        <li><strong>Remote control</strong> — restart, shutdown, and update your device from Home Assistant</li>
+        <li><strong>Flexible delivery</strong> — publish over MQTT or directly via the Home Assistant REST API</li>
+        <li><strong>Run as a service or cron job</strong> — auto-configured by the installer</li>
+        <li><strong>External sensor support</strong> — DS18B20 (temperature) and SHT21 (temperature + humidity)</li>
+        <li><strong>Sensor availability</strong> — sensors are marked unavailable in HA when readings fail</li>
+        <li><strong>Multi-language</strong> — English, German, French, and Bulgarian</li>
+        <li><strong>Easy updates</strong> — run <code>rpi-mqtt-monitor --update</code> or trigger from the Home Assistant UI</li>
+      </ul>
+
+      <h2>Explore the docs</h2>
+      <div class="cards">
+        <a class="card" href="monitoring.html"><h3>What Gets Monitored</h3><p>The full list of metrics and their config keys.</p></a>
+        <a class="card" href="installation.html"><h3>Installation</h3><p>One-line automated install, service or cron setup.</p></a>
+        <a class="card" href="cli.html"><h3>CLI Reference</h3><p>Every command-line flag explained.</p></a>
+        <a class="card" href="configuration.html"><h3>Configuration</h3><p>All <code>config.py</code> settings and display backends.</p></a>
+        <a class="card" href="home-assistant.html"><h3>Home Assistant</h3><p>Discovery, REST API, Wake-on-LAN and dashboards.</p></a>
+        <a class="card" href="external-sensors.html"><h3>External Sensors</h3><p>Wire up DS18B20 and SHT21 sensors.</p></a>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>

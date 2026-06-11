@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration · Raspberry Pi MQTT Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html">Home</a>
+        <a href="monitoring.html">What Gets Monitored</a>
+        <a href="installation.html">Installation</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="configuration.html" class="active">Configuration</a>
+        <a href="home-assistant.html">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <h1>Configuration</h1>
+      <p>All options live in <code>src/config.py</code>. Key settings:</p>
+
+      <table>
+        <thead><tr><th>Setting</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>mqtt_host</code></td><td>MQTT broker address</td></tr>
+          <tr><td><code>mqtt_user</code> / <code>mqtt_password</code></td><td>MQTT credentials</td></tr>
+          <tr><td><code>mqtt_port</code></td><td>MQTT port (default <code>1883</code>, <code>8883</code> for TLS)</td></tr>
+          <tr><td><code>mqtt_tls</code></td><td>Enable TLS/SSL for the MQTT connection</td></tr>
+          <tr><td><code>mqtt_tls_ca_certs</code> / <code>mqtt_tls_insecure</code></td><td>Optional CA file for a self-signed broker cert, or skip cert verification</td></tr>
+          <tr><td><code>mqtt_websockets</code> / <code>mqtt_websocket_path</code></td><td>Connect over MQTT-over-WebSockets (ports ~9001/8084) and its URL path</td></tr>
+          <tr><td><code>mqtt_discovery_prefix</code></td><td>HA discovery prefix (default <code>homeassistant</code>)</td></tr>
+          <tr><td><code>mqtt_topic_prefix</code></td><td>Topic prefix (default <code>rpi-MQTT-monitor</code>)</td></tr>
+          <tr><td><code>mqtt_uns_structure</code></td><td>Optional UNS prefix prepended to all topics</td></tr>
+          <tr><td><code>discovery_messages</code></td><td>Publish HA auto-discovery config messages</td></tr>
+          <tr><td><code>service_sleep_time</code></td><td>Seconds between readings when running as a service</td></tr>
+          <tr><td><code>update_check_interval</code></td><td>Seconds between update checks (default <code>3600</code>)</td></tr>
+          <tr><td><code>use_availability</code></td><td>Mark sensors unavailable in HA on read failure</td></tr>
+          <tr><td><code>retain</code></td><td>Set MQTT retain flag on published messages</td></tr>
+          <tr><td><code>qos</code></td><td>MQTT QoS level (<code>0</code>, <code>1</code>, or <code>2</code>)</td></tr>
+          <tr><td><code>language</code></td><td>UI language: <code>en</code>, <code>de</code>, <code>fr</code>, <code>bg</code></td></tr>
+          <tr><td><code>ha_device_name</code></td><td>Override hostname as the HA device name</td></tr>
+          <tr><td><code>hass_host</code> / <code>hass_token</code></td><td>Home Assistant API URL and long-lived token</td></tr>
+          <tr><td><code>restart_button</code></td><td>Add a restart button to HA</td></tr>
+          <tr><td><code>shutdown_button</code></td><td>Add a shutdown button to HA</td></tr>
+          <tr><td><code>display_control</code></td><td>Add display on/off buttons to HA (auto-detects backend: see below)</td></tr>
+          <tr><td><code>display_on_command</code> / <code>display_off_command</code></td><td>Optional custom commands for display control (override auto-detection)</td></tr>
+          <tr><td><code>group_messages</code></td><td>Send all values as a single CSV message (disables discovery)</td></tr>
+        </tbody>
+      </table>
+
+      <p>Full configuration reference:
+        <a href="https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration" target="_blank" rel="noopener">Configuration wiki</a>.</p>
+
+      <h2>Display control backends</h2>
+      <p>With <code>display_control = True</code>, the monitor on/off buttons auto-detect a working
+        backend for the current environment:</p>
+
+      <table>
+        <thead><tr><th>Environment</th><th>Backend used</th></tr></thead>
+        <tbody>
+          <tr><td>X11 desktop</td><td><code>xset dpms force on/off</code></td></tr>
+          <tr><td>wlroots Wayland (Pi labwc/wayfire, sway)</td><td><code>wlr-randr --output &lt;out&gt; --on/--off</code></td></tr>
+          <tr><td>Raspberry Pi</td><td><code>vcgencmd display_power 1/0</code></td></tr>
+          <tr><td>GNOME / generic Wayland</td><td><code>ddcutil</code> (DDC/CI, hardware level)</td></tr>
+        </tbody>
+      </table>
+
+      <p>GNOME and most non-wlroots Wayland compositors expose no CLI to force monitors off, so
+        external monitors are controlled over <strong>DDC/CI</strong> with <code>ddcutil</code>. When
+        you enable display control during <code>install.sh</code>, the installer detects your backend
+        and offers to perform this setup for you. To do it manually:</p>
+
+      <pre><code>sudo apt install ddcutil
+echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf
+sudo modprobe i2c-dev
+sudo usermod -aG i2c $USER     # the service runs as this user; re-login or restart the service afterwards
+ddcutil detect                 # confirm your monitor(s) are listed</code></pre>
+
+      <p>Each monitor must have <strong>DDC/CI enabled in its on-screen (OSD) menu</strong> — some
+        ship with it off.</p>
+
+      <p>If none of the above fits your setup, set <code>display_on_command</code> /
+        <code>display_off_command</code> in <code>config.py</code> to any custom command, which always
+        takes precedence over auto-detection.</p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>

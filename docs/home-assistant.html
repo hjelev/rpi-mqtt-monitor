@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home Assistant Integration · Raspberry Pi MQTT Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="assets/nav.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <button class="hamburger" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="index.html"><span class="dot">●</span> Raspberry Pi MQTT Monitor</a>
+    <span class="spacer"></span>
+    <a class="gh" href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-title">Documentation</div>
+        <a href="index.html">Home</a>
+        <a href="monitoring.html">What Gets Monitored</a>
+        <a href="installation.html">Installation</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="configuration.html">Configuration</a>
+        <a href="home-assistant.html" class="active">Home Assistant</a>
+        <a href="external-sensors.html">External Sensors</a>
+        <a href="changelog.html">Changelog</a>
+      </nav>
+    </aside>
+    <div class="backdrop"></div>
+
+    <main class="content">
+      <h1>Home Assistant Integration</h1>
+      <p>When <code>discovery_messages = True</code> (the default), a new MQTT device is created in
+        Home Assistant automatically — no <code>configuration.yaml</code> edits required. Just add it
+        to a dashboard.</p>
+
+      <h2>Home Assistant API</h2>
+      <p>To bypass MQTT and push directly to the HA REST API, use the <code>--hass_api</code> flag and
+        configure <code>hass_host</code> and <code>hass_token</code> in <code>config.py</code>.</p>
+
+      <h2>Wake on LAN</h2>
+      <p>Run <code>rpi-mqtt-monitor --hass_wake</code> to print the YAML snippet for a Home Assistant
+        Wake-on-LAN switch preconfigured with your device's MAC address and IP.</p>
+
+      <h2>Home Assistant Dashboard</h2>
+      <figure>
+        <img src="images/rpi-cpu2mqtt-hass.jpg" alt="Home Assistant dashboard" />
+      </figure>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    Raspberry Pi MQTT Monitor ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://github.com/hjelev/rpi-mqtt-monitor/releases" target="_blank" rel="noopener">Releases</a>
+  </footer>
+</body>
+</html>
