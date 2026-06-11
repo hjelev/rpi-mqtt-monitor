@@ -1182,12 +1182,18 @@ def on_message(client, userdata, msg):
 
         update_thread = threading.Thread(target=update_and_exit)
         update_thread.start()
-    elif command == "restart":
-        print("Restarting the system...")
-        os.system("sudo reboot")
-    elif command == "shutdown":
-        print("Shutting down the system...")
-        os.system("sudo shutdown now")
+    elif command in ("restart", "shutdown"):
+        # systemctl reboot/poweroff honor logind "block" inhibitors (GNOME always holds
+        # a session shutdown lock on Ubuntu Desktop), so plain `reboot`/`shutdown` are
+        # silently refused with "Operation denied due to active block inhibitor".
+        # -i / --ignore-inhibitors bypasses them; root is allowed to do this.
+        action = "reboot" if command == "restart" else "poweroff"
+        print("Restarting the system..." if command == "restart" else "Shutting down the system...")
+        result = subprocess.run(["sudo", "systemctl", action, "-i"],
+                                capture_output=True, text=True)
+        if result.returncode != 0:
+            print("System {} failed (rc={}): {}".format(
+                action, result.returncode, result.stderr.strip()))
     elif command == "display_off":
         print("Turn off display")
         os.system('su -l {} -c "xset -display :0 dpms force off"'.format(config.os_user))
