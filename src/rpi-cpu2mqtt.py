@@ -1349,9 +1349,11 @@ def set_display_power(turn_on):
         print("display {}: vcgencmd".format(state))
         return
 
-    # 2d. GNOME / generic Wayland -> ddcutil DDC/CI (d6 = power mode: 01 on, 05 off)
+    # 2d. GNOME / generic Wayland -> ddcutil DDC/CI (d6 = power mode: 01 on,
+    #     04 off -- DPM Off keeps the DDC bus alive so we can power back on;
+    #     05/hard-off can leave the monitor unreachable until a physical button press)
     if shutil.which("ddcutil"):
-        val = "01" if turn_on else "05"
+        val = "01" if turn_on else "04"
         for disp in _ddcutil_displays():
             os.system("ddcutil --display {} setvcp d6 {}".format(disp, val))
         print("display {}: ddcutil DDC/CI".format(state))
