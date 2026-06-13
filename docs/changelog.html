@@ -35,6 +35,40 @@
     <main class="content">
       <h1>Changelog</h1>
 
+      <h2>v1.3.4 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-14)</span></h2>
+
+      <h3>✨ New Features</h3>
+
+      <h4>IP address sensors</h4>
+      <ul>
+        <li>New opt-in sensors expose the device's network addresses: <strong>Local IPv4</strong>,
+          <strong>Local IPv6</strong>, <strong>External IPv4</strong>, and <strong>External IPv6</strong>.</li>
+        <li>Local addresses are detected via a UDP socket (no traffic sent); external addresses are
+          resolved through an outbound HTTPS call to <code>api.ipify.org</code> / <code>api6.ipify.org</code>.</li>
+        <li>All four are <strong>disabled by default</strong>; the installer now prompts to enable the
+          local and/or external IP sensors.</li>
+      </ul>
+
+      <h4>SSD health monitoring</h4>
+      <ul>
+        <li>New per-drive <strong>SSD health</strong> sensors gathered from <code>smartctl</code>
+          (<code>smartmontools</code>): <strong>SMART overall status</strong>,
+          <strong>wear / life used (%)</strong>, <strong>power-on hours</strong>, and
+          <strong>data written (TB)</strong>.</li>
+        <li>Works with both <strong>NVMe</strong> and <strong>SATA SSDs</strong> — NVMe values come from
+          the uniform SMART health log; SATA wear and data-written are best-effort from the vendor
+          attribute table.</li>
+        <li>Installer <strong>autodetects non-rotating drives</strong> and prompts to install
+          <code>smartmontools</code> and enable the sensors.</li>
+        <li><code>smartctl</code> needs root: the installer also adds a passwordless
+          <code>sudoers</code> drop-in so the sensors populate under <strong>cron</strong> as well as
+          the systemd service.</li>
+      </ul>
+
+      <h3>⚙️ New config keys</h3>
+      <p><code>local_ipv4</code>, <code>local_ipv6</code>, <code>external_ipv4</code>,
+        <code>external_ipv6</code>, <code>ssd_health</code></p>
+
       <h2>v1.3.3 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-13)</span></h2>
 
       <h3>✨ New Features</h3>
@@ -56,22 +90,6 @@
           matching sensors, installing only what each vendor needs.</li>
       </ul>
 
-      <h4>SSD health monitoring</h4>
-      <ul>
-        <li>New per-drive <strong>SSD health</strong> sensors gathered from <code>smartctl</code>
-          (<code>smartmontools</code>): <strong>SMART overall status</strong>,
-          <strong>wear / life used (%)</strong>, <strong>power-on hours</strong>, and
-          <strong>data written (TB)</strong>.</li>
-        <li>Works with both <strong>NVMe</strong> and <strong>SATA SSDs</strong> — NVMe values come from
-          the uniform SMART health log; SATA wear and data-written are best-effort from the vendor
-          attribute table.</li>
-        <li>Installer <strong>autodetects non-rotating drives</strong> and prompts to install
-          <code>smartmontools</code> and enable the sensors.</li>
-        <li><code>smartctl</code> needs root: the installer also adds a passwordless
-          <code>sudoers</code> drop-in so the sensors populate under <strong>cron</strong> as well as
-          the systemd service.</li>
-      </ul>
-
       <h3>🛠 Improvements</h3>
       <ul>
         <li><strong>Intel GPU sensor</strong> now works with older <code>intel-gpu-tools</code> builds
@@ -90,7 +108,7 @@
       <p><code>nvidia_gpu_util</code>, <code>nvidia_gpu_mem</code>, <code>nvidia_gpu_freq</code>,
         <code>nvidia_gpu_power</code>, <code>nvidia_gpu_temp</code>, <code>amd_gpu_util</code>,
         <code>amd_gpu_mem</code>, <code>amd_gpu_freq</code>, <code>amd_gpu_power</code>,
-        <code>amd_gpu_temp</code>, <code>ssd_health</code></p>
+        <code>amd_gpu_temp</code></p>
 
       <h2>v1.3.2 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-13)</span></h2>
 

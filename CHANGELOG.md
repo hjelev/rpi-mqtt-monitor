@@ -12,8 +12,18 @@
 - All four are **disabled by default**; the installer now prompts to enable the local and/or
   external IP sensors.
 
+#### SSD health monitoring
+- New per-drive **SSD health** sensors gathered from `smartctl` (`smartmontools`): **SMART overall
+  status**, **wear / life used (%)**, **power-on hours**, and **data written (TB)**.
+- Works with both **NVMe** and **SATA SSDs** — NVMe values come from the uniform SMART health log;
+  SATA wear and data-written are best-effort from the vendor attribute table.
+- Installer **autodetects non-rotating drives** and prompts to install `smartmontools` and enable
+  the sensors.
+- `smartctl` needs root: the installer also adds a passwordless `sudoers` drop-in so the sensors
+  populate under **cron** as well as the systemd service.
+
 ### ⚙️ New config keys
-`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`
+`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`, `ssd_health`
 
 ## v1.3.3 (2026-06-13)
 
