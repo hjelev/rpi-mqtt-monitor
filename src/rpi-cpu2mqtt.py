@@ -1106,37 +1106,62 @@ def parse_arguments():
     return args
 
 
+def _parse_intel_gpu_json(out):
+    """Parse intel_gpu_top -J output into the most recent sample dict, or None."""
+    out = (out or "").strip()
+    if not out:
+        return None
+    try:
+        data = json.loads(out)
+    except json.JSONDecodeError:
+        # -J streams concatenated objects / an unterminated array when interrupted.
+        # Extract the LAST complete top-level {...} object (most recent sample).
+        last, depth, start = None, 0, None
+        for i, ch in enumerate(out):
+            if ch == '{':
+                if depth == 0:
+                    start = i
+                depth += 1
+            elif ch == '}':
+                depth -= 1
+                if depth == 0 and start is not None:
+                    last = out[start:i + 1]
+        if last is None:
+            return None
+        try:
+            data = json.loads(last)
+        except json.JSONDecodeError:
+            return None
+    if isinstance(data, list):
+        data = data[-1] if data else {}
+    return data if isinstance(data, dict) else None
+
+
 def get_intel_gpu_stats():
-    """Run intel_gpu_top once and return its parsed JSON sample, or None on failure.
-    Needs root: works when running as the systemd service; under cron `sudo -n` fails
-    fast (non-interactive) so the cycle is not blocked waiting for a password."""
+    """Return intel_gpu_top's latest JSON sample, or None on failure.
+    Needs root: works under the systemd service; under cron `sudo -n` fails fast
+    (non-interactive) so the cycle is not blocked waiting for a password.
+
+    Fast path uses `-n 1` (print one sample and exit). Older intel-gpu-tools lack
+    `-n`; for those, fall back to running without it, bounding the run with the
+    `timeout` command (SIGINT, like Ctrl-C) and parsing the streamed sample."""
+    # Fast path: modern intel_gpu_top prints one sample and exits immediately.
     try:
         out = subprocess.run(
             ["sudo", "-n", "intel_gpu_top", "-s", "0", "-n", "1", "-J"],
-            capture_output=True, text=True, timeout=10).stdout.strip()
-        if not out:
-            return None
-        try:
-            data = json.loads(out)
-        except json.JSONDecodeError:
-            # intel_gpu_top -J may emit concatenated/array samples; take the first
-            # balanced {...} object.
-            depth = 0
-            start = None
-            for i, ch in enumerate(out):
-                if ch == '{':
-                    if depth == 0:
-                        start = i
-                    depth += 1
-                elif ch == '}':
-                    depth -= 1
-                    if depth == 0 and start is not None:
-                        out = out[start:i + 1]
-                        break
-            data = json.loads(out)
-        if isinstance(data, list):
-            data = data[-1] if data else {}
-        return data
+            capture_output=True, text=True, timeout=10).stdout
+        data = _parse_intel_gpu_json(out)
+        if data:
+            return data
+    except Exception:
+        pass
+    # Fallback for older versions without `-n`: run its loop and stop via `timeout`.
+    try:
+        out = subprocess.run(
+            ["sudo", "-n", "timeout", "--signal=INT", "2",
+             "intel_gpu_top", "-s", "500", "-J"],
+            capture_output=True, text=True, timeout=10).stdout
+        return _parse_intel_gpu_json(out)
     except Exception:
         return None
 
