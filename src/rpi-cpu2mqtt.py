@@ -9,6 +9,7 @@ from datetime import datetime
 import socket
 import paho.mqtt.client as paho
 import json
+import math
 import os
 import sys
 import shutil
@@ -68,11 +69,15 @@ def _slugify(text):
 def check_used_space(path):
     try:
         st = os.statvfs(path)
-        free_space = st.f_bavail * st.f_frsize
-        total_space = st.f_blocks * st.f_frsize
-        if total_space == 0:
+        total = st.f_blocks * st.f_frsize          # total size
+        free = st.f_bfree * st.f_frsize            # truly free blocks
+        avail = st.f_bavail * st.f_frsize          # available to unprivileged users
+        used = total - free
+        denominator = used + avail
+        if denominator == 0:
             return None if config.use_availability else 0
-        return int(100 - ((free_space / total_space) * 100))
+        # Match df's Use%: used / (used + avail), excluding root-reserved blocks, rounded up
+        return math.ceil(used / denominator * 100)
     except Exception:
         return None if config.use_availability else 0
 
