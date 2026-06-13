@@ -413,6 +413,89 @@ def check_all_drive_temps():
     return drive_temps
 
 
+def _list_ssd_devices():
+    """Return [(device_path, friendly_name), ...] for non-rotational disks
+    (NVMe and SATA SSDs). Rotational HDDs and virtual loop/ram devices are skipped."""
+    devices = []
+    for block in sorted(glob.glob('/sys/block/*')):
+        name = os.path.basename(block)
+        if name.startswith('loop') or name.startswith('ram') or name.startswith('zram'):
+            continue
+        try:
+            with open(os.path.join(block, 'queue/rotational'), 'r') as f:
+                if f.read().strip() != '0':
+                    continue
+        except Exception:
+            continue
+        devices.append(("/dev/" + name, name))
+    return devices
+
+
+def get_smartctl_data(device_path):
+    """Run smartctl and return the parsed JSON dict, or None on failure.
+    smartctl sets low exit-code bits when SMART flags trip but still emits valid
+    JSON, so the return code is ignored and only stdout is parsed."""
+    try:
+        out = subprocess.run(
+            ["sudo", "-n", "smartctl", "-j", "-H", "-A", "-i", device_path],
+            capture_output=True, text=True, timeout=15).stdout
+        return json.loads(out)
+    except Exception as e:
+        print(f"Error reading smartctl data for {device_path}: {e}")
+        return None
+
+
+def _extract_ssd_metrics(data):
+    """Pull health, wear (% life used), power-on hours and data written (TB) from
+    a smartctl JSON dict. NVMe values come from the uniform health log; SATA values
+    are best-effort from the vendor attribute table. Missing metrics are omitted."""
+    metrics = {}
+    status = data.get("smart_status", {})
+    if "passed" in status:
+        metrics["health"] = "PASSED" if status["passed"] else "FAILED"
+
+    nvme_log = data.get("nvme_smart_health_information_log")
+    if nvme_log:
+        if nvme_log.get("percentage_used") is not None:
+            metrics["wear"] = nvme_log["percentage_used"]
+        if nvme_log.get("power_on_hours") is not None:
+            metrics["power_on_hours"] = nvme_log["power_on_hours"]
+        units = nvme_log.get("data_units_written")
+        if units is not None:
+            # each NVMe data unit = 1000 * 512 bytes; truncate (not round) to 2
+            # decimals to match smartctl's own "[x.xx TB]" display
+            metrics["data_written"] = int(units * 512000 / 1e10) / 100
+    else:
+        attrs = {a.get("id"): a for a in data.get("ata_smart_attributes", {}).get("table", [])}
+        poh = attrs.get(9, {}).get("raw", {}).get("value")
+        if poh is not None:
+            metrics["power_on_hours"] = poh
+        # normalized 'value' = % life remaining (100 = new); wear = 100 - remaining
+        for wid in (231, 233, 177, 202):
+            remaining = attrs.get(wid, {}).get("value")
+            if remaining is not None:
+                metrics["wear"] = 100 - remaining
+                break
+        lbas = attrs.get(241, {}).get("raw", {}).get("value")
+        if lbas is not None:
+            metrics["data_written"] = int(lbas * 512 / 1e10) / 100
+    return metrics
+
+
+def check_all_ssd_health():
+    """Return {friendly_name: {metric: value, ...}, ...} for every SSD, gathered
+    from smartctl. Drives that return no usable data are skipped."""
+    ssd_health = {}
+    for device_path, name in _list_ssd_devices():
+        data = get_smartctl_data(device_path)
+        if not data:
+            continue
+        metrics = _extract_ssd_metrics(data)
+        if metrics:
+            ssd_health[name] = metrics
+    return ssd_health
+
+
 def print_measured_values(monitored_values):
     import re as _re
 
@@ -722,6 +805,14 @@ def handle_specific_configurations(data, what_config, device):
         data["payload_press"] = "display_off"
     elif what_config == device + "_temp":
         add_common_attributes(data, "hass:thermometer", device + " " + get_translation("temperature"), "°C", "temperature", "measurement")
+    elif what_config == device + "_ssd_health":
+        add_common_attributes(data, "mdi:harddisk", device + " SSD Health")
+    elif what_config == device + "_ssd_wear":
+        add_common_attributes(data, "mdi:gauge", device + " SSD Wear", "%", None, "measurement")
+    elif what_config == device + "_ssd_power_on_hours":
+        add_common_attributes(data, "mdi:timer-outline", device + " SSD Power-On Hours", "h", "duration", "total_increasing")
+    elif what_config == device + "_ssd_data_written":
+        add_common_attributes(data, "mdi:database-arrow-up", device + " SSD Data Written", "TB", None, "total_increasing")
     elif what_config == "rpi_power_status":
         add_common_attributes(data, "mdi:flash", get_translation("rpi_power_status"))
     elif what_config == "apt_updates":
@@ -918,6 +1009,13 @@ def publish_to_hass_api(monitored_values):
                     state = temp
                     attributes = config_json(device + "_temp", device, True)
                     send_sensor_data_to_home_assistant(entity_id, state, attributes)
+            elif param == 'ssd_health' and isinstance(value, dict):
+                for device, metrics in value.items():
+                    for metric, mval in metrics.items():
+                        key = device + "_ssd_" + metric
+                        entity_id = f"sensor.{hostname.replace('-','_')}_{key}"
+                        attributes = config_json(key, device, True)
+                        send_sensor_data_to_home_assistant(entity_id, mval, attributes)
             elif param == 'used_space_paths' and isinstance(value, dict):
                 for name, used in value.items():
                     entity_id = f"sensor.{hostname.replace('-','_')}_used_space_{name}"
@@ -954,7 +1052,7 @@ def publish_to_mqtt(monitored_values):
     if client is None:
         return
 
-    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ext_sensors', 'used_space_paths']
+    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ssd_health', 'ext_sensors', 'used_space_paths']
   # Publish standard monitored values
     for key, value in monitored_values.items():
         if key not in non_standard_values and key in config.__dict__ and config.__dict__[key]:
@@ -1000,6 +1098,19 @@ def publish_to_mqtt(monitored_values):
             if config.use_availability:
                 client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{device}_temp_availability", 'offline' if temp is None else 'online', qos=config.qos)
             client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + device + "_temp", temp, qos=config.qos, retain=config.retain)
+
+    if getattr(config, "ssd_health", False) and "ssd_health" in monitored_values:
+        for device, metrics in monitored_values["ssd_health"].items():
+            for metric, value in metrics.items():
+                key = device + "_ssd_" + metric
+                if config.discovery_messages:
+                    client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_{key}/config",
+                                   config_json(key, device), qos=config.qos)
+                if config.use_availability:
+                    client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}_availability",
+                                   'offline' if value is None else 'online', qos=config.qos)
+                client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}",
+                               value, qos=config.qos, retain=config.retain)
 
     if config.ext_sensors:
         # we loop through all sensors
@@ -1358,6 +1469,8 @@ def collect_monitored_values():
         monitored_values["rpi5_fan_speed"] = check_rpi5_fan_speed()
     if config.drive_temps:
         monitored_values["drive_temps"] = check_all_drive_temps()
+    if getattr(config, "ssd_health", False):
+        monitored_values["ssd_health"] = check_all_ssd_health()
     if config.rpi_power_status:
         monitored_values["rpi_power_status"] = check_rpi_power_status()
     if config.ext_sensors:

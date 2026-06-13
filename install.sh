@@ -306,6 +306,52 @@ configure_gpu() {
     fi
 }
 
+configure_storage() {
+    # Detect non-rotational disks (NVMe and SATA SSDs); skip virtual devices.
+    local ssds="" name
+    for block in /sys/block/*; do
+        name=$(basename "$block")
+        case "$name" in loop*|ram*|zram*) continue ;; esac
+        [ -r "$block/queue/rotational" ] || continue
+        if [ "$(cat "$block/queue/rotational")" = "0" ]; then
+            ssds="${ssds:+$ssds }$name"
+        fi
+    done
+
+    [ -z "$ssds" ] && return
+
+    print_green "SSD(s) detected: $ssds"
+    ask "Enable SSD health monitoring (installs smartmontools)? [y/N] "
+    read yn
+    printf "\n"
+    [[ "$yn" =~ ^([yY][eE][sS]|[yY])$ ]] || return
+
+    if ! command -v smartctl >/dev/null 2>&1; then
+        print_info "Installing smartmontools..."
+        sudo apt-get update && sudo apt-get install -y smartmontools
+    fi
+
+    sed -i "s/ssd_health = False/ssd_health = True/" src/config.py
+
+    # smartctl needs root; add a passwordless sudoers entry so cron mode also works.
+    local smartctl_path sudoers_file="/etc/sudoers.d/rpi-mqtt-monitor-smartctl"
+    smartctl_path=$(command -v smartctl)
+    if [ -n "$smartctl_path" ]; then
+        echo "${user} ALL=(root) NOPASSWD: ${smartctl_path}" | sudo tee "$sudoers_file" >/dev/null
+        sudo chmod 0440 "$sudoers_file"
+        if sudo visudo -cf "$sudoers_file" >/dev/null 2>&1; then
+            print_green "Passwordless sudoers entry for smartctl added"
+        else
+            sudo rm -f "$sudoers_file"
+            print_yellow "Could not validate sudoers entry — removed it. smartctl will only work in service mode."
+        fi
+    fi
+
+    service_recommended=1
+    print_green "SSD health monitoring enabled"
+    print_yellow "smartctl needs root — run as the systemd service, or rely on the sudoers entry just added for cron mode."
+}
+
 hass_api_configuration() {
     printm "Home Assistant API Settings"
 
@@ -355,6 +401,7 @@ update_config() {
     esac
 
     configure_gpu
+    configure_storage
 
     print_green "config.py updated with provided settings"
 

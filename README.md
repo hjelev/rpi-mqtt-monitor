@@ -44,6 +44,10 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 | RPi 5 fan speed | `rpi5_fan_speed` | disabled |
 | RPi power/throttle status | `rpi_power_status` | disabled |
 | HDD/SSD temperature | `drive_temps` | disabled |
+| SSD SMART status | `ssd_health` | disabled |
+| SSD wear / life used (%) | `ssd_health` | disabled |
+| SSD power-on hours | `ssd_health` | disabled |
+| SSD data written (TB) | `ssd_health` | disabled |
 | APT updates available | `apt_updates` | disabled |
 | Intel GPU render busy (%) | `intel_gpu_render` | disabled |
 | Intel GPU video busy (%) | `intel_gpu_video` | disabled |
@@ -66,6 +70,8 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 > - **Intel** uses `intel-gpu-tools` (`intel_gpu_top`); it requires root, so values only populate when running as the systemd service.
 > - **NVIDIA** uses the native `pynvml` library (`nvidia-ml-py`) and the NVIDIA driver — no root required.
 > - **AMD** reads `sysfs` (`/sys/class/drm`, in-kernel `amdgpu` driver) with no extra tools — no root required.
+
+> **SSD health.** The installer autodetects non-rotating drives (NVMe and SATA SSDs) and offers to install `smartmontools` and enable the `ssd_health` sensors. `smartctl` needs root, so values populate when running as the systemd service, or in cron mode via the passwordless sudoers entry the installer adds for `smartctl`. NVMe metrics come from the uniform SMART health log; SATA wear and data-written are read from the vendor attribute table and are best-effort (they vary by manufacturer).
 
 ## Table of Contents
 

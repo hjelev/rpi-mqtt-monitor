@@ -111,6 +111,11 @@ net_io = True
 # Check storage devices temperatures - experimental feature, disabled by default
 drive_temps = False
 
+# SSD health via smartctl (needs smartmontools; enable through install.sh).
+# Requires root — values populate when run as the systemd service, or in cron
+# mode via the sudoers drop-in the installer adds. NVMe and SATA SSDs supported.
+ssd_health = False
+
 # Enable wifi_signal for unit of measuring % or wifi_signal_dbm for unit of meaning dBm
 wifi_signal = False
 wifi_signal_dbm = False
