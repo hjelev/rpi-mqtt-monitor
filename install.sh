@@ -306,6 +306,26 @@ configure_gpu() {
     fi
 }
 
+configure_ip_sensors() {
+    ask "Enable local IP address sensors (IPv4/IPv6)? [y/N] "
+    read yn
+    printf "\n"
+    if [[ "$yn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        sed -i "s/local_ipv4 = False/local_ipv4 = True/" src/config.py
+        sed -i "s/local_ipv6 = False/local_ipv6 = True/" src/config.py
+        print_green "Local IP sensors enabled"
+    fi
+
+    ask "Enable external (public) IP sensors via api.ipify.org? [y/N] "
+    read yn
+    printf "\n"
+    if [[ "$yn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        sed -i "s/external_ipv4 = False/external_ipv4 = True/" src/config.py
+        sed -i "s/external_ipv6 = False/external_ipv6 = True/" src/config.py
+        print_green "External IP sensors enabled"
+    fi
+}
+
 configure_storage() {
     # Detect non-rotational disks (NVMe and SATA SSDs); skip virtual devices.
     local ssds="" name
@@ -402,6 +422,7 @@ update_config() {
 
     configure_gpu
     configure_storage
+    configure_ip_sensors
 
     print_green "config.py updated with provided settings"
 
