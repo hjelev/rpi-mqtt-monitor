@@ -68,7 +68,8 @@ body {
   align-items: center;
   gap: 8px;
 }
-.site-header .brand .dot { color: var(--accent); }
+.site-header .brand .brand-logo { height: 28px; width: auto; display: block; }
+h1 .h1-logo { height: 1.4em; width: auto; vertical-align: -0.3em; margin-right: 0.35em; }
 .site-header .spacer { flex: 1; }
 .site-header a.gh {
   color: var(--text-soft);

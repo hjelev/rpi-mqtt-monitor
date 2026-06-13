@@ -1,4 +1,4 @@
-# Raspberry Pi MQTT Monitor
+# <img src="./images/logo_small.png" alt="" height="40" align="left" hspace="10" /> Raspberry Pi MQTT Monitor
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor/releases)
 [![GitHub repo size](https://img.shields.io/github/repo-size/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
