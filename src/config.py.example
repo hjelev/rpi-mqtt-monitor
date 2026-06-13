@@ -93,6 +93,13 @@ cpu_load = True
 cpu_temp = True
 used_space = True
 used_space_path = '/'
+# Monitor additional disk paths/drives, each as its own "used space" sensor.
+# 'name' is the friendly label (also used in the MQTT topic, slugified).
+# Add as many entries as needed. Uncomment and edit to enable.
+# used_space_paths = [
+#     {'name': 'Home', 'path': '/home'},
+#     {'name': 'Data', 'path': '/mnt/data'},
+# ]
 voltage = False
 sys_clock_speed = False
 swap = False

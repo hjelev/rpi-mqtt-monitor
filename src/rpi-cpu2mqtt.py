@@ -58,6 +58,13 @@ def check_wifi_signal(format):
     return wifi_signal
 
 
+def _slugify(text):
+    """Lowercase, keep [a-z0-9_], collapse the rest to single underscores. Used to
+    turn a user-supplied disk name into a topic-safe sensor key."""
+    s = re.sub(r'[^a-z0-9]+', '_', str(text).strip().lower()).strip('_')
+    return s or 'disk'
+
+
 def check_used_space(path):
     try:
         st = os.statvfs(path)
@@ -525,6 +532,11 @@ def print_measured_values(monitored_values):
         c, label = (YELLOW, f"available  {GRAY}({v}){R}") if v else (BGREEN, "up to date")
         lines.append(_row("Update", f"{BOLD}{c}{label}{R}"))
 
+    if "used_space_paths" in monitored_values:
+        for name, used in (monitored_values["used_space_paths"] or {}).items():
+            lines.append(_row(f"{name.replace('_',' ').title()} Disk",
+                              f"{_bar(used, warn=70, crit=90)}  {_cpct(used, '%', 70, 90)}"))
+
     if "drive_temps" in monitored_values:
         for device, temp in (monitored_values["drive_temps"] or {}).items():
             lines.append(_row(f"{device.capitalize()} Temp", _ctemp(f"{temp:.1f}")))
@@ -624,6 +636,10 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "hass:thermometer", get_translation("cpu_temperature"), "°C", "temperature", "measurement")
     elif what_config == "used_space":
         add_common_attributes(data, "mdi:harddisk", get_translation("disk_usage"), "%", None, "measurement")
+    elif what_config.startswith("used_space_"):
+        add_common_attributes(data, "mdi:harddisk",
+                              device.replace('_', ' ').title() + " " + get_translation("disk_usage"),
+                              "%", None, "measurement")
     elif what_config == "voltage":
         add_common_attributes(data, "mdi:flash", get_translation("cpu_voltage"), "V", "voltage", "measurement")
     elif what_config == "swap":
@@ -862,6 +878,11 @@ def publish_to_hass_api(monitored_values):
                     state = temp
                     attributes = config_json(device + "_temp", device, True)
                     send_sensor_data_to_home_assistant(entity_id, state, attributes)
+            elif param == 'used_space_paths' and isinstance(value, dict):
+                for name, used in value.items():
+                    entity_id = f"sensor.{hostname.replace('-','_')}_used_space_{name}"
+                    attributes = config_json("used_space_" + name, name, True)
+                    send_sensor_data_to_home_assistant(entity_id, used, attributes)
             else:
                 entity_id = f"sensor.{hostname.replace('-','_')}_{param}"
                 state = value
@@ -893,7 +914,7 @@ def publish_to_mqtt(monitored_values):
     if client is None:
         return
 
-    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ext_sensors']
+    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ext_sensors', 'used_space_paths']
   # Publish standard monitored values
     for key, value in monitored_values.items():
         if key not in non_standard_values and key in config.__dict__ and config.__dict__[key]:
@@ -919,6 +940,18 @@ def publish_to_mqtt(monitored_values):
                            config_json('display_on'), qos=config.qos)
             client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
                            config_json('display_off'), qos=config.qos)
+    if "used_space_paths" in monitored_values:
+        for name, value in monitored_values["used_space_paths"].items():
+            key = "used_space_" + name
+            if config.discovery_messages:
+                client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_{key}/config",
+                               config_json(key, name), qos=config.qos)
+            if config.use_availability:
+                client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}_availability",
+                               'offline' if value is None else 'online', qos=config.qos)
+            client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/{key}",
+                           value, qos=config.qos, retain=config.retain)
+
     if config.drive_temps:
         for device, temp in monitored_values['drive_temps'].items():
             if config.discovery_messages:
@@ -997,6 +1030,8 @@ def bulk_publish_to_mqtt(monitored_values):
         'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status', 'data_sent', 'data_received',
         'intel_gpu_render', 'intel_gpu_video', 'intel_gpu_freq', 'intel_gpu_power'
     ]]
+
+    values.extend(monitored_values.get('used_space_paths', {}).values())
 
     ext_sensors = monitored_values.get('ext_sensors', [])
     values.extend(sensor[3] for sensor in ext_sensors)
@@ -1140,6 +1175,12 @@ def collect_monitored_values():
         monitored_values["cpu_temp"] = check_cpu_temp()
     if config.used_space:
         monitored_values["used_space"] = check_used_space(config.used_space_path)
+    extra_space = {}
+    for entry in getattr(config, "used_space_paths", []) or []:
+        slug = _slugify(entry.get("name") or entry.get("path"))
+        extra_space[slug] = check_used_space(entry["path"])
+    if extra_space:
+        monitored_values["used_space_paths"] = extra_space
     if config.voltage:
         monitored_values["voltage"] = check_voltage()
     if config.sys_clock_speed:
