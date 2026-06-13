@@ -560,6 +560,7 @@ main() {
     _bline "your ${finish_message}."
     printf "${BCYAN}║${R}%62s${BCYAN}║${R}\n" ""
     _bline "Run  rpi-mqtt-monitor -h  to see all available options."
+    _bline "Run  rpi-mqtt-monitor --config  to change settings later."
     printf "${BCYAN}║${R}%62s${BCYAN}║${R}\n" ""
     printf "${BCYAN}╚${LINE_D}╝${R}\n\n"
 }

@@ -201,6 +201,7 @@ class ConfiguratorUI:
         self.selected = 0
         self.top = 0          # first visible row in the list viewport
         self.dirty = False
+        self.saved_any = False  # True once any save succeeds this session
         self.status = ''
 
     # ---- value helpers -------------------------------------------------
@@ -381,6 +382,7 @@ class ConfiguratorUI:
             for s in self.settings:
                 s.original_text = s.value_text
             self.dirty = False
+            self.saved_any = True
             self.status = "Saved to {}".format(self.config_path)
         except PermissionError:
             self.status = "Permission denied writing {} (try sudo)".format(
@@ -455,7 +457,20 @@ def run(config_path, example_path):
             s.value_text = current[s.key]
             s.original_text = s.value_text
 
-    curses.wrapper(lambda stdscr: ConfiguratorUI(stdscr, settings, config_path).loop())
+    ui_holder = {}
+
+    def _run(stdscr):
+        ui = ConfiguratorUI(stdscr, settings, config_path)
+        ui_holder['ui'] = ui
+        ui.loop()
+
+    curses.wrapper(_run)
+
+    ui = ui_holder.get('ui')
+    if ui is not None and ui.saved_any:
+        print("Settings saved. If running as a service, restart it for changes "
+              "to take effect:")
+        print("    sudo systemctl restart rpi-mqtt-monitor.service")
 
 
 if __name__ == '__main__':
