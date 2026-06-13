@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.3.3 (2026-06-13)
 
 ### ✨ New Features
 
@@ -16,9 +16,37 @@
 - Installer now **autodetects the GPU vendor** (`lspci` / `nvidia-smi` / `amdgpu`) and prompts
   to enable the matching sensors, installing only what each vendor needs.
 
+### 🛠 Improvements
+- **Intel GPU sensor** now works with older `intel-gpu-tools` builds that don't support the
+  `-m` flag.
+
+### 🐛 Bug Fixes
+- Fixed **on-screen display (`-d`) rendering**: the model name carried a trailing NUL byte on
+  Raspberry Pi (pulling the box border left) and a leading space on other platforms (shifting
+  the Model/Manufacturer rows one character right). Both values are now cleaned at the source,
+  which also tidies the MQTT payloads.
+
 ### ⚙️ New config keys
 `nvidia_gpu_util`, `nvidia_gpu_mem`, `nvidia_gpu_freq`, `nvidia_gpu_power`, `nvidia_gpu_temp`,
 `amd_gpu_util`, `amd_gpu_mem`, `amd_gpu_freq`, `amd_gpu_power`, `amd_gpu_temp`
+
+## v1.3.2 (2026-06-13)
+
+### ✨ New Features
+- **Track free space on multiple paths/drives** via the new `used_space_paths` option — each
+  entry (`{'name': ..., 'path': ...}`) becomes its own "used space" sensor.
+
+### 🛠 Improvements
+- Disk usage is now measured with **`df`**, improving support for multiple mounts.
+
+### ⚙️ New config keys
+`used_space_paths`
+
+## v1.3.1 (2026-06-12)
+
+### 🛠 Improvements
+- Improved **display / monitor on-off control**.
+- Published the **documentation site** under `docs/`.
 
 ## v1.3.0 (2026-06-12)
 

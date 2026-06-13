@@ -44,6 +44,7 @@
           <tr><td>CPU load</td><td><code>cpu_load</code></td><td>enabled</td></tr>
           <tr><td>CPU temperature</td><td><code>cpu_temp</code></td><td>enabled</td></tr>
           <tr><td>Used disk space</td><td><code>used_space</code></td><td>enabled</td></tr>
+          <tr><td>Used disk space on extra paths/drives</td><td><code>used_space_paths</code></td><td>disabled</td></tr>
           <tr><td>Memory usage</td><td><code>memory</code></td><td>enabled</td></tr>
           <tr><td>Uptime (timestamp)</td><td><code>uptime</code></td><td>enabled</td></tr>
           <tr><td>Uptime (seconds)</td><td><code>uptime_seconds</code></td><td>disabled</td></tr>
@@ -61,15 +62,32 @@
           <tr><td>Intel GPU video busy (%)</td><td><code>intel_gpu_video</code></td><td>disabled</td></tr>
           <tr><td>Intel GPU frequency (MHz)</td><td><code>intel_gpu_freq</code></td><td>disabled</td></tr>
           <tr><td>Intel GPU power (W)</td><td><code>intel_gpu_power</code></td><td>disabled</td></tr>
+          <tr><td>NVIDIA GPU utilization (%)</td><td><code>nvidia_gpu_util</code></td><td>disabled</td></tr>
+          <tr><td>NVIDIA GPU memory (%)</td><td><code>nvidia_gpu_mem</code></td><td>disabled</td></tr>
+          <tr><td>NVIDIA GPU frequency (MHz)</td><td><code>nvidia_gpu_freq</code></td><td>disabled</td></tr>
+          <tr><td>NVIDIA GPU power (W)</td><td><code>nvidia_gpu_power</code></td><td>disabled</td></tr>
+          <tr><td>NVIDIA GPU temperature (°C)</td><td><code>nvidia_gpu_temp</code></td><td>disabled</td></tr>
+          <tr><td>AMD GPU utilization (%)</td><td><code>amd_gpu_util</code></td><td>disabled</td></tr>
+          <tr><td>AMD GPU memory (%)</td><td><code>amd_gpu_mem</code></td><td>disabled</td></tr>
+          <tr><td>AMD GPU frequency (MHz)</td><td><code>amd_gpu_freq</code></td><td>disabled</td></tr>
+          <tr><td>AMD GPU power (W)</td><td><code>amd_gpu_power</code></td><td>disabled</td></tr>
+          <tr><td>AMD GPU temperature (°C)</td><td><code>amd_gpu_temp</code></td><td>disabled</td></tr>
           <tr><td>Script update available</td><td><code>git_update</code></td><td>enabled</td></tr>
           <tr><td>External sensors</td><td><code>ext_sensors</code></td><td>disabled</td></tr>
         </tbody>
       </table>
 
       <blockquote>
-        <p>Intel GPU sensors use <code>intel-gpu-tools</code> (<code>intel_gpu_top</code>), which the
-          installer can set up for you. They require root, so values only populate when running as
-          the systemd service.</p>
+        <p><strong>GPU sensors.</strong> The installer autodetects your GPU vendor and enables the
+          matching sensors.</p>
+        <ul>
+          <li><strong>Intel</strong> uses <code>intel-gpu-tools</code> (<code>intel_gpu_top</code>);
+            it requires root, so values only populate when running as the systemd service.</li>
+          <li><strong>NVIDIA</strong> uses the native <code>pynvml</code> library
+            (<code>nvidia-ml-py</code>) and the NVIDIA driver — no root required.</li>
+          <li><strong>AMD</strong> reads <code>sysfs</code> (<code>/sys/class/drm</code>, in-kernel
+            <code>amdgpu</code> driver) with no extra tools — no root required.</li>
+        </ul>
       </blockquote>
     </main>
   </div>

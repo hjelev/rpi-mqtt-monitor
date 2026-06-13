@@ -31,6 +31,7 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 | CPU load | `cpu_load` | enabled |
 | CPU temperature | `cpu_temp` | enabled |
 | Used disk space | `used_space` | enabled |
+| Used disk space on extra paths/drives | `used_space_paths` | disabled |
 | Memory usage | `memory` | enabled |
 | Uptime (timestamp) | `uptime` | enabled |
 | Uptime (seconds) | `uptime_seconds` | disabled |

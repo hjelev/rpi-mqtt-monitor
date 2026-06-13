@@ -34,6 +34,73 @@
     <main class="content">
       <h1>Changelog</h1>
 
+      <h2>v1.3.3 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-13)</span></h2>
+
+      <h3>✨ New Features</h3>
+
+      <h4>NVIDIA &amp; AMD GPU monitoring</h4>
+      <ul>
+        <li>GPU monitoring now supports <strong>NVIDIA</strong> and <strong>AMD</strong> alongside Intel.</li>
+        <li><strong>NVIDIA</strong> sensors via the native <code>pynvml</code> library
+          (<code>nvidia-ml-py</code>): <strong>Utilization %</strong>, <strong>Memory %</strong>,
+          <strong>Frequency (MHz)</strong>, <strong>Power (W)</strong>, <strong>Temperature (°C)</strong>.</li>
+        <li><strong>AMD</strong> sensors read straight from <strong>sysfs</strong>
+          (<code>/sys/class/drm</code>, in-kernel <code>amdgpu</code> driver) with no external tools:
+          <strong>Utilization %</strong>, <strong>Memory %</strong>, <strong>Frequency (MHz)</strong>,
+          <strong>Power (W)</strong>, <strong>Temperature (°C)</strong>.</li>
+        <li>Unlike Intel (<code>intel_gpu_top</code>, root-only), NVIDIA and AMD reads
+          <strong>do not require root</strong>, so they also populate under cron.</li>
+        <li>Installer now <strong>autodetects the GPU vendor</strong>
+          (<code>lspci</code> / <code>nvidia-smi</code> / <code>amdgpu</code>) and prompts to enable the
+          matching sensors, installing only what each vendor needs.</li>
+      </ul>
+
+      <h3>🛠 Improvements</h3>
+      <ul>
+        <li><strong>Intel GPU sensor</strong> now works with older <code>intel-gpu-tools</code> builds
+          that don't support the <code>-m</code> flag.</li>
+      </ul>
+
+      <h3>🐛 Bug Fixes</h3>
+      <ul>
+        <li>Fixed <strong>on-screen display (<code>-d</code>) rendering</strong>: the model name carried
+          a trailing NUL byte on Raspberry Pi (pulling the box border left) and a leading space on other
+          platforms (shifting the Model/Manufacturer rows one character right). Both values are now
+          cleaned at the source, which also tidies the MQTT payloads.</li>
+      </ul>
+
+      <h3>⚙️ New config keys</h3>
+      <p><code>nvidia_gpu_util</code>, <code>nvidia_gpu_mem</code>, <code>nvidia_gpu_freq</code>,
+        <code>nvidia_gpu_power</code>, <code>nvidia_gpu_temp</code>, <code>amd_gpu_util</code>,
+        <code>amd_gpu_mem</code>, <code>amd_gpu_freq</code>, <code>amd_gpu_power</code>,
+        <code>amd_gpu_temp</code></p>
+
+      <h2>v1.3.2 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-13)</span></h2>
+
+      <h3>✨ New Features</h3>
+      <ul>
+        <li><strong>Track free space on multiple paths/drives</strong> via the new
+          <code>used_space_paths</code> option — each entry
+          (<code>{'name': ..., 'path': ...}</code>) becomes its own "used space" sensor.</li>
+      </ul>
+
+      <h3>🛠 Improvements</h3>
+      <ul>
+        <li>Disk usage is now measured with <strong><code>df</code></strong>, improving support for
+          multiple mounts.</li>
+      </ul>
+
+      <h3>⚙️ New config keys</h3>
+      <p><code>used_space_paths</code></p>
+
+      <h2>v1.3.1 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-12)</span></h2>
+
+      <h3>🛠 Improvements</h3>
+      <ul>
+        <li>Improved <strong>display / monitor on-off control</strong>.</li>
+        <li>Published the <strong>documentation site</strong> under <code>docs/</code>.</li>
+      </ul>
+
       <h2>v1.3.0 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-12)</span></h2>
       <p>A feature-packed release focused on <strong>display control</strong>, <strong>secure/flexible
         MQTT connectivity</strong>, <strong>Intel GPU monitoring</strong>, and a substantially
