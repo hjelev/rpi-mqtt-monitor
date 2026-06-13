@@ -275,9 +275,14 @@ def check_model_name():
         full_cmd = "cat /proc/cpuinfo  | grep 'name'| uniq"
         model_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
         try:
-            model_name = model_name.split(':')[1].replace('\n', '')
+            model_name = model_name.split(':')[1]
         except Exception:
             model_name = None if config.use_availability else 'Unknown'
+
+   # devicetree appends a trailing NUL and cpuinfo a leading space/newline; strip both so
+   # display width and MQTT payloads stay clean.
+   if isinstance(model_name, str):
+        model_name = model_name.replace('\x00', '').strip()
 
    return model_name
 
@@ -310,7 +315,7 @@ def get_manufacturer():
         if model and 'Raspberry' not in model:
             full_cmd = "cat /proc/cpuinfo  | grep 'vendor'| uniq"
             pretty_name = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
-            pretty_name = pretty_name.split(':')[1].replace('\n', '')
+            pretty_name = pretty_name.split(':')[1].strip()
         else:
             pretty_name = 'Raspberry Pi'
     except Exception:
