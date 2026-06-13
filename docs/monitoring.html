@@ -57,6 +57,10 @@
           <tr><td>RPi 5 fan speed</td><td><code>rpi5_fan_speed</code></td><td>disabled</td></tr>
           <tr><td>RPi power/throttle status</td><td><code>rpi_power_status</code></td><td>disabled</td></tr>
           <tr><td>HDD/SSD temperature</td><td><code>drive_temps</code></td><td>disabled</td></tr>
+          <tr><td>SSD SMART status</td><td><code>ssd_health</code></td><td>disabled</td></tr>
+          <tr><td>SSD wear / life used (%)</td><td><code>ssd_health</code></td><td>disabled</td></tr>
+          <tr><td>SSD power-on hours</td><td><code>ssd_health</code></td><td>disabled</td></tr>
+          <tr><td>SSD data written (TB)</td><td><code>ssd_health</code></td><td>disabled</td></tr>
           <tr><td>APT updates available</td><td><code>apt_updates</code></td><td>disabled</td></tr>
           <tr><td>Intel GPU render busy (%)</td><td><code>intel_gpu_render</code></td><td>disabled</td></tr>
           <tr><td>Intel GPU video busy (%)</td><td><code>intel_gpu_video</code></td><td>disabled</td></tr>
@@ -87,6 +91,20 @@
             (<code>nvidia-ml-py</code>) and the NVIDIA driver — no root required.</li>
           <li><strong>AMD</strong> reads <code>sysfs</code> (<code>/sys/class/drm</code>, in-kernel
             <code>amdgpu</code> driver) with no extra tools — no root required.</li>
+        </ul>
+      </blockquote>
+
+      <blockquote>
+        <p><strong>SSD health.</strong> The installer autodetects non-rotating drives
+          (<strong>NVMe</strong> and <strong>SATA SSDs</strong>) and offers to install
+          <code>smartmontools</code> and enable the <code>ssd_health</code> sensors.</p>
+        <ul>
+          <li><code>smartctl</code> needs root, so values populate when running as the systemd
+            service, or in cron mode via the passwordless <code>sudoers</code> drop-in the installer
+            adds for <code>smartctl</code>.</li>
+          <li><strong>NVMe</strong> metrics come from the uniform SMART health log; <strong>SATA</strong>
+            wear and data-written are read from the vendor attribute table and are best-effort
+            (they vary by manufacturer).</li>
         </ul>
       </blockquote>
     </main>

@@ -55,6 +55,22 @@
           matching sensors, installing only what each vendor needs.</li>
       </ul>
 
+      <h4>SSD health monitoring</h4>
+      <ul>
+        <li>New per-drive <strong>SSD health</strong> sensors gathered from <code>smartctl</code>
+          (<code>smartmontools</code>): <strong>SMART overall status</strong>,
+          <strong>wear / life used (%)</strong>, <strong>power-on hours</strong>, and
+          <strong>data written (TB)</strong>.</li>
+        <li>Works with both <strong>NVMe</strong> and <strong>SATA SSDs</strong> — NVMe values come from
+          the uniform SMART health log; SATA wear and data-written are best-effort from the vendor
+          attribute table.</li>
+        <li>Installer <strong>autodetects non-rotating drives</strong> and prompts to install
+          <code>smartmontools</code> and enable the sensors.</li>
+        <li><code>smartctl</code> needs root: the installer also adds a passwordless
+          <code>sudoers</code> drop-in so the sensors populate under <strong>cron</strong> as well as
+          the systemd service.</li>
+      </ul>
+
       <h3>🛠 Improvements</h3>
       <ul>
         <li><strong>Intel GPU sensor</strong> now works with older <code>intel-gpu-tools</code> builds
@@ -73,7 +89,7 @@
       <p><code>nvidia_gpu_util</code>, <code>nvidia_gpu_mem</code>, <code>nvidia_gpu_freq</code>,
         <code>nvidia_gpu_power</code>, <code>nvidia_gpu_temp</code>, <code>amd_gpu_util</code>,
         <code>amd_gpu_mem</code>, <code>amd_gpu_freq</code>, <code>amd_gpu_power</code>,
-        <code>amd_gpu_temp</code></p>
+        <code>amd_gpu_temp</code>, <code>ssd_health</code></p>
 
       <h2>v1.3.2 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-13)</span></h2>
 
