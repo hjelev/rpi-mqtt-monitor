@@ -229,22 +229,80 @@ setup_ddcutil() {
     print_yellow "Enable DDC/CI in your monitor's OSD menu, then verify with: ddcutil detect"
 }
 
-# Optional Intel GPU monitoring: installs intel-gpu-tools and enables the GPU sensors.
-# intel_gpu_top needs root, so the sensors only report when running as the service.
-configure_intel_gpu() {
-    ask "Enable Intel GPU monitoring (installs intel-gpu-tools)? [y/N] "
-    read GPU
-    printf "\n"
-    if [[ "$GPU" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        print_info "Installing Intel GPU tools..."
-        sudo apt-get update && sudo apt-get install -y intel-media-va-driver-non-free vainfo intel-gpu-tools
-        sed -i "s/intel_gpu_render = False/intel_gpu_render = True/" src/config.py
-        sed -i "s/intel_gpu_video = False/intel_gpu_video = True/" src/config.py
-        sed -i "s/intel_gpu_freq = False/intel_gpu_freq = True/" src/config.py
-        sed -i "s/intel_gpu_power = False/intel_gpu_power = True/" src/config.py
-        service_recommended=1
-        print_green "Intel GPU monitoring enabled"
-        print_yellow "intel_gpu_top needs root — run as the systemd service for GPU sensors to report."
+# Enable all GPU sensor flags for a vendor in config.py (intel|nvidia|amd).
+enable_gpu_flags() {
+    local vendor="$1"
+    case "$vendor" in
+        intel) for m in render video freq power; do sed -i "s/intel_gpu_${m} = False/intel_gpu_${m} = True/" src/config.py; done ;;
+        nvidia) for m in util mem freq power temp; do sed -i "s/nvidia_gpu_${m} = False/nvidia_gpu_${m} = True/" src/config.py; done ;;
+        amd) for m in util mem freq power temp; do sed -i "s/amd_gpu_${m} = False/amd_gpu_${m} = True/" src/config.py; done ;;
+    esac
+}
+
+# Optional GPU monitoring. Autodetects the GPU vendor and prompts to enable the matching
+# sensors. Intel uses intel_gpu_top (needs root → systemd service); NVIDIA uses the pynvml
+# Python library and AMD reads sysfs, neither of which needs root.
+configure_gpu() {
+    local gpus="" has_intel=0 has_nvidia=0 has_amd=0
+    command -v lspci >/dev/null 2>&1 && gpus=$(lspci 2>/dev/null | grep -Ei 'vga|3d|display' || true)
+
+    echo "$gpus" | grep -qi 'intel' && has_intel=1
+    { echo "$gpus" | grep -qi 'nvidia' || command -v nvidia-smi >/dev/null 2>&1; } && has_nvidia=1
+    { echo "$gpus" | grep -Eqi 'amd|ati|radeon' \
+        || ls /sys/class/drm/card*/device/driver 2>/dev/null | xargs -r -n1 readlink 2>/dev/null | grep -q amdgpu; } && has_amd=1
+
+    if [ "$has_intel" = 0 ] && [ "$has_nvidia" = 0 ] && [ "$has_amd" = 0 ]; then
+        print_info "No GPU autodetected."
+        printf "  ${CYAN}[1]${R}  Intel\n  ${CYAN}[2]${R}  NVIDIA\n  ${CYAN}[3]${R}  AMD\n  ${CYAN}[4]${R}  None ${CYAN}(default)${R}\n\n"
+        ask "Configure GPU monitoring manually? [1-4]: "
+        read manual
+        printf "\n"
+        case $manual in
+            1) has_intel=1 ;;
+            2) has_nvidia=1 ;;
+            3) has_amd=1 ;;
+            *) return ;;
+        esac
+    fi
+
+    if [ "$has_intel" = 1 ]; then
+        print_green "Intel GPU detected."
+        ask "Enable Intel GPU monitoring (installs intel-gpu-tools)? [y/N] "
+        read yn
+        printf "\n"
+        if [[ "$yn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            print_info "Installing Intel GPU tools..."
+            sudo apt-get update && sudo apt-get install -y intel-media-va-driver-non-free vainfo intel-gpu-tools
+            enable_gpu_flags intel
+            service_recommended=1
+            print_green "Intel GPU monitoring enabled"
+            print_yellow "intel_gpu_top needs root — run as the systemd service for GPU sensors to report."
+        fi
+    fi
+
+    if [ "$has_nvidia" = 1 ]; then
+        print_green "NVIDIA GPU detected."
+        ask "Enable NVIDIA GPU monitoring (installs the pynvml Python library)? [y/N] "
+        read yn
+        printf "\n"
+        if [[ "$yn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            print_info "Installing pynvml (nvidia-ml-py)..."
+            rpi_mon_env/bin/pip install nvidia-ml-py
+            command -v nvidia-smi >/dev/null 2>&1 || print_yellow "nvidia-smi not found — install the NVIDIA driver for GPU sensors to report."
+            enable_gpu_flags nvidia
+            print_green "NVIDIA GPU monitoring enabled"
+        fi
+    fi
+
+    if [ "$has_amd" = 1 ]; then
+        print_green "AMD GPU detected."
+        ask "Enable AMD GPU monitoring (reads sysfs, no extra packages)? [y/N] "
+        read yn
+        printf "\n"
+        if [[ "$yn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            enable_gpu_flags amd
+            print_green "AMD GPU monitoring enabled"
+        fi
     fi
 }
 
@@ -296,7 +354,7 @@ update_config() {
             mqtt_configuration ;;
     esac
 
-    configure_intel_gpu
+    configure_gpu
 
     print_green "config.py updated with provided settings"
 

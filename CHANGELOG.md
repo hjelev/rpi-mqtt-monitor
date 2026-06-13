@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### ✨ New Features
+
+#### NVIDIA & AMD GPU monitoring
+- GPU monitoring now supports **NVIDIA** and **AMD** alongside Intel.
+- **NVIDIA** sensors via the native `pynvml` library (`nvidia-ml-py`): **Utilization %**,
+  **Memory %**, **Frequency (MHz)**, **Power (W)**, **Temperature (°C)**.
+- **AMD** sensors read straight from **sysfs** (`/sys/class/drm`, in-kernel `amdgpu` driver) —
+  no external tools: **Utilization %**, **Memory %**, **Frequency (MHz)**, **Power (W)**,
+  **Temperature (°C)**.
+- Unlike Intel (`intel_gpu_top`, root-only), NVIDIA and AMD reads **do not require root**, so
+  they also populate under cron.
+- Installer now **autodetects the GPU vendor** (`lspci` / `nvidia-smi` / `amdgpu`) and prompts
+  to enable the matching sensors, installing only what each vendor needs.
+
+### ⚙️ New config keys
+`nvidia_gpu_util`, `nvidia_gpu_mem`, `nvidia_gpu_freq`, `nvidia_gpu_power`, `nvidia_gpu_temp`,
+`amd_gpu_util`, `amd_gpu_mem`, `amd_gpu_freq`, `amd_gpu_power`, `amd_gpu_temp`
+
 ## v1.3.0 (2026-06-12)
 
 A feature-packed release focused on **display control**, **secure/flexible MQTT connectivity**,
