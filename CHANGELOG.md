@@ -1,8 +1,17 @@
 # Changelog
 
-## v1.3.4 (2026-06-14)
+## Unreleased
 
 ### ✨ New Features
+
+#### Interactive configurator
+- New `rpi-mqtt-monitor --config` (`-c`) launches a **terminal UI for editing `config.py`**.
+- Navigate settings with the **↑/↓** arrows; each setting shows its description and default value.
+- Press **Enter** to edit — booleans toggle; numbers and strings open an inline editor pre-filled
+  with the current value (**Esc** cancels). Press **s** to save, **q** to quit.
+- Edits are written back **preserving comments, ordering, formatting, inline comments and the
+  existing quote style**; complex settings (lists, the output function) are shown read-only with a
+  note to edit them in the file.
 
 #### IP address sensors
 - New opt-in sensors expose the device's network addresses: **Local IPv4**, **Local IPv6**,

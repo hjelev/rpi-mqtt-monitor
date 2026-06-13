@@ -1243,8 +1243,15 @@ def parse_arguments():
     parser.add_argument('-v', '--version',  action='store_true',  help='display installed version and exit', default=False)
     parser.add_argument('-u', '--update',   action='store_true',  help='update script and config then exit', default=False)
     parser.add_argument('-w', '--hass_wake', action='store_true', help='display Home assistant wake on lan configuration', default=False)
+    parser.add_argument('-c', '--config', action='store_true', help='open the interactive TUI configurator and exit', default=False)
     parser.add_argument('--uninstall', action='store_true', help='uninstall rpi-mqtt-monitor and remove all related files')
     args = parser.parse_args()
+
+    if args.config:
+        import configurator
+        configurator.run(os.path.join(script_dir, 'config.py'),
+                         os.path.join(script_dir, 'config.py.example'))
+        exit()
 
     if args.update:
         version = update.check_git_version_remote(script_dir).strip()

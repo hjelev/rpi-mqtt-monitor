@@ -34,7 +34,7 @@
 
     <main class="content">
       <h1>CLI Reference</h1>
-      <pre><code>usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
+      <pre><code>usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [-c] [--uninstall]
 
 Monitor CPU load, temperature, frequency, free space, etc., and publish the
 data to an MQTT server or Home Assistant API.
@@ -47,6 +47,7 @@ options:
   -v, --version    display installed version and exit
   -u, --update     update script and config then exit
   -w, --hass_wake  display Home Assistant wake-on-LAN configuration
+  -c, --config     open the interactive TUI configurator and exit
   --uninstall      uninstall rpi-mqtt-monitor and remove all related files</code></pre>
 
       <h2>Options at a glance</h2>
@@ -60,6 +61,7 @@ options:
           <tr><td><code>-v, --version</code></td><td>Display installed version and exit</td></tr>
           <tr><td><code>-u, --update</code></td><td>Update script and config then exit</td></tr>
           <tr><td><code>-w, --hass_wake</code></td><td>Display Home Assistant wake-on-LAN configuration</td></tr>
+          <tr><td><code>-c, --config</code></td><td>Open the interactive TUI configurator (navigate with arrows, edit, save) and exit</td></tr>
           <tr><td><code>--uninstall</code></td><td>Uninstall rpi-mqtt-monitor and remove all related files</td></tr>
         </tbody>
       </table>

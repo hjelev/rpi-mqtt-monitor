@@ -35,9 +35,23 @@
     <main class="content">
       <h1>Changelog</h1>
 
-      <h2>v1.3.4 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-14)</span></h2>
+      <h2>Unreleased</h2>
 
       <h3>✨ New Features</h3>
+
+      <h4>Interactive configurator</h4>
+      <ul>
+        <li>New <code>rpi-mqtt-monitor --config</code> (<code>-c</code>) launches a
+          <strong>terminal UI for editing <code>config.py</code></strong>.</li>
+        <li>Navigate settings with the <strong>↑/↓</strong> arrows; each setting shows its description
+          and default value.</li>
+        <li>Press <strong>Enter</strong> to edit — booleans toggle; numbers and strings open an inline
+          editor pre-filled with the current value (<strong>Esc</strong> cancels). Press
+          <strong>s</strong> to save, <strong>q</strong> to quit.</li>
+        <li>Edits are written back <strong>preserving comments, ordering, formatting, inline comments
+          and the existing quote style</strong>; complex settings (lists, the output function) are
+          shown read-only with a note to edit them in the file.</li>
+      </ul>
 
       <h4>IP address sensors</h4>
       <ul>

@@ -123,7 +123,7 @@ rpi-mqtt-monitor --uninstall
 ## CLI Reference
 
 ```
-usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [--uninstall]
+usage: rpi-mqtt-monitor [-h] [-H] [-d] [-s] [-v] [-u] [-w] [-c] [--uninstall]
 
 Monitor CPU load, temperature, frequency, free space, etc., and publish the
 data to an MQTT server or Home Assistant API.
@@ -136,8 +136,19 @@ options:
   -v, --version    display installed version and exit
   -u, --update     update script and config then exit
   -w, --hass_wake  display Home Assistant wake-on-LAN configuration
+  -c, --config     open the interactive TUI configurator and exit
   --uninstall      uninstall rpi-mqtt-monitor and remove all related files
 ```
+
+### Interactive configurator
+
+Run `rpi-mqtt-monitor --config` to open a terminal UI for editing `config.py`. Move
+through the settings with the **↑/↓** arrows; each setting shows its description and
+default value. Press **Enter** to edit the selected value — booleans toggle, while numbers
+and strings open an inline editor pre-filled with the current value (**Esc** cancels an
+edit). Press **s** to save and **q** to quit. Comments, ordering, formatting and the
+existing quote style in `config.py` are preserved; complex settings (lists and the output
+function) are shown read-only with a note to edit them directly in the file.
 
 ## Configuration
 
