@@ -100,6 +100,14 @@
       </blockquote>
 
       <blockquote>
+        <p><strong>CPU voltage.</strong> On a Raspberry Pi this reads <code>vcgencmd measure_volts</code>.
+          On other hosts (e.g. x86 / Ubuntu) it falls back to a <code>Vcore</code> reading from
+          <code>hwmon</code> (lm-sensors), which requires a supported Super-I/O driver — run
+          <code>sensors-detect</code> if <code>sensors</code> shows no <code>Vcore</code>. Where neither
+          source exists the sensor reports as unavailable.</p>
+      </blockquote>
+
+      <blockquote>
         <p><strong>SSD health.</strong> The installer autodetects non-rotating drives
           (<strong>NVMe</strong> and <strong>SATA SSDs</strong>) and offers to install
           <code>smartmontools</code> and enable the <code>ssd_health</code> sensors.</p>

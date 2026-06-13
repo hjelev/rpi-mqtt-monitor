@@ -87,12 +87,21 @@ def check_cpu_load():
 
 
 def check_voltage():
-    try:
-        full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
-        voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
-        return voltage.strip()[:-1].decode('utf8')
-    except Exception:
-        return None if config.use_availability else 0
+    # Raspberry Pi: VideoCore firmware via vcgencmd
+    if shutil.which("vcgencmd"):
+        try:
+            full_cmd = "vcgencmd measure_volts | cut -f2 -d= | sed 's/000//'"
+            voltage = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+            voltage = voltage.strip()[:-1].decode('utf8')
+            if voltage:
+                return voltage
+        except Exception:
+            pass
+    # Non-Pi (x86 / Ubuntu): CPU Vcore from hwmon (lm-sensors style)
+    voltage = _read_cpu_voltage_hwmon()
+    if voltage is not None:
+        return voltage
+    return None if config.use_availability else 0
 
 
 def check_swap():
@@ -1417,6 +1426,26 @@ def _read_sysfs_num(path, scale=1, ndigits=0):
         return round(value, ndigits) if ndigits else int(value)
     except Exception:
         return None
+
+
+def _read_cpu_voltage_hwmon():
+    """CPU core voltage (V) from hwmon Super-I/O sensors on non-Pi hardware.
+    Scans /sys/class/hwmon/*/in*_input and picks the input whose *_label looks
+    like a CPU core rail (Vcore / CPU). Returns None if none is exposed."""
+    try:
+        for hwmon in sorted(glob.glob('/sys/class/hwmon/hwmon*')):
+            for inp in sorted(glob.glob(os.path.join(hwmon, 'in*_input'))):
+                label_path = inp[:-len('_input')] + '_label'
+                try:
+                    with open(label_path) as f:
+                        label = f.read().strip().lower()
+                except Exception:
+                    continue
+                if 'vcore' in label or 'cpu' in label:
+                    return _read_sysfs_num(inp, 1e-3, 3)  # mV -> V
+    except Exception:
+        pass
+    return None
 
 
 def _amd_gpu_device():

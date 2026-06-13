@@ -4,6 +4,13 @@
 
 ### ✨ New Features
 
+#### CPU voltage on non-Pi hosts
+- `voltage` now reads CPU core voltage from **hwmon (lm-sensors)** when `vcgencmd`
+  is not available, so the sensor works on x86 / Ubuntu hosts with a supported
+  Super-I/O driver exposing a `Vcore` rail (e.g. via `sensors-detect`).
+- When neither `vcgencmd` nor an hwmon Vcore sensor is present, the sensor now
+  reports cleanly as **unavailable** instead of publishing an empty value.
+
 #### Interactive configurator
 - New `rpi-mqtt-monitor --config` (`-c`) launches a **terminal UI for editing `config.py`**.
 - Navigate settings with the **↑/↓** arrows; each setting shows its description and default value.
