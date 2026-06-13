@@ -120,6 +120,12 @@ ssd_health = False
 wifi_signal = False
 wifi_signal_dbm = False
 
+# Local and external IP address sensors (external_* make an outbound HTTPS call to api.ipify.org)
+local_ipv4 = False
+local_ipv6 = False
+external_ipv4 = False
+external_ipv6 = False
+
 # This works only on raspbery pi version 5 with stock fan
 rpi5_fan_speed = False
 

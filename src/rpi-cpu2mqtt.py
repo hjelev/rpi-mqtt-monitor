@@ -360,6 +360,27 @@ def get_network_ip():
     return IP
 
 
+def get_local_ipv6():
+    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    try:
+        # Google public DNS over IPv6; need not be reachable, no packets are sent
+        s.connect(('2001:4860:4860::8888', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = None if config.use_availability else ''
+    finally:
+        s.close()
+    return ip
+
+
+def get_external_ip(version=4):
+    url = 'https://api.ipify.org' if version == 4 else 'https://api6.ipify.org'
+    try:
+        return requests.get(url, timeout=10).text.strip()
+    except Exception:
+        return None if config.use_availability else ''
+
+
 def get_mac_address():
     mac_num = uuid.getnode()
     mac = '-'.join((('%012X' % mac_num)[i:i+2] for i in range(0, 12, 2)))
@@ -763,6 +784,14 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:wifi", get_translation("wifi_signal_strength"), "dBm", "signal_strength", "measurement")
     elif what_config == "rpi5_fan_speed":
         add_common_attributes(data, "mdi:fan", get_translation("fan_speed"), "RPM", None, "measurement")
+    elif what_config == "local_ipv4":
+        add_common_attributes(data, "mdi:ip-network", "Local IPv4 Address")
+    elif what_config == "local_ipv6":
+        add_common_attributes(data, "mdi:ip-network", "Local IPv6 Address")
+    elif what_config == "external_ipv4":
+        add_common_attributes(data, "mdi:wan", "External IPv4 Address")
+    elif what_config == "external_ipv6":
+        add_common_attributes(data, "mdi:wan", "External IPv6 Address")
     elif what_config == "status":
         add_common_attributes(data, "mdi:lan-connect", get_translation("status"))
         data["value_template"] = "{{ 'online' if value == '1' else 'offline' }}"
@@ -1179,7 +1208,8 @@ def bulk_publish_to_mqtt(monitored_values):
     values = [monitored_values.get(key, 0) for key in [
         'cpu_load', 'cpu_temp', 'used_space', 'voltage', 'sys_clock_speed', 'swap', 'memory', 'uptime', 'uptime_seconds',
         'wifi_signal', 'wifi_signal_dbm', 'rpi5_fan_speed', 'git_update', 'rpi_power_status', 'data_sent', 'data_received',
-        'intel_gpu_render', 'intel_gpu_video', 'intel_gpu_freq', 'intel_gpu_power'
+        'intel_gpu_render', 'intel_gpu_video', 'intel_gpu_freq', 'intel_gpu_power',
+        'local_ipv4', 'local_ipv6', 'external_ipv4', 'external_ipv6'
     ]]
 
     values.extend(monitored_values.get('used_space_paths', {}).values())
@@ -1467,6 +1497,14 @@ def collect_monitored_values():
         monitored_values["wifi_signal_dbm"] = check_wifi_signal('dbm')
     if config.rpi5_fan_speed:
         monitored_values["rpi5_fan_speed"] = check_rpi5_fan_speed()
+    if getattr(config, "local_ipv4", False):
+        monitored_values["local_ipv4"] = get_network_ip()
+    if getattr(config, "local_ipv6", False):
+        monitored_values["local_ipv6"] = get_local_ipv6()
+    if getattr(config, "external_ipv4", False):
+        monitored_values["external_ipv4"] = get_external_ip(4)
+    if getattr(config, "external_ipv6", False):
+        monitored_values["external_ipv6"] = get_external_ip(6)
     if config.drive_temps:
         monitored_values["drive_temps"] = check_all_drive_temps()
     if getattr(config, "ssd_health", False):

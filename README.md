@@ -41,6 +41,10 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 | CPU voltage | `voltage` | disabled |
 | WiFi signal quality (%) | `wifi_signal` | disabled |
 | WiFi signal strength (dBm) | `wifi_signal_dbm` | disabled |
+| Local IPv4 address | `local_ipv4` | disabled |
+| Local IPv6 address | `local_ipv6` | disabled |
+| External IPv4 address | `external_ipv4` | disabled |
+| External IPv6 address | `external_ipv6` | disabled |
 | RPi 5 fan speed | `rpi5_fan_speed` | disabled |
 | RPi power/throttle status | `rpi_power_status` | disabled |
 | HDD/SSD temperature | `drive_temps` | disabled |

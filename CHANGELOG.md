@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.3.4 (2026-06-14)
+
+### ✨ New Features
+
+#### IP address sensors
+- New opt-in sensors expose the device's network addresses: **Local IPv4**, **Local IPv6**,
+  **External IPv4**, and **External IPv6**.
+- Local addresses are detected locally via a UDP socket (no traffic sent); external
+  addresses are resolved through an outbound HTTPS call to `api.ipify.org` / `api6.ipify.org`.
+- All four are **disabled by default**; the installer now prompts to enable the local and/or
+  external IP sensors.
+
+### ⚙️ New config keys
+`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`
+
 ## v1.3.3 (2026-06-13)
 
 ### ✨ New Features
