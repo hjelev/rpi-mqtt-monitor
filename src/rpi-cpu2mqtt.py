@@ -521,6 +521,16 @@ def print_measured_values(monitored_values):
         ("intel_gpu_video",  "GPU Video",  "%"),
         ("intel_gpu_freq",   "GPU Freq",   "MHz"),
         ("intel_gpu_power",  "GPU Power",  "W"),
+        ("nvidia_gpu_util",  "GPU Util",   "%"),
+        ("nvidia_gpu_mem",   "GPU Mem",    "%"),
+        ("nvidia_gpu_freq",  "GPU Freq",   "MHz"),
+        ("nvidia_gpu_power", "GPU Power",  "W"),
+        ("nvidia_gpu_temp",  "GPU Temp",   "°C"),
+        ("amd_gpu_util",     "GPU Util",   "%"),
+        ("amd_gpu_mem",      "GPU Mem",    "%"),
+        ("amd_gpu_freq",     "GPU Freq",   "MHz"),
+        ("amd_gpu_power",    "GPU Power",  "W"),
+        ("amd_gpu_temp",     "GPU Temp",   "°C"),
     ]
     for key, label, unit in plain_metrics:
         if key in monitored_values:
@@ -735,6 +745,26 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:speedometer", "Intel GPU Frequency", "MHz", "frequency", "measurement")
     elif what_config == "intel_gpu_power":
         add_common_attributes(data, "mdi:flash", "Intel GPU Power", "W", "power", "measurement")
+    elif what_config == "nvidia_gpu_util":
+        add_common_attributes(data, "mdi:expansion-card", "NVIDIA GPU Utilization", "%", None, "measurement")
+    elif what_config == "nvidia_gpu_mem":
+        add_common_attributes(data, "mdi:memory", "NVIDIA GPU Memory", "%", None, "measurement")
+    elif what_config == "nvidia_gpu_freq":
+        add_common_attributes(data, "mdi:speedometer", "NVIDIA GPU Frequency", "MHz", "frequency", "measurement")
+    elif what_config == "nvidia_gpu_power":
+        add_common_attributes(data, "mdi:flash", "NVIDIA GPU Power", "W", "power", "measurement")
+    elif what_config == "nvidia_gpu_temp":
+        add_common_attributes(data, "mdi:thermometer", "NVIDIA GPU Temperature", "°C", "temperature", "measurement")
+    elif what_config == "amd_gpu_util":
+        add_common_attributes(data, "mdi:expansion-card", "AMD GPU Utilization", "%", None, "measurement")
+    elif what_config == "amd_gpu_mem":
+        add_common_attributes(data, "mdi:memory", "AMD GPU Memory", "%", None, "measurement")
+    elif what_config == "amd_gpu_freq":
+        add_common_attributes(data, "mdi:speedometer", "AMD GPU Frequency", "MHz", "frequency", "measurement")
+    elif what_config == "amd_gpu_power":
+        add_common_attributes(data, "mdi:flash", "AMD GPU Power", "W", "power", "measurement")
+    elif what_config == "amd_gpu_temp":
+        add_common_attributes(data, "mdi:thermometer", "AMD GPU Temperature", "°C", "temperature", "measurement")
 
 def config_json(what_config, device="0", hass_api=False):
     data = build_data_template(what_config)
@@ -1196,6 +1226,98 @@ def _intel_gpu_value(gpu, path, ndigits, fallback_path=None):
     return None if config.use_availability else 0
 
 
+def get_nvidia_gpu_stats():
+    """Read NVIDIA GPU stats via pynvml (nvidia-ml-py). No root required.
+    Returns a dict of metric->value, or None if pynvml/the driver is unavailable so the
+    monitor degrades gracefully on non-NVIDIA hosts."""
+    pynvml = None
+    try:
+        import pynvml
+        pynvml.nvmlInit()
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+        mem = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        stats = {
+            "util": round(util.gpu, 1),
+            "mem": round(mem.used / mem.total * 100, 1) if mem.total else 0,
+            "freq": pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_SM),
+            "power": round(pynvml.nvmlDeviceGetPowerUsage(handle) / 1000, 2),
+            "temp": pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU),
+        }
+        return stats
+    except Exception:
+        return None
+    finally:
+        try:
+            if pynvml is not None:
+                pynvml.nvmlShutdown()
+        except Exception:
+            pass
+
+
+def _read_sysfs_num(path, scale=1, ndigits=0):
+    """Read a single number from a sysfs file, apply scale, and round.
+    Returns None on any failure so callers can fall back to availability handling."""
+    try:
+        with open(path) as f:
+            value = float(f.read().strip()) * scale
+        return round(value, ndigits) if ndigits else int(value)
+    except Exception:
+        return None
+
+
+def _amd_gpu_device():
+    """Return the /sys/class/drm/cardN/device path of the first amdgpu card, or None."""
+    try:
+        for card in sorted(glob.glob("/sys/class/drm/card[0-9]*/device")):
+            driver = os.path.join(card, "driver")
+            if os.path.islink(driver) and os.path.basename(os.readlink(driver)) == "amdgpu":
+                return card
+    except Exception:
+        pass
+    return None
+
+
+def get_amd_gpu_stats():
+    """Read AMD GPU stats from sysfs (in-kernel amdgpu driver). No tools, no root.
+    Returns a dict of metric->value, or None if no amdgpu card is present."""
+    device = _amd_gpu_device()
+    if not device:
+        return None
+    try:
+        hwmons = glob.glob(os.path.join(device, "hwmon", "hwmon*"))
+        hwmon = hwmons[0] if hwmons else None
+        freq = _read_sysfs_num(os.path.join(hwmon, "freq1_input"), 1e-6, 0) if hwmon else None
+        if freq is None:
+            freq = _amd_pp_dpm_sclk(os.path.join(device, "pp_dpm_sclk"))
+        return {
+            "util": _read_sysfs_num(os.path.join(device, "gpu_busy_percent")),
+            "mem": _read_sysfs_num(os.path.join(device, "mem_busy_percent")),
+            "freq": freq,
+            "power": _read_sysfs_num(os.path.join(hwmon, "power1_average"), 1e-6, 2) if hwmon else None,
+            "temp": _read_sysfs_num(os.path.join(hwmon, "temp1_input"), 1e-3, 1) if hwmon else None,
+        }
+    except Exception:
+        return None
+
+
+def _amd_pp_dpm_sclk(path):
+    """Parse the active core-clock (marked with '*') from pp_dpm_sclk, e.g. '1: 800Mhz *'.
+    The leading 'N:' is the DPM index, so read the digits from the token carrying the unit."""
+    try:
+        with open(path) as f:
+            for line in f:
+                if "*" in line:
+                    for token in line.split():
+                        if "hz" in token.lower():
+                            digits = "".join(c for c in token if c.isdigit())
+                            if digits:
+                                return int(digits)
+    except Exception:
+        pass
+    return None
+
+
 def collect_monitored_values():
     monitored_values = {}
 
@@ -1250,6 +1372,20 @@ def collect_monitored_values():
             monitored_values["intel_gpu_freq"] = _intel_gpu_value(gpu, ["frequency", "actual"], 0)
         if getattr(config, "intel_gpu_power", False):
             monitored_values["intel_gpu_power"] = _intel_gpu_value(gpu, ["power", "GPU"], 2, ["power", "Package"])
+    nvidia_keys = ["util", "mem", "freq", "power", "temp"]
+    if any(getattr(config, "nvidia_gpu_" + k, False) for k in nvidia_keys):
+        gpu = get_nvidia_gpu_stats() or {}
+        for k in nvidia_keys:
+            if getattr(config, "nvidia_gpu_" + k, False):
+                value = gpu.get(k)
+                monitored_values["nvidia_gpu_" + k] = value if value is not None else (None if config.use_availability else 0)
+    amd_keys = ["util", "mem", "freq", "power", "temp"]
+    if any(getattr(config, "amd_gpu_" + k, False) for k in amd_keys):
+        gpu = get_amd_gpu_stats() or {}
+        for k in amd_keys:
+            if getattr(config, "amd_gpu_" + k, False):
+                value = gpu.get(k)
+                monitored_values["amd_gpu_" + k] = value if value is not None else (None if config.use_availability else 0)
 
     return monitored_values
 

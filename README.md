@@ -48,10 +48,23 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 | Intel GPU video busy (%) | `intel_gpu_video` | disabled |
 | Intel GPU frequency (MHz) | `intel_gpu_freq` | disabled |
 | Intel GPU power (W) | `intel_gpu_power` | disabled |
+| NVIDIA GPU utilization (%) | `nvidia_gpu_util` | disabled |
+| NVIDIA GPU memory (%) | `nvidia_gpu_mem` | disabled |
+| NVIDIA GPU frequency (MHz) | `nvidia_gpu_freq` | disabled |
+| NVIDIA GPU power (W) | `nvidia_gpu_power` | disabled |
+| NVIDIA GPU temperature (°C) | `nvidia_gpu_temp` | disabled |
+| AMD GPU utilization (%) | `amd_gpu_util` | disabled |
+| AMD GPU memory (%) | `amd_gpu_mem` | disabled |
+| AMD GPU frequency (MHz) | `amd_gpu_freq` | disabled |
+| AMD GPU power (W) | `amd_gpu_power` | disabled |
+| AMD GPU temperature (°C) | `amd_gpu_temp` | disabled |
 | Script update available | `git_update` | enabled |
 | External sensors | `ext_sensors` | disabled |
 
-> Intel GPU sensors use `intel-gpu-tools` (`intel_gpu_top`), which the installer can set up for you. They require root, so values only populate when running as the systemd service.
+> **GPU sensors.** The installer autodetects your GPU vendor and enables the matching sensors.
+> - **Intel** uses `intel-gpu-tools` (`intel_gpu_top`); it requires root, so values only populate when running as the systemd service.
+> - **NVIDIA** uses the native `pynvml` library (`nvidia-ml-py`) and the NVIDIA driver — no root required.
+> - **AMD** reads `sysfs` (`/sys/class/drm`, in-kernel `amdgpu` driver) with no extra tools — no root required.
 
 ## Table of Contents
 

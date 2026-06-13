@@ -131,6 +131,22 @@ intel_gpu_video = False
 intel_gpu_freq = False
 intel_gpu_power = False
 
+# NVIDIA GPU stats via pynvml (pip: nvidia-ml-py; needs the NVIDIA driver). No root needed.
+# Enable through install.sh.
+nvidia_gpu_util = False
+nvidia_gpu_mem = False
+nvidia_gpu_freq = False
+nvidia_gpu_power = False
+nvidia_gpu_temp = False
+
+# AMD GPU stats via sysfs (/sys/class/drm; in-kernel amdgpu driver). No extra tools, no root.
+# Enable through install.sh.
+amd_gpu_util = False
+amd_gpu_mem = False
+amd_gpu_freq = False
+amd_gpu_power = False
+amd_gpu_temp = False
+
 # Change the thermal zone if you have issues with cpu temps
 cpu_thermal_zone = 'cpu'
 
