@@ -37,6 +37,11 @@
       <p>When <code>discovery_messages = True</code> (the default), a new MQTT device is created in
         Home Assistant automatically — no <code>configuration.yaml</code> edits required. Just add it
         to a dashboard.</p>
+      <p>The auto-created device groups all readings, controls (restart, shutdown, update), and sensors
+        under a single Home Assistant entry:</p>
+      <figure>
+        <img src="images/hass-view.png" alt="Auto-created Home Assistant device" />
+      </figure>
 
       <h2>Home Assistant API</h2>
       <p>To bypass MQTT and push directly to the HA REST API, use the <code>--hass_api</code> flag and
@@ -48,7 +53,7 @@
 
       <h2>Home Assistant Dashboard</h2>
       <figure>
-        <img src="images/rpi-cpu2mqtt-hass.jpg" alt="Home Assistant dashboard" />
+        <img src="images/hass-dashboard.png" alt="Home Assistant dashboard" />
       </figure>
     </main>
   </div>

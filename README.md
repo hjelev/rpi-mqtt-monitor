@@ -152,6 +152,10 @@ edit). Press **s** to save and **q** to quit. Comments, ordering, formatting and
 existing quote style in `config.py` are preserved; complex settings (lists and the output
 function) are shown read-only with a note to edit them directly in the file.
 
+<p align="center">
+  <img src="./images/configurator.png" alt="Interactive TUI configurator" />
+</p>
+
 ## Configuration
 
 All options live in `src/config.py`. Key settings:
@@ -213,6 +217,12 @@ If none of the above fits your setup, set `display_on_command` / `display_off_co
 
 When `discovery_messages = True` (the default), a new MQTT device is created in Home Assistant automatically — no `configuration.yaml` edits required. Just add it to a dashboard.
 
+The auto-created device groups all readings, controls (restart, shutdown, update), and sensors under a single Home Assistant entry:
+
+<p align="center">
+  <img src="./images/hass-view.png" alt="Auto-created Home Assistant device" />
+</p>
+
 ### Home Assistant API
 
 To bypass MQTT and push directly to the HA REST API, use the `--hass_api` flag and configure `hass_host` and `hass_token` in `config.py`.
@@ -224,7 +234,7 @@ Run `rpi-mqtt-monitor --hass_wake` to print the YAML snippet for a Home Assistan
 ### Home Assistant Dashboard
 
 <p align="center">
-  <img src="./images/rpi-cpu2mqtt-hass.jpg" alt="Home Assistant dashboard" />
+  <img src="./images/hass-dashboard.png" alt="Home Assistant dashboard" />
 </p>
 
 ## External Sensors

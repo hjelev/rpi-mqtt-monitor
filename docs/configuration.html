@@ -68,6 +68,16 @@
       <p>Full configuration reference:
         <a href="https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration" target="_blank" rel="noopener">Configuration wiki</a>.</p>
 
+      <h2>Interactive configurator</h2>
+      <p>Run <code>rpi-mqtt-monitor --config</code> to edit these settings from a terminal UI instead of
+        editing <code>config.py</code> by hand. Move through the settings with the <strong>↑/↓</strong>
+        arrows; each shows its description and default value. Press <strong>Enter</strong> to edit the
+        selected value, <strong>s</strong> to save, and <strong>q</strong> to quit. Comments, ordering,
+        and formatting in <code>config.py</code> are preserved.</p>
+      <figure>
+        <img src="images/configurator.png" alt="Interactive TUI configurator" />
+      </figure>
+
       <h2>Display control backends</h2>
       <p>With <code>display_control = True</code>, the monitor on/off buttons auto-detect a working
         backend for the current environment:</p>
