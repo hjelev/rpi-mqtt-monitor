@@ -825,7 +825,7 @@ def handle_specific_configurations(data, what_config, device):
         data["command_topic"] = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
         data["payload_install"] = "install"
         data['release_url'] = "https://github.com/hjelev/rpi-mqtt-monitor/releases/tag/" + version
-        data['entity_picture'] = "https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/refs/heads/master/images/update_icon.png"
+        data['entity_picture'] = "https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/refs/heads/master/images/logo_small.png"
         data['release_summary'] = get_release_notes(version)
     elif what_config == "restart_button":
         add_common_attributes(data, "mdi:restart", get_translation("system_restart"))
