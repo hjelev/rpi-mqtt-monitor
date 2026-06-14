@@ -35,9 +35,21 @@
     <main class="content">
       <h1>Changelog</h1>
 
-      <h2>Unreleased</h2>
+      <h2>v1.4.0</h2>
 
       <h3>✨ New Features</h3>
+
+      <h4>CPU voltage on non-Pi hosts</h4>
+      <ul>
+        <li><code>voltage</code> now reads CPU core voltage from <strong>hwmon (lm-sensors)</strong> when
+          <code>vcgencmd</code> is not available, so the sensor works on x86 / Ubuntu hosts with a
+          supported Super-I/O driver exposing a <code>Vcore</code> rail (e.g. via
+          <code>sensors-detect</code>).</li>
+        <li>When neither <code>vcgencmd</code> nor an hwmon Vcore sensor is present (typical on x86
+          mini-PCs with no Super-I/O voltage chip), the sensor no longer reports a misleading
+          <code>0 V</code> — it reports no value (shown as <strong>unavailable</strong> in Home
+          Assistant when <code>use_availability</code> is enabled).</li>
+      </ul>
 
       <h4>Interactive configurator</h4>
       <ul>
