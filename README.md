@@ -8,7 +8,7 @@
 [![GitHub top language](https://img.shields.io/github/languages/top/hjelev/rpi-mqtt-monitor)](https://github.com/hjelev/rpi-mqtt-monitor)
 
 <p align="center">
-  <img src="./images/rpi-mqtt-monitor-2-min.png" alt="Raspberry Pi MQTT Monitor" />
+  <img src="./images/rpi-mqtt-monitor-min.png" alt="Raspberry Pi MQTT Monitor" />
 </p>
 
 The easiest way to monitor your Raspberry Pi or Linux system health in [Home Assistant](https://www.home-assistant.io/) — up and running in minutes with zero manual HA configuration.
