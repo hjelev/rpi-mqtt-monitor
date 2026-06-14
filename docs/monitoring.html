@@ -102,9 +102,13 @@
       <blockquote>
         <p><strong>CPU voltage.</strong> On a Raspberry Pi this reads <code>vcgencmd measure_volts</code>.
           On other hosts (e.g. x86 / Ubuntu) it falls back to a <code>Vcore</code> reading from
-          <code>hwmon</code> (lm-sensors), which requires a supported Super-I/O driver — run
-          <code>sensors-detect</code> if <code>sensors</code> shows no <code>Vcore</code>. Where neither
-          source exists the sensor reports as unavailable.</p>
+          <code>hwmon</code> (lm-sensors), which requires a supported Super-I/O driver — install
+          <code>lm-sensors</code> and run <code>sensors-detect</code>; if <code>sensors</code> then shows
+          a <code>Vcore</code> line it is picked up automatically. Many x86 boxes (especially no-name
+          mini-PCs) have no Super-I/O voltage chip at all, so CPU voltage is simply unavailable there.
+          In that case the sensor reports no value (rather than a misleading <code>0&nbsp;V</code>);
+          either disable <code>voltage</code> or set <code>use_availability = True</code> for an explicit
+          "unavailable" state in Home Assistant.</p>
       </blockquote>
 
       <blockquote>

@@ -101,7 +101,10 @@ def check_voltage():
     voltage = _read_cpu_voltage_hwmon()
     if voltage is not None:
         return voltage
-    return None if config.use_availability else 0
+    # No real source (e.g. x86 without a Super-I/O Vcore sensor): report no
+    # value so HA shows unavailable instead of a misleading 0 V, regardless of
+    # use_availability. A zero-length retained publish also clears any stale 0.
+    return None
 
 
 def check_swap():
@@ -1225,7 +1228,7 @@ def bulk_publish_to_mqtt(monitored_values):
 
     ext_sensors = monitored_values.get('ext_sensors', [])
     values.extend(sensor[3] for sensor in ext_sensors)
-    values_str = ', '.join(map(str, values))
+    values_str = ', '.join('' if v is None else str(v) for v in values)
 
     client = create_mqtt_client()
     if client is None:

@@ -8,8 +8,10 @@
 - `voltage` now reads CPU core voltage from **hwmon (lm-sensors)** when `vcgencmd`
   is not available, so the sensor works on x86 / Ubuntu hosts with a supported
   Super-I/O driver exposing a `Vcore` rail (e.g. via `sensors-detect`).
-- When neither `vcgencmd` nor an hwmon Vcore sensor is present, the sensor now
-  reports cleanly as **unavailable** instead of publishing an empty value.
+- When neither `vcgencmd` nor an hwmon Vcore sensor is present (typical on x86
+  mini-PCs with no Super-I/O voltage chip), the sensor no longer reports a
+  misleading `0 V` — it reports no value (shown as **unavailable** in Home
+  Assistant when `use_availability` is enabled).
 
 #### Interactive configurator
 - New `rpi-mqtt-monitor --config` (`-c`) launches a **terminal UI for editing `config.py`**.
