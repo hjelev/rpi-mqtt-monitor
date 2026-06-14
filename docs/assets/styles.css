@@ -171,6 +171,38 @@ pre {
 }
 pre code { background: none; border: none; padding: 0; font-size: 0.86rem; }
 
+/* Code block with GitHub-style copy button */
+.codeblock { position: relative; margin: 1.2em 0; }
+.codeblock pre { margin: 0; padding-right: 52px; }
+.codeblock.wrap pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: visible;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-soft);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+}
+.codeblock:hover .copy-btn,
+.copy-btn:focus-visible { opacity: 1; }
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.copied { color: var(--accent-2); border-color: var(--accent-2); opacity: 1; }
+.copy-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
 blockquote {
   margin: 1.2em 0;
   padding: 12px 16px;
