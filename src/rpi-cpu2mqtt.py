@@ -45,7 +45,7 @@ def check_wifi_signal(format):
         full_cmd =  "ls /sys/class/ieee80211/*/device/net/"
         interface = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0].strip().decode("utf-8")
         full_cmd = "/sbin/iwconfig {} | grep -i quality".format(interface)
-        wifi_signal = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        wifi_signal = subprocess.Popen(full_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).communicate()[0]
 
         if format == 'dbm':
             wifi_signal = wifi_signal.decode("utf-8").strip().split(' ')[4].split('=')[1]
@@ -471,10 +471,14 @@ def get_smartctl_data(device_path):
     try:
         out = subprocess.run(
             ["sudo", "-n", "smartctl", "-j", "-H", "-A", "-i", device_path],
-            capture_output=True, text=True, timeout=15).stdout
+            capture_output=True, text=True, timeout=15).stdout.strip()
+        # Empty stdout means smartctl couldn't run (missing binary, no passwordless
+        # sudo, etc.). Treat as "no data" and skip the drive silently so the message
+        # never leaks onto the -d display.
+        if not out:
+            return None
         return json.loads(out)
-    except Exception as e:
-        print(f"Error reading smartctl data for {device_path}: {e}")
+    except Exception:
         return None
 
 
