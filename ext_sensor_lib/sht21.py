@@ -64,9 +64,14 @@ class SHT21:
         raspberry pi where the device_number = 0, but it should work
         where device_number=1"""
         self.i2c = open('/dev/i2c-%s' % device_number, 'rb+', 0)
-        fcntl.ioctl(self.i2c, self.I2C_SLAVE, 0x40)
-        self.i2c.write(bytes([self._SOFTRESET]))
-        time.sleep(0.050)
+        try:
+            fcntl.ioctl(self.i2c, self.I2C_SLAVE, 0x40)
+            self.i2c.write(bytes([self._SOFTRESET]))
+            time.sleep(0.050)
+        except Exception:
+            # don't leak the file descriptor if setup fails
+            self.i2c.close()
+            raise
 
     def read_temperature(self):    
         """Reads the temperature from the sensor.  Not that this call blocks
@@ -74,8 +79,9 @@ class SHT21:
         self.i2c.write(bytes([self._TRIGGER_TEMPERATURE_NO_HOLD]))
         time.sleep(self._TEMPERATURE_WAIT_TIME)
         data = self.i2c.read(3)
-        if self._calculate_checksum(data, 2) == data[2]:
+        if len(data) == 3 and self._calculate_checksum(data, 2) == data[2]:
             return self._get_temperature_from_buffer(data)
+        return None
 
     def read_humidity(self):    
         """Reads the humidity from the sensor.  Not that this call blocks 
@@ -83,8 +89,9 @@ class SHT21:
         self.i2c.write(bytes([self._TRIGGER_HUMIDITY_NO_HOLD]))
         time.sleep(self._HUMIDITY_WAIT_TIME)
         data = self.i2c.read(3)
-        if self._calculate_checksum(data, 2) == data[2]:
+        if len(data) == 3 and self._calculate_checksum(data, 2) == data[2]:
             return self._get_humidity_from_buffer(data)
+        return None
 
     def close(self):
         """Closes the i2c connection"""
@@ -149,19 +156,19 @@ class SHT21Test(unittest.TestCase):
 
     def test_temperature(self):
         """Unit test to check the checksum method"""
-        calc_temp = SHT21._get_temperature_from_buffer([chr(99), chr(172)])
-        self.failUnless(abs(calc_temp - 21.5653979492) < 0.1)
+        calc_temp = SHT21._get_temperature_from_buffer(bytes([99, 172]))
+        self.assertTrue(abs(calc_temp - 21.5653979492) < 0.1)
 
     def test_humidity(self):
         """Unit test to check the humidity computation using example
         from the v4 datasheet"""
-        calc_temp = SHT21._get_humidity_from_buffer([chr(99), chr(82)])
-        self.failUnless(abs(calc_temp - 42.4924) < 0.001)
+        calc_temp = SHT21._get_humidity_from_buffer(bytes([99, 82]))
+        self.assertTrue(abs(calc_temp - 42.4924) < 0.001)
 
     def test_checksum(self):
         """Unit test to check the checksum method.  Uses values read"""
-        self.failUnless(SHT21._calculate_checksum([chr(99), chr(172)], 2) == 249)
-        self.failUnless(SHT21._calculate_checksum([chr(99), chr(160)], 2) == 132)
+        self.assertTrue(SHT21._calculate_checksum(bytes([99, 172]), 2) == 249)
+        self.assertTrue(SHT21._calculate_checksum(bytes([99, 160]), 2) == 132)
 
 if __name__ == "__main__":
     try:

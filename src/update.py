@@ -97,16 +97,21 @@ def check_git_version_remote(script_dir):
 
 
 def update_config_version(version, script_dir):
-    with open(script_dir + '/config.py', 'r') as f:
+    config_path = os.path.join(script_dir, 'config.py')
+    with open(config_path, 'r') as f:
         lines = f.readlines()
 
-    with open(script_dir + '/config.py', 'w') as f:
-        print(":: Updating config version to {}".format(version))
+    print(":: Updating config version to {}".format(version))
+    # write to a temp file then atomically replace so a crash mid-write
+    # can never leave config.py truncated/corrupted
+    tmp_path = config_path + '.tmp'
+    with open(tmp_path, 'w') as f:
         for line in lines:
             if 'version = ' in line:
                 f.write('version = "{}"\n'.format(version))
             else:
                 f.write(line)
+    os.replace(tmp_path, config_path)
 
 
 def install_requirements(script_dir):

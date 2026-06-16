@@ -2,7 +2,11 @@
 config.py
 update.sh
 rpi-mqtt-monitor.iml
-<
+
+# Claude Code agent tooling (skills, drivers, local settings)
+.claude/
+CLAUDE.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -108,20 +108,27 @@ install_requirements() {
 }
 
 # ── Configuration ─────────────────────────────────────────────
+# Escape a user-supplied string so it can be used as the replacement part of a
+# `sed s|...|REPL|` command. Escapes backslash, ampersand and the | delimiter,
+# so values containing /, &, \ or | no longer corrupt config.py.
+sed_escape() {
+    printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'
+}
+
 mqtt_configuration() {
     printm "MQTT Settings"
 
     ask "MQTT host: "
     read HOST
-    sed -i "s/ip address or host/${HOST}/" src/config.py
+    sed -i "s|ip address or host|$(sed_escape "$HOST")|" src/config.py
 
     ask "MQTT user: "
     read USER
-    sed -i "s/username/${USER}/" src/config.py
+    sed -i "s|username|$(sed_escape "$USER")|" src/config.py
 
     ask "MQTT password: "
     read PASS
-    sed -i "s/\"password/\"${PASS}/" src/config.py
+    sed -i "s|\"password|\"$(sed_escape "$PASS")|" src/config.py
 
     ask "Use SSL/TLS for the MQTT connection? [y/N] "
     read SSL
@@ -144,23 +151,23 @@ mqtt_configuration() {
         ask "WebSocket path (default: /mqtt): "
         read WSPATH
         if [ -z "$WSPATH" ]; then WSPATH=/mqtt; fi
-        sed -i "s|mqtt_websocket_path = .*|mqtt_websocket_path = '${WSPATH}'|" src/config.py
+        sed -i "s|mqtt_websocket_path = .*|mqtt_websocket_path = '$(sed_escape "$WSPATH")'|" src/config.py
     fi
 
     ask "MQTT port (default: ${default_port}): "
     read PORT
     if [ -z "$PORT" ]; then PORT=${default_port}; fi
-    sed -i "s/1883/${PORT}/" src/config.py
+    sed -i "s|1883|$(sed_escape "$PORT")|" src/config.py
 
     ask "MQTT topic prefix (default: rpi-MQTT-monitor): "
     read TOPIC
     if [ -z "$TOPIC" ]; then TOPIC=rpi-MQTT-monitor; fi
-    sed -i "s/rpi-MQTT-monitor/${TOPIC}/" src/config.py
+    sed -i "s|rpi-MQTT-monitor|$(sed_escape "$TOPIC")|" src/config.py
 
     ask "MQTT UNS structure (default: empty): "
     read UNS
     if [[ -n "$UNS" && ! "$UNS" =~ /$ ]]; then UNS="${UNS}/"; fi
-    sed -i "s/mqtt_uns_structure = .*/mqtt_uns_structure = '${UNS}'/" src/config.py
+    sed -i "s|mqtt_uns_structure = .*|mqtt_uns_structure = '$(sed_escape "$UNS")'|" src/config.py
 
     ask "Enable display/monitor control? [y/N] "
     read CONTROL

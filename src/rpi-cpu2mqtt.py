@@ -989,7 +989,14 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
     if client is None:
         print("Error: Unable to connect to MQTT broker")
         return
+    try:
+        _publish_update_status_to_mqtt(client, git_update, apt_updates)
+    finally:
+        client.loop_stop()
+        client.disconnect()
 
+
+def _publish_update_status_to_mqtt(client, git_update, apt_updates):
     if config.git_update:
         if config.discovery_messages:
             client.publish(config.mqtt_discovery_prefix + "/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_git_update/config",
@@ -1012,9 +1019,6 @@ def publish_update_status_to_mqtt(git_update, apt_updates):
     while len(client._out_messages) > 0:
         time.sleep(0.1)
         client.loop()
-
-    client.loop_stop()
-    client.disconnect()
 
 
 def publish_update_progress(client, in_progress, new_ver, percentage=None):
@@ -1081,7 +1085,11 @@ def send_sensor_data_to_home_assistant(entity_id, state, attributes):
         "state": state,
         "attributes": attributes
     }
-    response = requests.post(url, headers=headers, json=data)
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+    except requests.RequestException as e:
+        print(f"Failed to update {entity_id}: {e}")
+        return
     if response.status_code in [200, 201]:
         pass
     else:
@@ -1092,7 +1100,15 @@ def publish_to_mqtt(monitored_values):
     client = create_mqtt_client()
     if client is None:
         return
+    try:
+        _publish_to_mqtt(client, monitored_values)
+    finally:
+        # always tear down the network loop/connection, even if a publish raised
+        client.loop_stop()
+        client.disconnect()
 
+
+def _publish_to_mqtt(client, monitored_values):
     non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ssd_health', 'ext_sensors', 'used_space_paths']
   # Publish standard monitored values
     for key, value in monitored_values.items():
@@ -1212,9 +1228,6 @@ def publish_to_mqtt(monitored_values):
         time.sleep(0.1)
         client.loop()
 
-    client.loop_stop()
-    client.disconnect()
-
 
 def bulk_publish_to_mqtt(monitored_values):
     values = [monitored_values.get(key, 0) for key in [
@@ -1234,14 +1247,15 @@ def bulk_publish_to_mqtt(monitored_values):
     if client is None:
         return
 
-    client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname, values_str, qos=config.qos, retain=config.retain)
+    try:
+        client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname, values_str, qos=config.qos, retain=config.retain)
 
-    while len(client._out_messages) > 0:
-        time.sleep(0.1)
-        client.loop()
-
-    client.loop_stop()
-    client.disconnect()
+        while len(client._out_messages) > 0:
+            time.sleep(0.1)
+            client.loop()
+    finally:
+        client.loop_stop()
+        client.disconnect()
 
 
 def parse_arguments():
@@ -1646,7 +1660,9 @@ def gather_and_send_info():
 def update_status():
     while not stop_event.is_set():
         git_update = check_git_update(script_dir)
-        apt_updates = get_apt_updates()
+        # only run `sudo apt update` when the feature is enabled; otherwise it
+        # fires every update_check_interval and can trigger sudo mail to root
+        apt_updates = get_apt_updates() if config.apt_updates else None
         publish_update_status_to_mqtt(git_update, apt_updates)
         stop_event.wait(config.update_check_interval)
         if stop_event.is_set():

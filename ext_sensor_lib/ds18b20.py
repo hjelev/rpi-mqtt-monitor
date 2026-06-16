@@ -13,18 +13,20 @@ def sensor_DS18B20(sensor_id, verbose=False):
     """
     # read the file
     try:
-        file = open('/sys/bus/w1/devices/28-%s/w1_slave' % sensor_id)
-        filecontent = file.read()
-        file.close()
+        with open('/sys/bus/w1/devices/28-%s/w1_slave' % sensor_id) as file:
+            filecontent = file.read()
+        lines = filecontent.split("\n")
+        # the first line ends in "YES" only when the CRC check passed
+        if len(lines) < 2 or not lines[0].strip().endswith("YES"):
+            raise ValueError("CRC check failed or incomplete read")
         # read temperature value and convert it
-        stringvalue = filecontent.split("\n")[1].split(" ")[9]
-        temperature = float(stringvalue[2:]) / 1000
-    except IOError as e:
+        stringvalue = lines[1].split("t=")[-1]
+        temperature = float(stringvalue) / 1000
+    except (IOError, IndexError, ValueError) as e:
         # if an error occurs, we return -300
         temperature = float(-300)
 
     # format the temperature
-    temp = '%6.1f' % temperature
     temp = round(temperature, 1)
     # if we set the verbose, we print the current temperature
     if verbose:
