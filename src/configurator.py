@@ -347,6 +347,9 @@ class ConfiguratorUI:
     def edit_selected(self):
         s = self.settings[self.selected]
         self.status = ''
+        if s.key == 'cpu_thermal_zone':
+            self._pick_thermal_zone(s)
+            return
         if s.type == 'bool':
             s.value_text = 'False' if s.value_text == 'True' else 'True'
             self.dirty = True
@@ -375,6 +378,96 @@ class ConfiguratorUI:
                 self.dirty = True
         else:
             self.status = "Complex value - edit it directly in config.py"
+
+    def _select_from_list(self, title, items):
+        """Modal pick-list. Returns the chosen index, or None if cancelled.
+
+        up/down or j/k move, Enter chooses, Esc cancels. Renders over the screen
+        using the same helpers/styling as the main view.
+        """
+        if not items:
+            return None
+        scr = self.stdscr
+        sel = 0
+        while True:
+            scr.erase()
+            h, w = scr.getmaxyx()
+            self._put(0, 0, (" " + title).ljust(w), curses.A_REVERSE | curses.A_BOLD)
+            list_h = max(1, h - 2)
+            top = 0
+            if sel >= list_h:
+                top = sel - list_h + 1
+            row = 1
+            for idx in range(top, min(len(items), top + list_h)):
+                is_sel = (idx == sel)
+                marker = '>' if is_sel else ' '
+                attr = curses.A_REVERSE if is_sel else curses.A_NORMAL
+                self._put(row, 0, "{} {}".format(marker, items[idx]).ljust(w), attr)
+                row += 1
+            self._put(h - 1, 0,
+                      " up/down move  enter select  Esc cancel".ljust(w),
+                      curses.A_REVERSE)
+            scr.refresh()
+            ch = scr.getch()
+            if ch in (curses.KEY_UP, ord('k')):
+                sel = max(0, sel - 1)
+            elif ch in (curses.KEY_DOWN, ord('j')):
+                sel = min(len(items) - 1, sel + 1)
+            elif ch in (curses.KEY_ENTER, 10, 13):
+                return sel
+            elif ch == 27:                     # Esc cancels
+                return None
+
+    def _pick_thermal_zone(self, s):
+        """Let the user pick cpu_thermal_zone from the sensors psutil reports.
+
+        Falls back to free-text entry if psutil is unavailable or reports no
+        temperature sensors, so the field stays usable everywhere.
+        """
+        custom_label = "Custom value…"
+        keys = []
+        try:
+            import psutil
+            temps = psutil.sensors_temperatures()
+            for key in sorted(temps):
+                readings = temps[key]
+                if readings and readings[0].current is not None:
+                    keys.append("{}  ({:.1f}°C)".format(key, readings[0].current))
+                else:
+                    keys.append(key)
+            zone_keys = sorted(temps)
+        except Exception:
+            keys = []
+            zone_keys = []
+
+        if not keys:
+            self.status = "No sensors detected via psutil - enter the key manually"
+            raw = self._edit_line("{} (text, Esc=cancel):".format(s.key),
+                                  initial=_unquote(s.value_text))
+            if raw is None:
+                return
+            new_value = _quote(raw, _quote_char(s.value_text))
+            if new_value != s.value_text:
+                s.value_text = new_value
+                self.dirty = True
+            return
+
+        choice = self._select_from_list(
+            "Select CPU temperature sensor (cpu_thermal_zone)",
+            keys + [custom_label])
+        if choice is None:
+            return
+        if choice == len(keys):                # Custom value...
+            raw = self._edit_line("{} (text, Esc=cancel):".format(s.key),
+                                  initial=_unquote(s.value_text))
+            if raw is None:
+                return
+            new_value = _quote(raw, _quote_char(s.value_text))
+        else:
+            new_value = _quote(zone_keys[choice], _quote_char(s.value_text))
+        if new_value != s.value_text:
+            s.value_text = new_value
+            self.dirty = True
 
     def save(self):
         try:

@@ -100,6 +100,14 @@
       </blockquote>
 
       <blockquote>
+        <p><strong>CPU temperature.</strong> The reading comes from a <code>psutil</code> sensor whose key
+          varies by board. Set <code>cpu_thermal_zone</code> to the right key — run
+          <code>rpi-mqtt-monitor --config</code>, select <code>cpu_thermal_zone</code>, and pick from the
+          sensors detected live on your machine (e.g. <code>soc_thermal</code> on a Rock64). If the
+          configured key is unknown, the first available sensor is used automatically.</p>
+      </blockquote>
+
+      <blockquote>
         <p><strong>CPU voltage.</strong> On a Raspberry Pi this reads <code>vcgencmd measure_volts</code>.
           On other hosts (e.g. x86 / Ubuntu) it falls back to a <code>Vcore</code> reading from
           <code>hwmon</code> (lm-sensors), which requires a supported Super-I/O driver — install

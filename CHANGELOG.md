@@ -4,6 +4,15 @@
 
 ### ✨ New Features
 
+#### Configurable CPU temperature sensor
+- The CPU temperature source (`cpu_thermal_zone`) can now be picked from the sensors
+  **detected live on your machine**: in `rpi-mqtt-monitor --config`, select
+  `cpu_thermal_zone` to choose from the `psutil` keys with their current readings
+  (e.g. `soc_thermal` on a Rock64), or enter a custom value.
+- When the configured key is unknown, the sensor now **falls back to the first
+  available sensor** instead of failing, so unusual SoCs report a temperature
+  out-of-the-box.
+
 #### CPU voltage on non-Pi hosts
 - `voltage` now reads CPU core voltage from **hwmon (lm-sensors)** when `vcgencmd`
   is not available, so the sensor works on x86 / Ubuntu hosts with a supported

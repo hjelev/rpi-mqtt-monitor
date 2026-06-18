@@ -246,7 +246,10 @@ def check_cpu_temp():
         elif "coretemp" in temps:
             cpu_temp = temps["coretemp"][0].current
         else:
-            raise ValueError("CPU temperature sensor not found.")
+            # Unknown SoC (e.g. Rock64 'soc_thermal'): use the first reported
+            # sensor so the value works out-of-the-box. Override the choice via
+            # config.cpu_thermal_zone (the configurator can list the options).
+            cpu_temp = temps[next(iter(temps))][0].current
 
         return round(cpu_temp, 2) 
     except Exception as e:
