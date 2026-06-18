@@ -186,6 +186,7 @@ All options live in `src/config.py`. Key settings:
 | `shutdown_button` | Add a shutdown button to HA |
 | `display_control` | Add display on/off buttons to HA (auto-detects backend: see below) |
 | `display_on_command` / `display_off_command` | Optional custom commands for display control (override auto-detection) |
+| `custom_scripts` | Add buttons to HA that run custom scripts/programs on the host |
 | `group_messages` | Send all values as a single CSV message (disables discovery) |
 
 Full configuration reference: [Configuration wiki](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
