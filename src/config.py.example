@@ -80,6 +80,22 @@ os_user = 'os_user_to_be_replaced'
 display_on_command = ''
 display_off_command = ''
 
+# Run custom scripts/programs on the host from Home Assistant buttons.
+# Each entry: ["/path/to/script", "mdi:icon", "unique_payload"]
+#   - executed directly (no shell) so it must be an executable file / script
+#     with a shebang; wrap multi-command logic in your own .sh
+#   - icon is any Material Design Icons name (mdi:...)
+#   - payload is a short, unique id used as the button's payload and to match
+#     the incoming command
+# Empty list disables the feature. The service must be running (--service).
+custom_scripts = []
+# custom_scripts = [
+#     ["/home/pi/scripts/backup.sh", "mdi:backup-restore", "run_backup"],
+# ]
+
+# Max seconds a custom script may run before it is killed.
+# custom_script_timeout = 300
+
 # By default, the 'hostname' will be used as device name in home assistant.
 # To set a custom device name, uncomment the following line and set the custom name.
 # ha_device_name = 'device_name_to_use'

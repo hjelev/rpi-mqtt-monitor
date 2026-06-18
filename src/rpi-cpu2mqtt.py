@@ -1117,7 +1117,7 @@ def publish_to_mqtt(monitored_values):
 
 
 def _publish_to_mqtt(client, monitored_values):
-    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ssd_health', 'ext_sensors', 'used_space_paths']
+    non_standard_values = ['restart_button', 'shutdown_button', 'display_control', 'drive_temps', 'ssd_health', 'ext_sensors', 'used_space_paths', 'custom_scripts']
   # Publish standard monitored values
     for key, value in monitored_values.items():
         if key not in non_standard_values and key in config.__dict__ and config.__dict__[key]:
@@ -1143,6 +1143,22 @@ def _publish_to_mqtt(client, monitored_values):
                            config_json('display_on'), qos=config.qos)
             client.publish(config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix + "/" + hostname + "_display_off/config",
                            config_json('display_off'), qos=config.qos)
+    if getattr(config, 'custom_scripts', None):
+        for script_path, icon, payload in config.custom_scripts:
+            key = "custom_script_" + re.sub(r'[^a-zA-Z0-9_-]', '_', payload)
+            if config.discovery_messages:
+                data = {
+                    "name": payload.replace('_', ' ').title(),
+                    "icon": icon,
+                    "command_topic": config.mqtt_discovery_prefix + "/update/" + hostname + "/command",
+                    "payload_press": payload,
+                    "unique_id": hostname + "_" + key,
+                    "device": build_device_info(),
+                }
+                client.publish(
+                    config.mqtt_discovery_prefix + "/button/" + config.mqtt_topic_prefix
+                    + "/" + hostname + "_" + key + "/config",
+                    json.dumps(data), qos=config.qos)
     if "used_space_paths" in monitored_values:
         for name, value in monitored_values["used_space_paths"].items():
             key = "used_space_" + name
@@ -1789,6 +1805,20 @@ def set_display_power(turn_on):
           "display_{}_command in config.py)".format(state, state))
 
 
+def run_custom_script(script_path):
+    def _run():
+        try:
+            timeout = getattr(config, 'custom_script_timeout', 300)
+            result = subprocess.run([script_path], capture_output=True,
+                                    text=True, timeout=timeout)
+            print("Custom script {} finished rc={}".format(script_path, result.returncode))
+            if result.returncode != 0 and result.stderr:
+                print("stderr: " + result.stderr.strip())
+        except Exception as e:
+            print("Error running custom script {}: {}".format(script_path, e))
+    threading.Thread(target=_run, daemon=True).start()
+
+
 def on_message(client, userdata, msg):
     global exit_flag, thread1, thread2
     command = msg.payload.decode()
@@ -1853,6 +1883,11 @@ def on_message(client, userdata, msg):
     elif command == "display_on":
         print("Turn on display")
         set_display_power(True)
+    else:
+        scripts = {entry[2]: entry[0] for entry in (getattr(config, 'custom_scripts', None) or [])}
+        if command in scripts:
+            print("Running custom script for payload: " + command)
+            run_custom_script(scripts[command])
 
 exit_flag = False
 thread1 = None

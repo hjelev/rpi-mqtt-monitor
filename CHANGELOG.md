@@ -60,8 +60,18 @@
 - `smartctl` needs root: the installer also adds a passwordless `sudoers` drop-in so the sensors
   populate under **cron** as well as the systemd service.
 
+#### Custom scripts via MQTT
+- New `custom_scripts` config lets you run your own scripts/programs on the host
+  from Home Assistant. Each entry `["/path/to/script", "mdi:icon", "payload"]`
+  creates a **button** in HA; pressing it triggers the script.
+- Scripts run in a background thread (so they never block monitoring), are
+  executed **directly without a shell**, and are bounded by `custom_script_timeout`
+  (default 300s). Only payloads listed in `custom_scripts` are accepted, so stray
+  or retained MQTT messages can't trigger anything.
+- Requires the service to be running (`--service`).
+
 ### ⚙️ New config keys
-`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`, `ssd_health`
+`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`, `ssd_health`, `custom_scripts`, `custom_script_timeout`
 
 ## v1.3.3 (2026-06-13)
 
