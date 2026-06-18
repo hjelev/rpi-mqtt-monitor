@@ -39,6 +39,20 @@
 
       <h3>✨ New Features</h3>
 
+      <h4>Status is now a binary_sensor</h4>
+      <ul>
+        <li>The device <strong>status</strong> entity is now published as a Home Assistant
+          <code>binary_sensor</code> with <code>device_class: connectivity</code>
+          (Connected / Disconnected), instead of a plain text sensor reporting
+          <code>online</code> / <code>offline</code>. This makes it usable in HA groups and
+          group-state alerts without extra templating.</li>
+        <li><strong>Migration note:</strong> because the entity's domain changes from
+          <code>sensor</code> to <code>binary_sensor</code>, existing installs will see the old
+          <code>sensor.&lt;host&gt;_status</code> go unavailable. The new
+          <code>binary_sensor.&lt;host&gt;_status</code> is created automatically via MQTT
+          discovery; the orphaned sensor can be deleted once in HA.</li>
+      </ul>
+
       <h4>CPU voltage on non-Pi hosts</h4>
       <ul>
         <li><code>voltage</code> now reads CPU core voltage from <strong>hwmon (lm-sensors)</strong> when
