@@ -158,7 +158,9 @@ amd_gpu_freq = False
 amd_gpu_power = False
 amd_gpu_temp = False
 
-# Change the thermal zone if you have issues with cpu temps
+# psutil sensor key used for the CPU temperature. Run `rpi-mqtt-monitor --config`
+# and edit this to pick from the sensors detected on your board (e.g. 'soc_thermal'
+# on a Rock64). If unset/unknown, the first available sensor is used.
 cpu_thermal_zone = 'cpu'
 
 # read external sensors for temperature, humidity, pressure etc.
