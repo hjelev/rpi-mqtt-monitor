@@ -4,6 +4,17 @@
 
 ### ✨ New Features
 
+#### Status is now a binary_sensor
+- The device **status** entity is now published as a Home Assistant
+  `binary_sensor` with `device_class: connectivity` (Connected / Disconnected),
+  instead of a plain text sensor reporting `online` / `offline`. This makes it
+  usable in HA groups and group-state alerts without extra templating.
+- **Migration note:** because the entity's domain changes from `sensor` to
+  `binary_sensor`, existing installs will see the old `sensor.<host>_status`
+  go unavailable. The new `binary_sensor.<host>_status` is created
+  automatically via MQTT discovery; the orphaned sensor can be deleted once
+  in HA.
+
 #### Configurable CPU temperature sensor
 - The CPU temperature source (`cpu_thermal_zone`) can now be picked from the sensors
   **detected live on your machine**: in `rpi-mqtt-monitor --config`, select

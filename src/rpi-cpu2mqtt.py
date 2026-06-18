@@ -812,8 +812,9 @@ def handle_specific_configurations(data, what_config, device):
     elif what_config == "external_ipv6":
         add_common_attributes(data, "mdi:wan", "External IPv6 Address")
     elif what_config == "status":
-        add_common_attributes(data, "mdi:lan-connect", get_translation("status"))
-        data["value_template"] = "{{ 'online' if value == '1' else 'offline' }}"
+        add_common_attributes(data, "mdi:lan-connect", get_translation("status"), None, "connectivity")
+        data["payload_on"] = "1"
+        data["payload_off"] = "0"
     elif what_config == "git_update":
         add_common_attributes(data, "mdi:git", get_translation("rpi_mqtt_monitor"), None, "update", "measurement")
         data["title"] = "Device Update"
@@ -1209,7 +1210,7 @@ def _publish_to_mqtt(client, monitored_values):
                 # humidity
                 client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/" + "sht21_hum_status_" + item[0], item[3][1], qos=config.qos, retain=config.retain)
                 
-    status_sensor_topic = config.mqtt_discovery_prefix + "/sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
+    status_sensor_topic = config.mqtt_discovery_prefix + "/binary_sensor/" + config.mqtt_topic_prefix + "/" + hostname + "_status/config"
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
     client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
 
