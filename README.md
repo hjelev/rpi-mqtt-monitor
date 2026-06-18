@@ -17,6 +17,7 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 
 - **Zero-config Home Assistant setup** — MQTT discovery messages create devices and sensors automatically
 - **Remote control** — restart, shutdown, and update your device from Home Assistant
+- **Custom scripts** — run your own scripts/programs on the host from Home Assistant buttons
 - **Flexible delivery** — publish over MQTT or directly via the Home Assistant REST API
 - **Run as a service or cron job** — auto-configured by the installer
 - **External sensor support** — DS18B20 (temperature) and SHT21 (temperature + humidity)
