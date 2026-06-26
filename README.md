@@ -24,6 +24,7 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 - **Sensor availability** — sensors are marked unavailable in HA when readings fail
 - **Multi-language** — English, German, French, and Bulgarian
 - **Easy updates** — run `rpi-mqtt-monitor --update` or trigger from the Home Assistant UI
+<img src="https://m.masoko.net/p/kivqMdbIv" alt="" />
 
 ## What Gets Monitored
 
