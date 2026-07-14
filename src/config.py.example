@@ -109,6 +109,12 @@ cpu_load = True
 cpu_temp = True
 used_space = True
 used_space_path = '/'
+
+# APC UPS sensors (apcupsd required)
+ups_status = False
+ups_bcharge = False
+ups_timeleft = False
+
 # Monitor additional disk paths/drives, each as its own "used space" sensor.
 # 'name' is the friendly label (also used in the MQTT topic, slugified).
 # Add as many entries as needed. Uncomment and edit to enable.
