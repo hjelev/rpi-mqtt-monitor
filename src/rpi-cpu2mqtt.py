@@ -161,6 +161,36 @@ def check_rpi_power_status():
     except Exception as e:
         return "Error: " + str(e)
 
+def check_apcups():
+    """
+    Read APC UPS information from apcupsd.
+    """
+
+    try:
+        result = subprocess.run(
+            ["apcaccess", "status"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+
+        values = {}
+
+        for line in result.stdout.splitlines():
+            if ":" not in line:
+                continue
+
+            key, value = line.split(":", 1)
+            values[key.strip()] = value.strip()
+
+        return {
+            "ups_status": values.get("STATUS"),
+            "ups_bcharge": float(values.get("BCHARGE", "0").split()[0]),
+            "ups_timeleft": float(values.get("TIMELEFT", "0").split()[0])
+        }
+
+    except Exception:
+        return None
 
 def check_service_file_exists():
     service_file_path = "/etc/systemd/system/rpi-mqtt-monitor.service"
@@ -789,6 +819,32 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:harddisk", get_translation("disk_swap"), "%", None, "measurement")
     elif what_config == "memory":
         add_common_attributes(data, "mdi:memory", get_translation("memory_usage"), "%", None, "measurement")
+    elif what_config == "ups_status":
+        add_common_attributes(
+            data,
+            "mdi:battery",
+            "UPS Status"
+        )
+
+    elif what_config == "ups_bcharge":
+        add_common_attributes(
+            data,
+            "mdi:battery-high",
+            "UPS Battery Charge",
+            "%",
+            "battery",
+            "measurement"
+        )
+
+    elif what_config == "ups_timeleft":
+        add_common_attributes(
+            data,
+            "mdi:timer-outline",
+            "UPS Runtime Remaining",
+            "min",
+            None,
+            "measurement"
+        )
     elif what_config == "sys_clock_speed":
         add_common_attributes(data, "mdi:speedometer", get_translation("cpu_clock_speed"), "MHz", "frequency", "measurement")
     elif what_config == "uptime":
@@ -1594,6 +1650,21 @@ def collect_monitored_values():
         data_sent, data_received = get_network_data()
         monitored_values["data_sent"] = data_sent
         monitored_values["data_received"] = data_received
+    if getattr(config, "ups_status", False) or \
+       getattr(config, "ups_bcharge", False) or \
+       getattr(config, "ups_timeleft", False):
+
+        ups = check_apcups()
+
+        if ups:
+            if getattr(config, "ups_status", False):
+                monitored_values["ups_status"] = ups["ups_status"]
+
+            if getattr(config, "ups_bcharge", False):
+                monitored_values["ups_bcharge"] = ups["ups_bcharge"]
+
+            if getattr(config, "ups_timeleft", False):
+                monitored_values["ups_timeleft"] = ups["ups_timeleft"]
     if (getattr(config, "intel_gpu_render", False) or getattr(config, "intel_gpu_video", False)
             or getattr(config, "intel_gpu_freq", False) or getattr(config, "intel_gpu_power", False)):
         gpu = get_intel_gpu_stats() or {}
