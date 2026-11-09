@@ -175,6 +175,15 @@ mqtt_configuration() {
     if [[ "$CONTROL" =~ ^([yY][eE][sS]|[yY])$ ]]; then
         configure_display_control
     fi
+
+    ask "Publish sleep/wake (suspend/resume) state to Home Assistant? [y/N] "
+    read SLEEPSTATE
+    printf "\n"
+    if [[ "$SLEEPSTATE" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        sed -i "s/sleep_state = False/sleep_state = True/" src/config.py
+        service_recommended=1
+        print_green "Sleep state sensor enabled (needs the systemd service)"
+    fi
     finish_message="MQTT broker"
 }
 
@@ -537,7 +546,7 @@ main() {
 
     printf "\n"
     if [ "$service_recommended" = "1" ]; then
-        print_info "Display control needs the systemd service to receive MQTT commands (cron cannot)."
+        print_info "Display control and the sleep state sensor need the systemd service (cron cannot)."
     fi
     printf "  ${BOLD}Select scheduling method:${R}\n"
     printf "  ${CYAN}[c]${R}  Cron job\n"

@@ -80,6 +80,11 @@ os_user = 'os_user_to_be_replaced'
 display_on_command = ''
 display_off_command = ''
 
+# Publish a sleep state sensor ("awake"/"sleeping") that updates right before
+# suspend/hibernate and right after resume, via systemd-logind over D-Bus.
+# Needs the systemd service (--service), MQTT (not the HA API) and the jeepney package.
+sleep_state = False
+
 # Run custom scripts/programs on the host from Home Assistant buttons.
 # Each entry: ["/path/to/script", "mdi:icon", "unique_payload"]
 #   - executed directly (no shell) so it must be an executable file / script

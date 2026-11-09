@@ -70,8 +70,20 @@
   or retained MQTT messages can't trigger anything.
 - Requires the service to be running (`--service`).
 
+#### Sleep / wake state sensor
+- New `sleep_state` option adds a **Sleep State** sensor (`awake` / `sleeping`) that
+  updates the moment the machine suspends or hibernates, and again on resume —
+  handy for desktops/laptops that sleep daily.
+- The service listens to **systemd-logind over D-Bus** (`PrepareForSleep`) and holds a
+  short "delay" inhibitor lock, so `sleeping` is published (and `status` set to
+  disconnected) before the system actually sleeps — no waiting for the MQTT keepalive.
+- On resume it reconnects straight away, publishes `awake` and sends a fresh set of
+  readings instead of waiting for the next `service_sleep_time` cycle.
+- Uses the pure-Python `jeepney` package (added to `requirements.txt`). Requires the
+  service (`--service`) and MQTT mode; enable it from `install.sh` or `--config`.
+
 ### ⚙️ New config keys
-`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`, `ssd_health`, `custom_scripts`, `custom_script_timeout`
+`local_ipv4`, `local_ipv6`, `external_ipv4`, `external_ipv6`, `ssd_health`, `custom_scripts`, `custom_script_timeout`, `sleep_state`
 
 ## v1.3.3 (2026-06-13)
 

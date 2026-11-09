@@ -52,6 +52,21 @@
       <p>Run <code>rpi-mqtt-monitor --hass_wake</code> to print the YAML snippet for a Home Assistant
         Wake-on-LAN switch preconfigured with your device's MAC address and IP.</p>
 
+      <h2>Sleep / wake state</h2>
+      <p>For machines that suspend and resume, set <code>sleep_state = True</code> (or answer yes in
+        <code>install.sh</code>). The service watches systemd-logind over D-Bus and publishes a
+        <strong>Sleep State</strong> sensor to <code>&lt;prefix&gt;/&lt;host&gt;/sleep_state</code>:</p>
+      <ul>
+        <li><strong>Before suspend/hibernate:</strong> <code>sleeping</code> is published and
+          <code>status</code> goes to disconnected immediately. A short logind "delay" lock makes sure
+          this goes out before the machine sleeps (capped by <code>InhibitDelayMaxSec</code>, so
+          suspend is never blocked).</li>
+        <li><strong>After resume:</strong> the service reconnects, publishes <code>awake</code> and
+          sends fresh readings straight away.</li>
+      </ul>
+      <p>Requires the systemd service (<code>--service</code>) in MQTT mode on a systemd host. Check it
+        is active with <code>systemd-inhibit --list</code>.</p>
+
       <h2>Home Assistant Dashboard</h2>
       <figure>
         <img src="images/hass-dashboard.png" alt="Home Assistant dashboard" />

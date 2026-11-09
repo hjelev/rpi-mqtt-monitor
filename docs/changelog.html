@@ -106,9 +106,22 @@
           the systemd service.</li>
       </ul>
 
+      <h4>Sleep / wake state sensor</h4>
+      <ul>
+        <li>New <code>sleep_state</code> option adds a <strong>Sleep State</strong> sensor
+          (<code>awake</code> / <code>sleeping</code>) that updates the moment the machine suspends
+          or hibernates, and again on resume.</li>
+        <li>The service listens to <strong>systemd-logind over D-Bus</strong>
+          (<code>PrepareForSleep</code>) and holds a short "delay" inhibitor lock, so
+          <code>sleeping</code> is published before the system actually sleeps.</li>
+        <li>On resume it reconnects, publishes <code>awake</code> and sends fresh readings
+          immediately. Uses the pure-Python <code>jeepney</code> package; requires the service
+          and MQTT mode.</li>
+      </ul>
+
       <h3>⚙️ New config keys</h3>
       <p><code>local_ipv4</code>, <code>local_ipv6</code>, <code>external_ipv4</code>,
-        <code>external_ipv6</code>, <code>ssd_health</code></p>
+        <code>external_ipv6</code>, <code>ssd_health</code>, <code>sleep_state</code></p>
 
       <h2>v1.3.3 <span style="font-weight:400;color:var(--text-soft);font-size:1rem">(2026-06-13)</span></h2>
 

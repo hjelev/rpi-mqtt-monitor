@@ -815,6 +815,9 @@ def handle_specific_configurations(data, what_config, device):
         add_common_attributes(data, "mdi:lan-connect", get_translation("status"), None, "connectivity")
         data["payload_on"] = "1"
         data["payload_off"] = "0"
+    elif what_config == "sleep_state":
+        add_common_attributes(data, "mdi:power-sleep", get_translation("sleep_state"), None, "enum")
+        data["options"] = ["awake", "sleeping"]
     elif what_config == "git_update":
         add_common_attributes(data, "mdi:git", get_translation("rpi_mqtt_monitor"), None, "update", "measurement")
         data["title"] = "Device Update"
@@ -1230,6 +1233,15 @@ def _publish_to_mqtt(client, monitored_values):
     client.publish(status_sensor_topic, config_json('status'), qos=config.qos)
     client.publish(config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status", "1", qos=config.qos, retain=config.retain)
 
+    # 'sleeping' is published by the service just before suspend. Re-asserting
+    # 'awake' every cycle self-heals a late or lost message around resume.
+    if getattr(config, 'sleep_state', False):
+        if config.discovery_messages:
+            client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_sleep_state/config",
+                           config_json('sleep_state'), qos=config.qos)
+        if not system_sleeping.is_set():
+            client.publish(f"{config.mqtt_uns_structure}{config.mqtt_topic_prefix}/{hostname}/sleep_state", "awake", qos=config.qos, retain=True)
+
     if "data_sent" in monitored_values:
         if config.discovery_messages:
             client.publish(f"{config.mqtt_discovery_prefix}/sensor/{config.mqtt_topic_prefix}/{hostname}_data_sent/config",
@@ -1631,7 +1643,13 @@ def get_network_data():
 
 
 def gather_and_send_info():
-    while not stop_event.is_set():       
+    while not stop_event.is_set():
+        refresh_event.clear()
+        if system_sleeping.is_set():
+            # Suspending: don't publish (it would flip status back to online).
+            # resume_publishing() sets refresh_event once reconnected after resume.
+            refresh_event.wait(1)
+            continue
         monitored_values = collect_monitored_values()
 
         if hasattr(config, 'random_delay'):
@@ -1675,8 +1693,9 @@ def gather_and_send_info():
         if not args.service:
             break
         # Break the sleep into 1-second intervals and check stop_event after each interval
+        # refresh_event cuts the wait short, e.g. to send fresh values after resume.
         for _ in range(config.service_sleep_time):
-            if stop_event.is_set():
+            if stop_event.is_set() or refresh_event.is_set():
                 break
             time.sleep(1)
 
@@ -1889,10 +1908,109 @@ def on_message(client, userdata, msg):
             print("Running custom script for payload: " + command)
             run_custom_script(scripts[command])
 
+def service_topics():
+    """(command_topic, status_topic, sleep_state_topic) for the service client."""
+    base = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname
+    command_topic = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
+    return command_topic, base + "/status", base + "/sleep_state"
+
+
+def start_service_client():
+    """Create, connect and start the long-lived MQTT client used by --service
+    (listens for commands, owns the status last will)."""
+    command_topic, status_topic, sleep_topic = service_topics()
+
+    def on_service_connect(client, userdata, flags, rc):
+        # Re-subscribe on every (re)connect: paho does not restore
+        # subscriptions automatically after an auto-reconnect, so without
+        # this the command buttons silently stop working after a broker
+        # restart or network blip.
+        if rc != 0:
+            print("Error: Unable to connect to MQTT broker, return code:", rc)
+            return
+        client.subscribe(command_topic)
+        client.publish(status_topic, "1", qos=config.qos, retain=config.retain)
+        if getattr(config, 'sleep_state', False):
+            client.publish(sleep_topic, "awake", qos=1, retain=True)
+            if system_sleeping.is_set():
+                print("Sleep state: reconnected after resume, published 'awake'")
+                resume_publishing()
+        print("Listening to topic : " + command_topic)
+
+    client = paho.Client(transport=mqtt_transport())
+    client.username_pw_set(config.mqtt_user, config.mqtt_password)
+    configure_mqtt_connection(client)
+    client.on_message = on_message
+    client.on_connect = on_service_connect
+    if getattr(config, 'sleep_state', False):
+        # Reconnect quickly once the network comes back after resume.
+        client.reconnect_delay_set(min_delay=1, max_delay=30)
+    # set will_set to send a message when the client disconnects
+    client.will_set(status_topic, "0", qos=config.qos, retain=config.retain)
+    # connect_async + loop_start so the service keeps retrying if the
+    # broker is not yet reachable at boot (covered by systemd Restart too).
+    client.connect_async(config.mqtt_host, int(config.mqtt_port))
+    client.loop_start()
+    return client
+
+
+def resume_publishing():
+    """Leave the post-suspend state and trigger an immediate sensor refresh."""
+    if system_sleeping.is_set():
+        system_sleeping.clear()
+        refresh_event.set()
+
+
+def on_system_sleep():
+    """Called (with logind's delay lock held) just before suspend/hibernate."""
+    system_sleeping.set()
+    _, status_topic, sleep_topic = service_topics()
+    old = client
+    if old.is_connected():
+        infos = [old.publish(sleep_topic, "sleeping", qos=1, retain=True),
+                 old.publish(status_topic, "0", qos=1, retain=config.retain)]
+        deadline = time.monotonic() + 3
+        for info in infos:
+            try:
+                info.wait_for_publish(timeout=max(0.1, deadline - time.monotonic()))
+            except (RuntimeError, ValueError):
+                pass
+        if all(info.is_published() for info in infos):
+            print("Sleep state: published 'sleeping'")
+        else:
+            print("Sleep state: broker did not confirm 'sleeping' (network already down?)")
+    else:
+        print("Sleep state: MQTT not connected, could not publish 'sleeping'")
+    # Clean disconnect: no dead session left on the broker while we sleep, and
+    # this client will not auto-reconnect. A fresh client is created on wake so
+    # that any unconfirmed 'sleeping' message is never resent after 'awake'.
+    old.disconnect()
+
+
+def on_system_wake():
+    """Called after resume: reconnect with a fresh client, which publishes
+    'awake' and triggers a sensor refresh once connected."""
+    global client
+    old = client
+    client = start_service_client()
+    # Reap the old client's network thread in the background (it exits on its own
+    # after the disconnect; never block the D-Bus thread on it).
+    threading.Thread(target=old.loop_stop, daemon=True).start()
+    # Fallback: resume normal publishing even if MQTT stays unreachable.
+    fallback = threading.Timer(60, resume_publishing)
+    fallback.daemon = True
+    fallback.start()
+
+
 exit_flag = False
 thread1 = None
 thread2 = None
+client = None
 stop_event = threading.Event()
+# Set while the system is suspending/suspended (sleep_state feature).
+system_sleeping = threading.Event()
+# Set to make gather_and_send_info() publish now instead of waiting.
+refresh_event = threading.Event()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # get device host name - used in mqtt topic
 # and adhere to the allowed character set
@@ -1910,33 +2028,15 @@ if __name__ == '__main__':
 
     if args.service:
         if not args.hass_api:
-            command_topic = config.mqtt_discovery_prefix + "/update/" + hostname + "/command"
-            status_topic = config.mqtt_uns_structure + config.mqtt_topic_prefix + "/" + hostname + "/status"
+            client = start_service_client()
 
-            def on_service_connect(client, userdata, flags, rc):
-                # Re-subscribe on every (re)connect: paho does not restore
-                # subscriptions automatically after an auto-reconnect, so without
-                # this the command buttons silently stop working after a broker
-                # restart or network blip.
-                if rc != 0:
-                    print("Error: Unable to connect to MQTT broker, return code:", rc)
-                    return
-                client.subscribe(command_topic)
-                client.publish(status_topic, "1", qos=config.qos, retain=config.retain)
-                print("Listening to topic : " + command_topic)
-
-            client = paho.Client(transport=mqtt_transport())
-            client.username_pw_set(config.mqtt_user, config.mqtt_password)
-            configure_mqtt_connection(client)
-            client.on_message = on_message
-            client.on_connect = on_service_connect
-            # set will_set to send a message when the client disconnects
-            client.will_set(status_topic, "0", qos=config.qos, retain=config.retain)
-            # connect_async + loop_start so the service keeps retrying if the
-            # broker is not yet reachable at boot (covered by systemd Restart too).
-            client.connect_async(config.mqtt_host, int(config.mqtt_port))
-            client.loop_start()
-
+            if getattr(config, 'sleep_state', False):
+                import sleep_monitor
+                monitor = sleep_monitor.SleepMonitor(on_system_sleep, on_system_wake, stop_event)
+                thread3 = threading.Thread(target=monitor.run, daemon=True)
+                thread3.start()
+        elif getattr(config, 'sleep_state', False):
+            print("Sleep state: only supported with MQTT, not the Home Assistant API; ignoring.")
 
         thread1 = threading.Thread(target=gather_and_send_info)
         thread1.daemon = True  # Set thread1 as a daemon thread

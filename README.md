@@ -18,6 +18,7 @@ The easiest way to monitor your Raspberry Pi or Linux system health in [Home Ass
 - **Zero-config Home Assistant setup** — MQTT discovery messages create devices and sensors automatically
 - **Remote control** — restart, shutdown, and update your device from Home Assistant
 - **Custom scripts** — run your own scripts/programs on the host from Home Assistant buttons
+- **Sleep / wake state** — instant `awake` / `sleeping` sensor on suspend and resume (systemd hosts)
 - **Flexible delivery** — publish over MQTT or directly via the Home Assistant REST API
 - **Run as a service or cron job** — auto-configured by the installer
 - **External sensor support** — DS18B20 (temperature) and SHT21 (temperature + humidity)
@@ -104,7 +105,7 @@ bash <(curl -s https://raw.githubusercontent.com/hjelev/rpi-mqtt-monitor/master/
 ```
 
 The installer will:
-- Install missing dependencies (`git`, `python3`, `pip`, `paho-mqtt`, `requests`, `psutil`)
+- Install missing dependencies (`git`, `python3`, `pip`, `paho-mqtt`, `requests`, `psutil`, `jeepney`)
 - Create a Python virtual environment (`rpi_mon_env`)
 - Prompt you to configure MQTT host and credentials in `config.py`
 - Set up a systemd service or cron job
@@ -188,6 +189,7 @@ All options live in `src/config.py`. Key settings:
 | `display_control` | Add display on/off buttons to HA (auto-detects backend: see below) |
 | `display_on_command` / `display_off_command` | Optional custom commands for display control (override auto-detection) |
 | `custom_scripts` | Add buttons to HA that run custom scripts/programs on the host |
+| `sleep_state` | Publish an `awake` / `sleeping` sensor on suspend/resume (service + MQTT only, see below) |
 | `group_messages` | Send all values as a single CSV message (disables discovery) |
 
 Full configuration reference: [Configuration wiki](https://github.com/hjelev/rpi-mqtt-monitor/wiki/Configuration)
@@ -234,6 +236,15 @@ To bypass MQTT and push directly to the HA REST API, use the `--hass_api` flag a
 ### Wake on LAN
 
 Run `rpi-mqtt-monitor --hass_wake` to print the YAML snippet for a Home Assistant Wake-on-LAN switch preconfigured with your device's MAC address and IP.
+
+### Sleep / wake state
+
+For machines that suspend and resume (e.g. a desktop that sleeps every night), set `sleep_state = True` (or answer yes in `install.sh`). The service then watches systemd-logind over D-Bus and publishes a **Sleep State** sensor to `<prefix>/<host>/sleep_state`:
+
+- **Before suspend/hibernate:** `sleeping` is published and `status` goes to disconnected immediately. The service holds a short logind "delay" lock so this goes out before the machine sleeps (logind caps the delay at `InhibitDelayMaxSec`, so suspend can never be blocked).
+- **After resume:** the service reconnects, publishes `awake` and sends fresh readings straight away.
+
+Requires running as the systemd service (`--service`) in MQTT mode on a systemd host. Check it is active with `systemd-inhibit --list` — an `rpi-mqtt-monitor` entry should be listed.
 
 ### Home Assistant Dashboard
 
